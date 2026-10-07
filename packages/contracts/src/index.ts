@@ -6,3 +6,4 @@ export * from './endpoints.js';
 export * from './academics.js';
 export * from './people.js';
 export * from './imports.js';
+export * from './school.js';

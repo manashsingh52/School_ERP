@@ -28,6 +28,13 @@ import {
 import { requestUploadSchema } from './files.js';
 import { createImportSchema, listImportRowsQuerySchema, setImportMappingSchema } from './imports.js';
 import {
+  promotionCommitSchema,
+  promotionPreviewSchema,
+  setOnboardingStepSchema,
+  updateBrandingSchema,
+  updateSchoolProfileSchema,
+} from './school.js';
+import {
   createGuardianSchema,
   createRoleSchema,
   createTeacherSchema,
@@ -138,6 +145,15 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/imports/:id/rows': { summary: 'Rows with status and problems', tag: 'Imports', access: 'permission:import.run', query: listImportRowsQuerySchema },
   'POST /v1/imports/:id/commit': { summary: 'Import the valid rows (background job)', tag: 'Imports', access: 'permission:import.run', idempotent: true },
   'GET /v1/imports/:id/problems': { summary: 'CSV of rows that need fixing', tag: 'Imports', access: 'permission:import.run' },
+
+  'GET /v1/school': { summary: 'This school: profile, branding, current year', tag: 'School', access: 'school' },
+  'PATCH /v1/school': { summary: 'Edit school profile', tag: 'School', access: 'permission:school.settings.manage', body: updateSchoolProfileSchema },
+  'PATCH /v1/school/branding': { summary: 'Logo and accent colour', tag: 'School', access: 'permission:school.branding.manage', body: updateBrandingSchema },
+  'GET /v1/onboarding': { summary: 'Setup checklist', tag: 'School', access: 'permission:school.settings.view' },
+  'PUT /v1/onboarding/step': { summary: 'Remember the wizard step', tag: 'School', access: 'permission:school.settings.manage', body: setOnboardingStepSchema },
+  'POST /v1/onboarding/go-live': { summary: 'Mark the school live', tag: 'School', access: 'permission:school.settings.manage' },
+  'POST /v1/promotions/preview': { summary: 'Plan year-end promotion', tag: 'Students', access: 'permission:student.promote', body: promotionPreviewSchema },
+  'POST /v1/promotions/commit': { summary: 'Promote students to the next year', tag: 'Students', access: 'permission:student.promote', body: promotionCommitSchema, idempotent: true },
 
   'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 

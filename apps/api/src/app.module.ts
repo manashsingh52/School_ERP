@@ -37,6 +37,8 @@ import { ImportsService } from './modules/imports/imports.service.js';
 import { MembersController, PermissionsController, RolesController } from './modules/members/members.controller.js';
 import { MembersService } from './modules/members/members.service.js';
 import { IdentityService } from './modules/schools/identity.service.js';
+import { OnboardingController, PromotionsController, SchoolController } from './modules/school/school.controller.js';
+import { SchoolService } from './modules/school/school.service.js';
 import { SchoolsService } from './modules/schools/schools.service.js';
 import { SearchController, SearchService } from './modules/search/search.controller.js';
 import { TeachersController } from './modules/teachers/teachers.controller.js';
@@ -128,6 +130,9 @@ export class SearchModule {}
 @Module({ imports: [SchoolsModule, GuardiansModule], controllers: [ImportsController], providers: [ImportsService] })
 export class ImportsModule {}
 
+@Module({ imports: [FilesModule], controllers: [SchoolController, OnboardingController, PromotionsController], providers: [SchoolService] })
+export class SchoolModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
@@ -146,6 +151,7 @@ export class AppModule {
         MembersModule,
         SearchModule,
         ImportsModule,
+        SchoolModule,
       ],
     };
   }

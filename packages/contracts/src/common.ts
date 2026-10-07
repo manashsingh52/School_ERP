@@ -31,6 +31,19 @@ export const phoneSchema = z.string().trim().transform((value, ctx) => {
   return phone;
 });
 
+/**
+ * Office numbers: Indian mobiles OR landlines with STD code ("020 2612 3456" → +912026123456).
+ * Use phoneSchema (mobile only) for anything that receives SMS.
+ */
+export const contactPhoneSchema = z.string().trim().transform((value, ctx) => {
+  const mobile = normalizePhone(value);
+  if (mobile) return mobile;
+  const digits = value.replace(/[\s\-().]/g, '').replace(/^\+91/, '').replace(/^0/, '');
+  if (/^[1-9]\d{9}$/.test(digits)) return `+91${digits}`;
+  ctx.addIssue({ code: 'custom', message: 'Enter a valid phone number with STD code' });
+  return z.NEVER;
+});
+
 export const emailSchema = z
   .string()
   .trim()

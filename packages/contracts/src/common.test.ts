@@ -18,6 +18,15 @@ describe('normalizePhone', () => {
   });
 });
 
+describe('contactPhoneSchema', () => {
+  it('accepts landlines with STD code and mobiles', async () => {
+    const { contactPhoneSchema } = await import('./common.js');
+    expect(contactPhoneSchema.parse('020 2612 3456')).toBe('+912026123456');
+    expect(contactPhoneSchema.parse('98765 43210')).toBe('+919876543210');
+    expect(contactPhoneSchema.safeParse('12345').success).toBe(false);
+  });
+});
+
 describe('identifierSchema', () => {
   it('detects email and lower-cases it', () => {
     expect(identifierSchema.parse(' Admin@School.IN ')).toEqual({ kind: 'email', value: 'admin@school.in' });
