@@ -10,7 +10,7 @@
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "lint": "turbo run lint",
+    "lint": "eslint .",
     "db:start": "pnpm --filter @schoolos/api db:start",
     "db:migrate": "pnpm --filter @schoolos/api db:migrate",
     "db:seed": "pnpm --filter @schoolos/api db:seed",
@@ -18,8 +18,13 @@
     "db:reset": "pnpm --filter @schoolos/api db:reset"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
     "prettier": "^3.6.0",
     "turbo": "^2.11.7",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.71.1"
   }
 }

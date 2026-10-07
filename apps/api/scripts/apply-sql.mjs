@@ -5,8 +5,10 @@
 //  • Special policies for schools, users, memberships, notification_templates
 //  • Grants: identity tables are platform-only, plans/subscriptions read-only, audit_logs append-only
 //  • Coverage check: fails if any tenant table is left without RLS
+//  • BullMQ's PostgreSQL queue schema ("bullmq"), owned by the owner role, used by the platform role
 import pg from 'pg';
 import { pathToFileURL } from 'node:url';
+import { runMigrations as runQueueMigrations } from 'bullmq';
 
 const SPECIAL_TENANT_POLICIES = {
   memberships: {
@@ -27,6 +29,16 @@ export async function applySecurity(connectionString, { log = console.log } = {}
   const client = new pg.Client({ connectionString });
   await client.connect();
   try {
+    // Background-job tables (BullMQ manages its own migrations + advisory lock).
+    await runQueueMigrations(client, 'bullmq');
+    await client.query(`
+      GRANT USAGE ON SCHEMA bullmq TO schoolos_platform;
+      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA bullmq TO schoolos_platform;
+      GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA bullmq TO schoolos_platform;
+      GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA bullmq TO schoolos_platform;
+      REVOKE ALL ON SCHEMA bullmq FROM schoolos_app;
+    `);
+
     await client.query('BEGIN');
 
     await client.query(`
@@ -94,7 +106,7 @@ export async function applySecurity(connectionString, { log = console.log } = {}
     if (missing.length) throw new Error(`RLS coverage check failed for: ${missing.join(', ')}`);
 
     await client.query('COMMIT');
-    log(`Security applied: RLS on ${tenantTables.length} tenant tables + schools, users. Coverage check passed.`);
+    log(`Security applied: RLS on ${tenantTables.length} tenant tables + schools, users. Coverage check passed. Queue schema ready.`);
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;

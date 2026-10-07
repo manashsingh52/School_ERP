@@ -34,10 +34,10 @@ export class PrismaService implements OnModuleDestroy {
    * transaction's connection; all queries made through `tx` are auto-scoped as usual.
    */
   async tenantTx<T>(fn: (tx: TenantTx) => Promise<T>, options?: { timeout?: number }): Promise<T> {
-    const ctx = RequestContextStore.tenant();
+    const ctx = RequestContextStore.school();
     return this.db.$transaction(
       async (tx) => {
-        await tx.$executeRaw`SELECT set_config('app.school_id', ${ctx.schoolId}, true), set_config('app.user_id', ${ctx.userId}, true)`;
+        await tx.$executeRaw`SELECT set_config('app.school_id', ${ctx.schoolId}, true), set_config('app.user_id', ${ctx.userId ?? ''}, true)`;
         return RequestContextStore.run({ ...ctx, inTenantTx: true }, () => fn(tx as TenantTx));
       },
       { timeout: options?.timeout ?? 10_000 },

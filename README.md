@@ -34,11 +34,17 @@ Open **http://demo.localhost:3000** — demo logins are listed at the top of
 [`apps/api/src/seed/seed.ts`](apps/api/src/seed/seed.ts) (password = `SEED_PASSWORD` in `.env`).
 OTP codes are printed in the API log (`[dev OTP]`) — no SMS is sent until a DLT-registered provider is configured.
 
+Background jobs run inside the API locally (`RUN_WORKERS=true`, queues stored in PostgreSQL — no Redis).
+`pnpm --filter @schoolos/api worker` runs them as a separate process instead.
+
 `pnpm db:reset` wipes and re-seeds the **local** database (asks for confirmation).
+
+Accounts and keys still to be added (SMS, storage bucket, domain…): [docs/SETUP-LATER.md](docs/SETUP-LATER.md).
 
 ## Checks
 
 ```bash
+pnpm lint          # ESLint incl. tenancy/permission guardrails
 pnpm typecheck     # all packages
 pnpm test          # unit + API integration tests (real Postgres with RLS, tenant-isolation suite)
 pnpm build

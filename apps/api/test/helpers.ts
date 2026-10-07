@@ -1,4 +1,7 @@
-import { generateKeyPairSync, randomInt } from 'node:crypto';
+import { generateKeyPairSync, randomBytes, randomInt, randomUUID } from 'node:crypto';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import { pino } from 'pino';
 import supertest from 'supertest';
@@ -13,7 +16,7 @@ import { SchoolsService } from '../src/modules/schools/schools.service.js';
 
 export const PASSWORD = 'Test@Pass123';
 
-export function testEnv() {
+export function testEnv(overrides: Record<string, string> = {}) {
   const urls = inject('dbUrls');
   const { privateKey, publicKey } = generateKeyPairSync('ed25519');
   return loadEnv({
@@ -24,6 +27,12 @@ export function testEnv() {
     JWT_PRIVATE_KEY: privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
     JWT_PUBLIC_KEY: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
     OTP_PEPPER: 'test-pepper-0123456789abcdef',
+    STORAGE_DRIVER: 'local',
+    STORAGE_LOCAL_DIR: mkdtempSync(join(tmpdir(), 'schoolos-test-files-')),
+    STORAGE_LOCAL_URL_BASE: '', // links become /v1/files/local/<token>, callable by supertest
+    STORAGE_SIGNING_SECRET: randomBytes(32).toString('base64url'),
+    RUN_WORKERS: 'false',
+    ...overrides,
   });
 }
 
@@ -81,8 +90,8 @@ export class TestApp {
   }
 }
 
-export async function createTestApp(): Promise<TestApp> {
-  const app = await createApp(testEnv(), pino({ level: 'silent' }));
+export async function createTestApp(overrides: Record<string, string> = {}): Promise<TestApp> {
+  const app = await createApp(testEnv(overrides), pino({ level: 'silent' }));
   await app.init();
   return new TestApp(app);
 }
@@ -97,6 +106,8 @@ export interface Tenant {
   sectionB: string;
   /** s1: in A, parent's child · s2: in A · s3: in B */
   students: { s1: string; s2: string; s3: string };
+  /** A READY file uploaded by the admin. */
+  fileId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
 }
 
@@ -150,5 +161,19 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
   });
   await db.studentGuardian.create({ data: { schoolId, studentId: s1, guardianId: guardian.id, relation: 'FATHER' } });
 
-  return { slug, schoolId, sectionA: a!.id, sectionB: b!.id, students: { s1, s2, s3 }, users };
+  const adminMembership = await db.membership.findFirstOrThrow({ where: { schoolId, user: { email: users.admin } } });
+  const file = await db.file.create({
+    data: {
+      schoolId,
+      bucket: 'local',
+      objectKey: `schools/${schoolId}/document/${randomUUID()}`,
+      originalName: 'report.pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 10n,
+      status: 'READY',
+      uploadedByMemberId: adminMembership.id,
+    },
+  });
+
+  return { slug, schoolId, sectionA: a!.id, sectionB: b!.id, students: { s1, s2, s3 }, users, fileId: file.id };
 }

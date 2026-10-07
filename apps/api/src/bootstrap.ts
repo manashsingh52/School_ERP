@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import type { LoggerService } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import express from 'express';
 import helmet from 'helmet';
 import type { Logger } from 'pino';
 import { AppModule } from './app.module.js';
@@ -35,6 +36,8 @@ export async function createApp(env: Env, logger?: Logger): Promise<NestExpressA
   app.set('trust proxy', 1); // behind Google LB / Cloudflare: req.ip = client IP
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: false })); // JSON API; the web app sets its own CSP
+  // Local-storage uploads arrive as raw bytes (development driver only); everything else is JSON.
+  app.use(`/${API_PREFIX}/files/local`, express.raw({ type: () => true, limit: '25mb' }));
   app.useBodyParser('json', { limit: '1mb' });
 
   const contextMiddleware = app.get(RequestContextMiddleware);

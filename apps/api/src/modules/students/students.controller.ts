@@ -7,6 +7,7 @@ import {
   uuidSchema,
 } from '@schoolos/contracts';
 import { RequirePermission } from '../../core/auth/decorators.js';
+import { Idempotent } from '../../core/idempotency/idempotency.js';
 import { ZodPipe } from '../../core/validation/zod.pipe.js';
 import { StudentsService } from './students.service.js';
 
@@ -30,6 +31,7 @@ export class StudentsController {
 
   @Post()
   @RequirePermission('student.create')
+  @Idempotent({ required: false })
   async create(@Body(new ZodPipe(createStudentSchema)) body: z.output<typeof createStudentSchema>) {
     return { data: await this.students.create(body) };
   }

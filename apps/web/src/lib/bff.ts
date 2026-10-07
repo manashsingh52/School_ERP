@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 export function csrfRejection(req: NextRequest): NextResponse | null {
   const origin = req.headers.get('origin');
   const host = req.headers.get('host');
-  let sameOrigin = false;
+  let sameOrigin: boolean;
   try {
     sameOrigin = !!origin && !!host && new URL(origin).host === host;
   } catch {
@@ -47,17 +47,17 @@ export function deviceNameFrom(userAgent: string | null): string {
   return `${browser} on ${os}`;
 }
 
-/** Passes an API response through unchanged (status + JSON body). */
+const RELAYED_HEADERS = ['content-type', 'content-disposition', 'x-content-type-options', 'x-request-id', 'retry-after'];
+
+/** Passes an API response through unchanged: status, raw bytes (JSON or file downloads) and safe headers. */
 export async function relay(res: Response): Promise<NextResponse> {
-  const body = await res.text();
-  return new NextResponse(body || null, {
-    status: res.status,
-    headers: {
-      'content-type': res.headers.get('content-type') ?? 'application/json',
-      'x-request-id': res.headers.get('x-request-id') ?? '',
-      'cache-control': 'no-store',
-    },
-  });
+  const body = await res.arrayBuffer();
+  const headers = new Headers({ 'cache-control': 'no-store' });
+  for (const name of RELAYED_HEADERS) {
+    const value = res.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  return new NextResponse(body.byteLength ? body : null, { status: res.status, headers });
 }
 
 export const serviceUnavailable = () =>

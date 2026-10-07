@@ -21,6 +21,9 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      # openapi.json must be regenerated when contracts change
+      - run: pnpm --filter @schoolos/contracts openapi && git diff --exit-code packages/contracts/openapi.json
       # Type checks for every package (generates the Prisma client first)
       - run: pnpm typecheck
       # Unit + integration tests. The API suite boots a real PostgreSQL 17 (embedded-postgres)

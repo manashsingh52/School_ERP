@@ -69,10 +69,10 @@ export class AuthGuard implements CanActivate {
       });
     }
 
-    if (rule.kind === 'permission') {
+    if (rule.kind === 'permission' || rule.kind === 'school') {
       const ctx = RequestContextStore.get();
       if (!ctx?.schoolId) throw new AppError('SCHOOL_NOT_SELECTED', 403, 'Select a school to continue.');
-      if (!ctx.permissions?.[rule.permission]) throw AppError.forbidden();
+      if (rule.kind === 'permission' && !ctx.permissions?.[rule.permission]) throw AppError.forbidden();
     }
     return true;
   }

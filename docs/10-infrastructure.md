@@ -13,7 +13,7 @@ pilot (month 4–5). So:
    - Cloud Run api with **workers in the same process** (`RUN_WORKERS=true`), min instances 0 → 1 only when a school is live
    - Cloud SQL smallest shared-core tier, no HA
    - **No load balancer:** use the Cloudflare Worker routing option (§3, option B, $0–5)
-   - Upstash free tier
+   - No Redis: background jobs run on PostgreSQL (BullMQ 6 Postgres backend), decided 2026-10-07
    - Estimated **$25–45/month**
 3. The full topology below is the target once paying schools exist. The code supports both: worker as a separate service
    or in-process, chosen by environment variable.

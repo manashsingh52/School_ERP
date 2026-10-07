@@ -9,6 +9,7 @@ import type {
   updateStudentSchema,
 } from '@schoolos/contracts';
 import { AuditService, diff } from '../../core/audit/audit.service.js';
+import { OutboxService } from '../../core/outbox/outbox.service.js';
 import { AppError } from '../../core/errors/app-error.js';
 import { ScopeService } from '../../core/permissions/scope.service.js';
 import { PrismaService } from '../../core/prisma/prisma.service.js';
@@ -39,6 +40,7 @@ export class StudentsService {
     private readonly prisma: PrismaService,
     private readonly scope: ScopeService,
     private readonly audit: AuditService,
+    private readonly outbox: OutboxService,
   ) {}
 
   async list(query: ListQuery): Promise<PageResponse<StudentListItem>> {
@@ -181,8 +183,10 @@ export class StudentsService {
         entityId: student.id,
         after: { admissionNo: student.admissionNo, sectionId: section.id },
       });
+      await this.outbox.publish(tx, 'student.created', { studentId: student.id });
       return student.id;
     });
+    this.outbox.flush();
     return this.get(id);
   }
 

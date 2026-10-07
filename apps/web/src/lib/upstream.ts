@@ -7,7 +7,7 @@ export interface UpstreamOptions {
   path: string; // "/v1/students?page=2"
   accessToken?: string;
   slug?: string | null;
-  body?: string;
+  body?: BodyInit;
   contentType?: string | null;
   clientIp?: string | null;
   userAgent?: string | null;

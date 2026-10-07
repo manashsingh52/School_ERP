@@ -42,11 +42,11 @@ function normalise(value: unknown): unknown {
 @Injectable()
 export class AuditService {
   async record(tx: TenantTx, entry: AuditEntry): Promise<void> {
-    const ctx = RequestContextStore.tenant();
+    const ctx = RequestContextStore.school();
     await tx.auditLog.create({
       data: {
         schoolId: ctx.schoolId,
-        actorType: 'USER',
+        actorType: ctx.actor === 'system' ? 'SYSTEM' : 'USER',
         actorUserId: ctx.userId,
         actorMembershipId: ctx.membershipId,
         action: entry.action,

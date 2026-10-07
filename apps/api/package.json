@@ -15,9 +15,12 @@
     "db:seed": "pnpm generate && pnpm build && node --env-file-if-exists=.env dist/seed/seed.js",
     "keys:generate": "node scripts/generate-keys.mjs",
     "db:reset": "prisma migrate reset --force && node --env-file-if-exists=.env scripts/apply-sql.mjs && pnpm db:seed",
-    "generate": "prisma generate && node scripts/gen-tenant-models.mjs"
+    "generate": "prisma generate && node scripts/gen-tenant-models.mjs",
+    "db:bootstrap": "node --env-file-if-exists=.env scripts/bootstrap-db.mjs",
+    "worker": "node --enable-source-maps --env-file-if-exists=.env dist/worker.js"
   },
   "dependencies": {
+    "@google-cloud/storage": "^8.2.0",
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
@@ -26,7 +29,11 @@
     "@prisma/client": "7.10.0",
     "@schoolos/contracts": "workspace:*",
     "@schoolos/permissions": "workspace:*",
+    "bullmq": "^6.3.11",
+    "express": "^5.1.0",
+    "file-type": "^22.1.1",
     "helmet": "^8.1.0",
+    "ioredis": "^6.0.0",
     "jose": "^6.2.12",
     "pg": "^8.16.0",
     "pino": "^10.4.0",
@@ -37,7 +44,7 @@
   "devDependencies": {
     "@swc/cli": "^0.7.8",
     "@swc/core": "^1.13.0",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.18.0",
     "@types/pg": "^8.15.0",
     "@types/supertest": "^6.0.3",

@@ -19,10 +19,18 @@ const tokens: Record<'adminA' | 'teacherA' | 'parentA' | 'accountantA' | 'adminB
 const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => string> = {
   'GET /v1/students/:id': (b) => b.students.s1,
   'PATCH /v1/students/:id': (b) => b.students.s1,
+  'POST /v1/files/:id/complete': (b) => b.fileId,
+  'GET /v1/files/:id/download-url': (b) => b.fileId,
 };
 
 /** Routes with :id that are not tenant data (e.g. scoped to the signed-in user). */
-const NON_TENANT_ID_ROUTES = new Set(['DELETE /v1/me/sessions/:id', 'GET /v1/public/schools/:slug']);
+const NON_TENANT_ID_ROUTES = new Set([
+  'DELETE /v1/me/sessions/:id',
+  'GET /v1/public/schools/:slug',
+  // Signed-token routes: authorised by an HMAC token, not by tenant id (dev storage only)
+  'PUT /v1/files/local/:token',
+  'GET /v1/files/local/:token',
+]);
 
 beforeAll(async () => {
   t = await createTestApp();
@@ -169,7 +177,9 @@ describe('route access rules', () => {
     expect(publicRoutes.sort()).toEqual(
       [
         'GET /health',
+        'GET /v1/files/local/:token',
         'GET /v1/public/schools/:slug',
+        'PUT /v1/files/local/:token',
         'POST /v1/auth/login',
         'POST /v1/auth/otp/send',
         'POST /v1/auth/otp/verify',

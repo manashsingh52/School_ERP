@@ -14,11 +14,19 @@ import { HealthController } from './core/health/health.controller.js';
 import { LOGGER } from './core/logger/logger.js';
 import { ScopeService } from './core/permissions/scope.service.js';
 import { PlatformPrismaService, PrismaService } from './core/prisma/prisma.service.js';
+import { IdempotencyInterceptor } from './core/idempotency/idempotency.js';
+import { OutboxService } from './core/outbox/outbox.service.js';
+import { GcsStorageDriver } from './core/storage/gcs.driver.js';
+import { LocalStorageDriver } from './core/storage/local.driver.js';
+import { StorageDriver } from './core/storage/storage.js';
+import { QueueService } from './core/queue/queue.service.js';
 import { MemoryRateLimitStore, RateLimitGuard } from './core/rate-limit/rate-limit.js';
 import { AuthController } from './modules/auth/auth.controller.js';
 import { AuthService } from './modules/auth/auth.service.js';
 import { ConsoleOtpSender, OtpSender } from './modules/auth/otp-sender.js';
 import { SessionService } from './modules/auth/session.service.js';
+import { FilesController, LocalStorageController } from './modules/files/files.controller.js';
+import { FilesService } from './modules/files/files.service.js';
 import { MeController } from './modules/me/me.controller.js';
 import { PublicController } from './modules/public/public.controller.js';
 import { SchoolsService } from './modules/schools/schools.service.js';
@@ -44,6 +52,16 @@ export class CoreModule {
       RateLimitGuard,
       RequestContextMiddleware,
       RouteAccessCheck,
+      QueueService,
+      OutboxService,
+      IdempotencyInterceptor,
+      {
+        provide: StorageDriver,
+        useFactory: () =>
+          env.STORAGE_DRIVER === 'gcs'
+            ? new GcsStorageDriver(env.GCS_PROJECT_ID!, env.GCS_PRIVATE_BUCKET!)
+            : new LocalStorageDriver(env.STORAGE_LOCAL_DIR, env.STORAGE_SIGNING_SECRET!, env.STORAGE_LOCAL_URL_BASE),
+      },
     ];
     return {
       module: CoreModule,
@@ -75,12 +93,15 @@ export class SchoolsModule {}
 @Module({ controllers: [StudentsController], providers: [StudentsService] })
 export class StudentsModule {}
 
+@Module({ controllers: [FilesController, LocalStorageController], providers: [FilesService] })
+export class FilesModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
     return {
       module: AppModule,
-      imports: [CoreModule.forRoot(env, logger), AuthModule, PublicModule, SchoolsModule, StudentsModule],
+      imports: [CoreModule.forRoot(env, logger), AuthModule, PublicModule, SchoolsModule, StudentsModule, FilesModule],
     };
   }
 }

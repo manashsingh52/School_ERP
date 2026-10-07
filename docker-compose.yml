@@ -1,0 +1,43 @@
+# Local services — an ALTERNATIVE to `pnpm db:start` (embedded PostgreSQL) once Docker is installed.
+#
+#   docker compose up -d                 # PostgreSQL 17 only (all V1 needs: data + job queues)
+#   pnpm --filter @schoolos/api db:bootstrap && pnpm db:migrate && pnpm db:seed
+#
+#   docker compose --profile redis up -d # + Redis     (only if QUEUE_BACKEND=redis)
+#   docker compose --profile mail up -d  # + Mailpit   (email preview at http://localhost:8025, Phase 3)
+#   docker compose --profile gcs up -d   # + fake Google Cloud Storage (to exercise the GCS driver locally)
+#
+# Ports match apps/api/.env.example, so stop `pnpm db:start` before using this.
+name: schoolos
+
+services:
+  postgres:
+    image: postgres:17
+    ports: ['54329:5432']
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres # local only — matches scripts/pg-cluster.mjs
+    volumes: ['pgdata:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    profiles: [redis]
+    ports: ['6379:6379']
+
+  mailpit:
+    image: axllent/mailpit
+    profiles: [mail]
+    ports: ['1025:1025', '8025:8025']
+
+  fake-gcs:
+    image: fsouza/fake-gcs-server
+    profiles: [gcs]
+    command: ['-scheme', 'http', '-port', '4443', '-external-url', 'http://localhost:4443']
+    ports: ['4443:4443']
+
+volumes:
+  pgdata:

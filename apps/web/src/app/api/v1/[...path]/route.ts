@@ -33,7 +33,8 @@ async function handle(req: NextRequest, ctx: { params: Promise<{ path: string[] 
       path: `/v1/${path.map(encodeURIComponent).join('/')}${req.nextUrl.search}`,
       accessToken: req.cookies.get(ACCESS_COOKIE)?.value,
       slug: req.headers.get(SCHOOL_SLUG_HEADER),
-      body: mutating ? await req.text() : undefined,
+      // Raw bytes so JSON and file uploads (local storage driver) both pass through intact.
+      body: mutating ? await req.arrayBuffer() : undefined,
       contentType: req.headers.get('content-type'),
       clientIp: clientIpFrom(req.headers),
       userAgent: req.headers.get('user-agent'),

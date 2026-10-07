@@ -18,7 +18,8 @@ Each document is short enough to review in one sitting and ends with **Open ques
 | 09 | [Security & privacy](09-security-privacy.md) | Auth, threat model, controls, DPDP / CERT-In notes |
 | 10 | [Infrastructure](10-infrastructure.md) | Google Cloud layout, environments, CI/CD, backups, monitoring, cost |
 | 11 | [Payments](11-payments.md) | Fees → invoice → Razorpay → webhook → receipt, with every failure case |
-| 12 | [Roadmap](12-roadmap.md) | Build order, milestones, Definition of Done |
+| 12 | [Roadmap](12-roadmap.md) | Build order, milestones, Definition of Done, **progress log** |
+| — | [Setup later](SETUP-LATER.md) | Accounts & keys to add before deploying |
 
 ## Decisions already locked (2026-10-07)
 
@@ -28,7 +29,7 @@ Each document is short enough to review in one sitting and ends with **Open ques
 | Tenant isolation | One PostgreSQL DB, `school_id` on every tenant row, Prisma auto-scoping **+ Postgres Row-Level Security** | 03 |
 | Identity | One global `User`, a `Membership` per school, roles per membership, school switcher | 02, 04 |
 | Auth | Own NestJS auth: JWT access + rotating refresh tokens, per-device sessions, SMS OTP (MSG91) | 09 |
-| Jobs | Redis on **Upstash** + BullMQ; workers are a separate Cloud Run service | 01, 10 |
+| Jobs | BullMQ **on PostgreSQL** (no Redis in V1; Upstash only if ever needed); workers are a separate Cloud Run service or run in the API (lean mode) | 01, 10, 12 |
 | Repo | pnpm + Turborepo monorepo | 01 |
 | Payments | Each school connects **its own Razorpay account**; platform never holds school money | 11 |
 | Team | Solo developer + Claude → web + API first, Flutter later | 12 |

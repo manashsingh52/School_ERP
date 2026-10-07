@@ -35,14 +35,17 @@ Built and verified (70 automated tests passing; checked in the browser at deskto
 - [x] Design system core (`packages/ui`): tokens with per-school OKLCH accent, Button, Input/Field, Card, Badge, Avatar, Skeleton, Empty/Error states, Table, Pagination, Tooltip, Dialog, Menu, Command palette, Toasts
 - [x] Demo seed: 15 classes, 30 sections, 750 students, one login per role + super admin
 
-Still open in Phase 1:
+### 2026-10-07: Phase 1 foundation, second slice ✅ (86 tests)
 
-- [ ] Outbox relay + BullMQ queues (needs Redis: local Docker or Upstash)
-- [ ] Storage service (GCS adapter + local fake) and the signed-URL upload flow
-- [ ] `Idempotency-Key` middleware (needed before any money endpoint)
-- [ ] OpenAPI generation from the Zod contracts (for the Flutter client)
-- [ ] ESLint with the custom rules (no `PlatformPrismaService` in feature modules, no role-name checks)
-- [ ] `docker-compose.yml` (once Docker Desktop is installed)
+- [x] **Background jobs without Redis:** BullMQ 6 on PostgreSQL (schema `bullmq`), transactional outbox + relay (`FOR UPDATE SKIP LOCKED`), tenant-scoped job context, worker entrypoint (`dist/worker.js`) and lean mode (`RUN_WORKERS=true`). Redis is a config switch
+- [x] Storage abstraction: local driver (HMAC-signed links, dev only) + Google Cloud Storage driver (slot, configured later); upload → verify real type (magic bytes) → READY; signed download links
+- [x] `Idempotency-Key` support (replays results and business errors; required on money endpoints later)
+- [x] OpenAPI 3.1 generated from the Zod contracts (`packages/contracts/openapi.json`); a test keeps it in sync with the real routes
+- [x] ESLint with guardrails (no RLS-bypass client in feature modules, no role-name checks, no unsafe raw SQL); runs in CI
+- [x] `docker-compose.yml` ready for when Docker is installed
+- [x] [SETUP-LATER.md](SETUP-LATER.md): every account/key slot in one checklist
+
+Phase 1 is complete apart from items that need your accounts (see SETUP-LATER.md). **Next: Phase 2 (core school).**
 
 ### Implementation notes (where code differs from the plan, and why)
 
@@ -50,6 +53,7 @@ Still open in Phase 1:
 |---|---|---|
 | Local Postgres via Docker Compose | `embedded-postgres` (real PostgreSQL 17 from npm, `pnpm db:start`) | Docker not installed yet; tests use the same approach, so CI needs no service container |
 | RLS SQL hand-written inside migration folders | `apps/api/scripts/apply-sql.mjs`, an idempotent script run after every migrate. It **discovers** every `school_id` table and fails if one is uncovered | A new table can't be forgotten |
+| Redis (Upstash) for BullMQ queues | **BullMQ 6 PostgreSQL backend** | Saves an external service and ~$10–20/month; same Cloud SQL backups cover queued jobs. `QUEUE_BACKEND=redis` switches back |
 | Session revocation via a Redis deny-list | Session row checked on each request (30 s in-process cache) | No Redis yet. Single instance is fine for V1; move to Redis pub/sub when scaling out |
 | Rate limits in Redis | In-memory store behind a `RateLimitStore` interface | Same reason; swapping the store is one class |
 | Design tokens in `packages/design-tokens` (JSON) | CSS variables in `packages/ui/src/styles.css` | Only one React client today; generate Flutter `ThemeData` from these in Phase 7 |
