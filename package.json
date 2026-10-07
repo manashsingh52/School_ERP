@@ -1,0 +1,25 @@
+{
+  "name": "schoolos",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "db:start": "pnpm --filter @schoolos/api db:start",
+    "db:migrate": "pnpm --filter @schoolos/api db:migrate",
+    "db:seed": "pnpm --filter @schoolos/api db:seed",
+    "format": "prettier --write .",
+    "db:reset": "pnpm --filter @schoolos/api db:reset"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.0",
+    "turbo": "^2.11.7",
+    "typescript": "5.9.3"
+  }
+}

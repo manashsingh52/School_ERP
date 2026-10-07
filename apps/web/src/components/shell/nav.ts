@@ -1,0 +1,65 @@
+import type { Permission, PermissionScope } from '@schoolos/permissions';
+import {
+  BarChart3,
+  BookOpen,
+  CalendarCheck,
+  CalendarClock,
+  ClipboardList,
+  CreditCard,
+  FileText,
+  GraduationCap,
+  IndianRupee,
+  LayoutDashboard,
+  Megaphone,
+  NotebookPen,
+  Settings,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
+
+export interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  /** Shown when the member has ANY of these permissions (at a staff scope unless `scopes` says otherwise). */
+  any: Permission[];
+  scopes?: PermissionScope[];
+  /** Built and usable now. Others show a "coming soon" page with the phase from docs/12. */
+  ready: boolean;
+  phase?: string;
+}
+
+const STAFF: PermissionScope[] = ['ALL', 'ASSIGNED', 'SELF'];
+
+/** Sidebar order from docs/06 §1. */
+export const NAV: NavItem[] = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, any: ['dashboard.view'], scopes: ['ALL'], ready: true },
+  { href: '/students', label: 'Students', icon: Users, any: ['student.view'], scopes: STAFF, ready: true },
+  { href: '/teachers', label: 'Teachers', icon: GraduationCap, any: ['teacher.view'], scopes: STAFF, ready: false, phase: 'Phase 2' },
+  { href: '/academics', label: 'Academics', icon: BookOpen, any: ['academic.view'], scopes: STAFF, ready: false, phase: 'Phase 2' },
+  { href: '/attendance', label: 'Attendance', icon: CalendarCheck, any: ['attendance.view'], scopes: STAFF, ready: false, phase: 'Phase 3' },
+  { href: '/homework', label: 'Homework', icon: NotebookPen, any: ['homework.view'], scopes: STAFF, ready: false, phase: 'Phase 3' },
+  { href: '/timetable', label: 'Timetable', icon: CalendarClock, any: ['timetable.view'], scopes: STAFF, ready: false, phase: 'Phase 3' },
+  { href: '/exams', label: 'Examinations', icon: ClipboardList, any: ['exam.view'], scopes: STAFF, ready: false, phase: 'Phase 4' },
+  { href: '/fees', label: 'Fees', icon: IndianRupee, any: ['fee.manage', 'invoice.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },
+  { href: '/payments', label: 'Payments', icon: CreditCard, any: ['payment.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },
+  { href: '/communication', label: 'Communication', icon: Megaphone, any: ['notice.create'], scopes: STAFF, ready: false, phase: 'Phase 3' },
+  { href: '/documents', label: 'Documents', icon: FileText, any: ['document.view'], scopes: STAFF, ready: false, phase: 'Phase 6' },
+  { href: '/reports', label: 'Reports', icon: BarChart3, any: ['report.academic', 'report.finance'], scopes: STAFF, ready: false, phase: 'Phase 6' },
+];
+
+export const SETTINGS_NAV: NavItem = {
+  href: '/settings',
+  label: 'Settings',
+  icon: Settings,
+  any: ['school.settings.view'],
+  scopes: STAFF,
+  ready: false,
+  phase: 'Phase 6',
+};
+
+export const ALL_NAV = [...NAV, SETTINGS_NAV];
+
+export function visibleNav(can: (p: Permission, s?: PermissionScope[]) => boolean, items = NAV): NavItem[] {
+  return items.filter((item) => item.any.some((p) => can(p, item.scopes)));
+}

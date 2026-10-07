@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+@import '@schoolos/ui/styles.css';
+
+/* Tailwind v4 scans these for class names */
+@source '../../../../packages/ui/src';
