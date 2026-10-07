@@ -22,6 +22,8 @@ export abstract class StorageDriver {
   abstract stat(key: string): Promise<StoredObject | null>;
   /** First bytes of an object (magic-byte checks). */
   abstract readHead(key: string, bytes: number): Promise<Buffer>;
+  /** Whole object (imports; bounded by the purpose's size limit). */
+  abstract read(key: string): Promise<Buffer>;
   abstract delete(key: string): Promise<void>;
 }
 

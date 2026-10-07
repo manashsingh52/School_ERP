@@ -142,7 +142,7 @@ export class GuardiansService {
         return g;
       });
     }
-    if (invite && !guardian.membershipId) await this.inviteGuardian(guardian.id);
+    if (invite && !guardian.membershipId) await this.createLogin(guardian.id);
     return guardian.id;
   }
 
@@ -202,15 +202,19 @@ export class GuardiansService {
   }
 
   async inviteGuardian(id: string): Promise<GuardianItem> {
+    await this.createLogin(id);
+    return this.get(id);
+  }
+
+  /** Works for user requests and background jobs alike (no read-back as the current user). */
+  private async createLogin(id: string): Promise<void> {
     const g = await this.prisma.db.guardian.findUnique({ where: { id } });
     if (!g) throw AppError.notFound('parent');
-    if (!g.membershipId) {
-      const { membershipId } = await this.identity.invite({ name: g.name, phone: g.phone, email: g.email, roleKey: 'parent' });
-      await this.prisma.tenantTx(async (tx) => {
-        await tx.guardian.update({ where: { id }, data: { membershipId } });
-        await this.audit.record(tx, { action: 'guardian.invite', entityType: 'Guardian', entityId: id });
-      });
-    }
-    return this.get(id);
+    if (g.membershipId) return;
+    const { membershipId } = await this.identity.invite({ name: g.name, phone: g.phone, email: g.email, roleKey: 'parent' });
+    await this.prisma.tenantTx(async (tx) => {
+      await tx.guardian.update({ where: { id }, data: { membershipId } });
+      await this.audit.record(tx, { action: 'guardian.invite', entityType: 'Guardian', entityId: id });
+    });
   }
 }

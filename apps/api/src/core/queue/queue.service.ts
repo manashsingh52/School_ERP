@@ -12,6 +12,8 @@ export const QUEUES = {
   events: 'events',
   /** Housekeeping: cleanup, reconciliation, scheduled jobs. */
   maintenance: 'maintenance',
+  /** Excel/CSV import commits. */
+  imports: 'imports',
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 

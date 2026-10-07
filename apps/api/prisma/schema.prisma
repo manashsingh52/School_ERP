@@ -355,6 +355,7 @@ enum ImportJobStatus {
 }
 
 enum ImportRowStatus {
+  PENDING // uploaded, not yet validated
   VALID
   INVALID
   DUPLICATE

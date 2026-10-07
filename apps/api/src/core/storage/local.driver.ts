@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { mkdir, open, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, open, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 import { AppError } from '../errors/app-error.js';
 import { StorageDriver, type SignedUpload, type StoredObject } from './storage.js';
@@ -59,6 +59,10 @@ export class LocalStorageDriver extends StorageDriver {
     } finally {
       await handle.close();
     }
+  }
+
+  read(key: string): Promise<Buffer> {
+    return readFile(this.path(key));
   }
 
   async delete(key: string): Promise<void> {

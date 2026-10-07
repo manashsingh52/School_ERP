@@ -41,6 +41,11 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'PATCH /v1/roles/:id': (b) => b.teacherRoleId,
   'PUT /v1/roles/:id/permissions': (b) => ({ id: b.teacherRoleId, body: { permissions: [] } }),
   'DELETE /v1/roles/:id': (b) => b.teacherRoleId,
+  'GET /v1/imports/:id': (b) => b.importJobId,
+  'PUT /v1/imports/:id/mapping': (b) => ({ id: b.importJobId, body: { mapping: {} } }),
+  'GET /v1/imports/:id/rows': (b) => b.importJobId,
+  'POST /v1/imports/:id/commit': (b) => b.importJobId,
+  'GET /v1/imports/:id/problems': (b) => b.importJobId,
   'POST /v1/files/:id/complete': (b) => b.fileId,
   'GET /v1/files/:id/download-url': (b) => b.fileId,
 };
@@ -49,6 +54,7 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
 const NON_TENANT_ID_ROUTES = new Set([
   'DELETE /v1/me/sessions/:id',
   'GET /v1/public/schools/:slug',
+  'GET /v1/imports/templates/:entity', // template download, not a record
   // Signed-token routes: authorised by an HMAC token, not by tenant id (dev storage only)
   'PUT /v1/files/local/:token',
   'GET /v1/files/local/:token',

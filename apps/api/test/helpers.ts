@@ -116,6 +116,7 @@ export interface Tenant {
   guardianId: string;
   adminMembershipId: string;
   teacherRoleId: string;
+  importJobId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
 }
 
@@ -206,5 +207,10 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     guardianId: guardian.id,
     adminMembershipId: adminMembership.id,
     teacherRoleId: (await db.role.findFirstOrThrow({ where: { schoolId, key: 'teacher' } })).id,
+    importJobId: (
+      await db.importJob.create({
+        data: { schoolId, entity: 'STUDENTS', fileId: file.id, status: 'MAPPING', detectedColumns: ['Name'], createdByMemberId: adminMembership.id },
+      })
+    ).id,
   };
 }

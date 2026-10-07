@@ -26,6 +26,7 @@ import {
   updateSubjectSchema,
 } from './academics.js';
 import { requestUploadSchema } from './files.js';
+import { createImportSchema, listImportRowsQuerySchema, setImportMappingSchema } from './imports.js';
 import {
   createGuardianSchema,
   createRoleSchema,
@@ -128,6 +129,15 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'PUT /v1/roles/:id/permissions': { summary: 'Set role permissions', tag: 'Users', access: 'permission:role.manage', body: setRolePermissionsSchema },
   'DELETE /v1/roles/:id': { summary: 'Delete an unused custom role', tag: 'Users', access: 'permission:role.manage' },
   'GET /v1/permissions': { summary: 'Permission catalog', tag: 'Users', access: 'permission:user.view' },
+
+  'GET /v1/imports': { summary: 'Recent imports', tag: 'Imports', access: 'permission:import.run' },
+  'POST /v1/imports': { summary: 'Start an import from an uploaded file', tag: 'Imports', access: 'permission:import.run', body: createImportSchema },
+  'GET /v1/imports/templates/:entity': { summary: 'Download an Excel template', tag: 'Imports', access: 'permission:import.run' },
+  'GET /v1/imports/:id': { summary: 'Import status, mapping and stats', tag: 'Imports', access: 'permission:import.run' },
+  'PUT /v1/imports/:id/mapping': { summary: 'Map columns and validate every row', tag: 'Imports', access: 'permission:import.run', body: setImportMappingSchema },
+  'GET /v1/imports/:id/rows': { summary: 'Rows with status and problems', tag: 'Imports', access: 'permission:import.run', query: listImportRowsQuerySchema },
+  'POST /v1/imports/:id/commit': { summary: 'Import the valid rows (background job)', tag: 'Imports', access: 'permission:import.run', idempotent: true },
+  'GET /v1/imports/:id/problems': { summary: 'CSV of rows that need fixing', tag: 'Imports', access: 'permission:import.run' },
 
   'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 
