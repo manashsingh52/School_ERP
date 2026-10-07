@@ -62,7 +62,17 @@ export default tseslint.config(
     },
   },
   {
+    // Tests look roles up by key to set up scenarios — that's not authorisation.
     files: ['**/*.test.ts', 'apps/api/test/**'],
-    rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'MemberExpression[property.name=/^\\$(query|execute)RawUnsafe$/]',
+          message: 'Unsafe raw SQL is banned — use tagged $queryRaw`...` (docs/09 §3).',
+        },
+      ],
+    },
   },
 );
