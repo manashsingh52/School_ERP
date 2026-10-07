@@ -15,11 +15,13 @@ import { ScopeService } from '../../core/permissions/scope.service.js';
 import { PrismaService } from '../../core/prisma/prisma.service.js';
 import { fromDate, toDate } from '../../core/util/dates.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+import { FilesService } from '../files/files.service.js';
+import { GuardiansService } from '../guardians/guardians.service.js';
+import { IdentityService } from '../schools/identity.service.js';
 
 type CreateInput = z.output<typeof createStudentSchema>;
 type UpdateInput = z.output<typeof updateStudentSchema>;
 type ListQuery = z.output<typeof listStudentsQuerySchema>;
-
 
 const enrollmentSelect = (yearId: string | null) => ({
   where: { academicYearId: yearId ?? '00000000-0000-0000-0000-000000000000' },
@@ -40,6 +42,9 @@ export class StudentsService {
     private readonly scope: ScopeService,
     private readonly audit: AuditService,
     private readonly outbox: OutboxService,
+    private readonly guardians: GuardiansService,
+    private readonly identity: IdentityService,
+    private readonly files: FilesService,
   ) {}
 
   async list(query: ListQuery): Promise<PageResponse<StudentListItem>> {
@@ -110,11 +115,15 @@ export class StudentsService {
     const yearId = await this.scope.currentAcademicYearId();
     const s = await this.prisma.db.student.findUnique({
       where: { id },
-      include: { enrollments: enrollmentSelect(yearId) },
+      include: {
+        enrollments: enrollmentSelect(yearId),
+        guardians: { include: { guardian: true }, orderBy: [{ isPrimary: 'desc' }] },
+      },
     });
     if (!s) throw AppError.notFound('student');
     const e = s.enrollments[0];
     const showContact = await this.scope.canAccessStudent('student.contact.view', id);
+    const logins = await this.identity.loginStatus(s.guardians.map((g) => g.guardian.membershipId));
     return {
       id: s.id,
       admissionNo: s.admissionNo,
@@ -126,10 +135,28 @@ export class StudentsService {
       rollNo: e?.rollNo ?? null,
       classId: e?.classId ?? null,
       sectionId: e?.sectionId ?? null,
+      academicYearId: yearId,
       dateOfBirth: fromDate(s.dateOfBirth),
       gender: s.gender,
       admissionDate: fromDate(s.admissionDate),
-      ...(showContact ? { phone: s.phone, email: s.email } : {}),
+      bloodGroup: s.bloodGroup,
+      photoUrl: s.photoFileId ? await this.files.inlineUrl(s.photoFileId) : null,
+      ...(showContact
+        ? {
+            phone: s.phone,
+            email: s.email,
+            address: { line1: s.addressLine1, line2: s.addressLine2, city: s.city, state: s.state, postalCode: s.postalCode },
+            emergencyContact: { name: s.emergencyContactName, phone: s.emergencyContactPhone },
+          }
+        : {}),
+      guardians: s.guardians.map((link) => ({
+        guardianId: link.guardianId,
+        name: link.guardian.name,
+        relation: link.relation,
+        isPrimary: link.isPrimary,
+        login: link.guardian.membershipId ? (logins.get(link.guardian.membershipId) ?? 'NONE') : 'NONE',
+        ...(showContact ? { phone: link.guardian.phone, email: link.guardian.email } : {}),
+      })),
       createdAt: s.createdAt.toISOString(),
     };
   }
@@ -142,29 +169,19 @@ export class StudentsService {
       select: { id: true, classId: true, academicYearId: true },
     });
     if (!section) throw AppError.invalidReference('sectionId', 'section');
+    await this.assertAdmissionNoFree(input.admissionNo);
 
-    const taken = await this.prisma.db.student.findFirst({
-      where: { admissionNo: input.admissionNo },
-      select: { id: true },
-    });
-    if (taken) {
-      throw new AppError('STUDENT_ADMISSION_NO_TAKEN', 409, `Admission number ${input.admissionNo} is already used.`, [
-        { field: 'admissionNo', message: 'Already in use' },
-      ]);
+    const phones = input.guardians.map((g) => g.phone);
+    if (new Set(phones).size !== phones.length) {
+      throw new AppError('VALIDATION_FAILED', 422, 'Two guardians have the same phone number.', [{ field: 'guardians', message: 'Duplicate phone' }]);
     }
+    // Guardians are matched by phone: an existing parent (e.g. of a sibling) is reused.
+    const guardianIds: string[] = [];
+    for (const g of input.guardians) guardianIds.push(await this.guardians.ensure(g, input.inviteGuardians));
 
     const id = await this.prisma.tenantTx(async (tx) => {
       const student = await tx.student.create({
-        data: {
-          admissionNo: input.admissionNo,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          dateOfBirth: toDate(input.dateOfBirth),
-          gender: input.gender,
-          admissionDate: toDate(input.admissionDate),
-          phone: input.phone,
-          email: input.email,
-        } as Prisma.StudentUncheckedCreateInput,
+        data: { admissionNo: input.admissionNo, ...this.profileFields(input) } as Prisma.StudentUncheckedCreateInput,
       });
       await tx.studentEnrollment.create({
         data: {
@@ -176,11 +193,14 @@ export class StudentsService {
           enrolledOn: toDate(input.admissionDate) ?? new Date(),
         } as Prisma.StudentEnrollmentUncheckedCreateInput,
       });
+      for (const [i, g] of input.guardians.entries()) {
+        await this.guardians.link(tx, guardianIds[i]!, student.id, g.relation, g.isPrimary);
+      }
       await this.audit.record(tx, {
         action: 'student.create',
         entityType: 'Student',
         entityId: student.id,
-        after: { admissionNo: student.admissionNo, sectionId: section.id },
+        after: { admissionNo: student.admissionNo, sectionId: section.id, guardians: guardianIds.length },
       });
       await this.outbox.publish(tx, 'student.created', { studentId: student.id });
       return student.id;
@@ -191,20 +211,18 @@ export class StudentsService {
 
   async update(id: string, input: UpdateInput): Promise<StudentDetail> {
     if (!(await this.scope.canAccessStudent('student.edit', id))) throw AppError.notFound('student');
+    if (input.photoFileId) await this.files.assertReady(input.photoFileId, 'student_photo');
 
     await this.prisma.tenantTx(async (tx) => {
       const before = await tx.student.findUnique({ where: { id } });
       if (!before) throw AppError.notFound('student');
+      if (input.admissionNo && input.admissionNo !== before.admissionNo) await this.assertAdmissionNoFree(input.admissionNo);
       const data = {
         admissionNo: input.admissionNo,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        dateOfBirth: toDate(input.dateOfBirth),
-        gender: input.gender,
-        admissionDate: toDate(input.admissionDate),
-        phone: input.phone,
-        email: input.email,
+        ...this.profileFields(input),
         status: input.status,
+        photoFileId: input.photoFileId,
+        archivedAt: input.status === undefined ? undefined : input.status === 'ARCHIVED' ? new Date() : null,
       };
       const changes = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
       if (!Object.keys(changes).length) return;
@@ -213,6 +231,35 @@ export class StudentsService {
       if (delta) await this.audit.record(tx, { action: 'student.update', entityType: 'Student', entityId: id, ...delta });
     });
     return this.get(id);
+  }
+
+  private async assertAdmissionNoFree(admissionNo: string) {
+    const taken = await this.prisma.db.student.findFirst({ where: { admissionNo }, select: { id: true } });
+    if (taken) {
+      throw new AppError('STUDENT_ADMISSION_NO_TAKEN', 409, `Admission number ${admissionNo} is already used.`, [
+        { field: 'admissionNo', message: 'Already in use' },
+      ]);
+    }
+  }
+
+  private profileFields(input: Partial<CreateInput>) {
+    return {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      dateOfBirth: toDate(input.dateOfBirth),
+      gender: input.gender,
+      admissionDate: toDate(input.admissionDate),
+      phone: input.phone,
+      email: input.email,
+      bloodGroup: input.bloodGroup,
+      addressLine1: input.addressLine1,
+      addressLine2: input.addressLine2,
+      city: input.city,
+      state: input.state,
+      postalCode: input.postalCode,
+      emergencyContactName: input.emergencyContactName,
+      emergencyContactPhone: input.emergencyContactPhone,
+    };
   }
 }
 

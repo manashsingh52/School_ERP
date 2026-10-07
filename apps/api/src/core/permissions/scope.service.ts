@@ -77,6 +77,47 @@ export class ScopeService {
     }
   }
 
+  /** Guardians visible under `permission`: ALL · ASSIGNED (parents of my students) · SELF (me). */
+  async guardianWhere(permission: Permission): Promise<Prisma.GuardianWhereInput> {
+    switch (this.scopeOf(permission)) {
+      case 'ALL':
+        return {};
+      case 'ASSIGNED': {
+        const students = await this.studentWhere('student.view').catch(() => ({ id: { in: [] } }));
+        return { children: { some: { student: students } } };
+      }
+      case 'SELF':
+        return { membershipId: RequestContextStore.tenant().membershipId };
+      default:
+        return { id: { in: [] } };
+    }
+  }
+
+  /** Teachers visible under `permission`: ALL · OWN_CHILDREN (my children's class and subject teachers). */
+  async teacherWhere(permission: Permission): Promise<Prisma.TeacherWhereInput> {
+    switch (this.scopeOf(permission)) {
+      case 'ALL':
+        return {};
+      case 'OWN_CHILDREN': {
+        const [childIds, yearId] = await Promise.all([this.childStudentIds(), this.currentAcademicYearId()]);
+        if (!childIds.length || !yearId) return { id: { in: [] } };
+        const sections = await this.prisma.db.studentEnrollment.findMany({
+          where: { studentId: { in: childIds }, academicYearId: yearId },
+          select: { sectionId: true },
+        });
+        const sectionIds = sections.map((s) => s.sectionId);
+        return {
+          OR: [
+            { classTeacherOf: { some: { id: { in: sectionIds } } } },
+            { assignments: { some: { sectionId: { in: sectionIds } } } },
+          ],
+        };
+      }
+      default:
+        return { id: { in: [] } };
+    }
+  }
+
   /** True when the current member may see this student under `permission`. */
   async canAccessStudent(permission: Permission, studentId: string): Promise<boolean> {
     const scope = RequestContextStore.tenant().permissions[permission];

@@ -61,10 +61,17 @@ export class AuthService {
       throw INVALID_LOGIN();
     }
 
-    await this.platform.user.update({
-      where: { id: user.id },
-      data: { failedLogins: 0, lockedUntil: null, lastLoginAt: new Date(), status: 'ACTIVE' },
-    });
+    await this.platform.$transaction([
+      this.platform.user.update({
+        where: { id: user.id },
+        data: { failedLogins: 0, lockedUntil: null, lastLoginAt: new Date(), status: 'ACTIVE' },
+      }),
+      // Signing in accepts any pending school invitations.
+      this.platform.membership.updateMany({
+        where: { userId: user.id, status: 'INVITED' },
+        data: { status: 'ACTIVE', joinedAt: new Date() },
+      }),
+    ]);
     return this.startSession(user, schoolSlug, device);
   }
 

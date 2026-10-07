@@ -26,6 +26,22 @@ import {
   updateSubjectSchema,
 } from './academics.js';
 import { requestUploadSchema } from './files.js';
+import {
+  createGuardianSchema,
+  createRoleSchema,
+  createTeacherSchema,
+  inviteMemberSchema,
+  linkChildSchema,
+  listGuardiansQuerySchema,
+  listMembersQuerySchema,
+  listTeachersQuerySchema,
+  searchQuerySchema,
+  setRolePermissionsSchema,
+  updateGuardianSchema,
+  updateMemberSchema,
+  updateRoleSchema,
+  updateTeacherSchema,
+} from './people.js';
 import { createStudentSchema, listStudentsQuerySchema, updateStudentSchema } from './students.js';
 
 export interface EndpointDef {
@@ -88,6 +104,32 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/teaching-assignments': { summary: 'Who teaches what', tag: 'Academics', access: 'permission:academic.view', query: listAssignmentsQuerySchema },
   'POST /v1/teaching-assignments': { summary: 'Assign a teacher', tag: 'Academics', access: 'permission:academic.manage', body: createAssignmentSchema },
   'DELETE /v1/teaching-assignments/:id': { summary: 'Remove an assignment', tag: 'Academics', access: 'permission:academic.manage' },
+
+  'GET /v1/teachers': { summary: 'List teachers', tag: 'Teachers', access: 'permission:teacher.view', query: listTeachersQuerySchema },
+  'GET /v1/teachers/:id': { summary: 'Teacher profile', tag: 'Teachers', access: 'permission:teacher.view' },
+  'POST /v1/teachers': { summary: 'Add a teacher (optionally invite to log in)', tag: 'Teachers', access: 'permission:teacher.manage', body: createTeacherSchema, idempotent: true },
+  'PATCH /v1/teachers/:id': { summary: 'Edit a teacher', tag: 'Teachers', access: 'permission:teacher.manage', body: updateTeacherSchema },
+  'POST /v1/teachers/:id/invite': { summary: 'Create a login for a teacher', tag: 'Teachers', access: 'permission:teacher.manage' },
+
+  'GET /v1/guardians': { summary: 'List parents/guardians', tag: 'Parents', access: 'permission:guardian.view', query: listGuardiansQuerySchema },
+  'GET /v1/guardians/:id': { summary: 'Parent profile with children', tag: 'Parents', access: 'permission:guardian.view' },
+  'POST /v1/guardians': { summary: 'Add a parent', tag: 'Parents', access: 'permission:guardian.manage', body: createGuardianSchema },
+  'PATCH /v1/guardians/:id': { summary: 'Edit a parent', tag: 'Parents', access: 'permission:guardian.manage', body: updateGuardianSchema },
+  'POST /v1/guardians/:id/children': { summary: 'Link a child', tag: 'Parents', access: 'permission:guardian.manage', body: linkChildSchema },
+  'DELETE /v1/guardians/:id/children/:studentId': { summary: 'Unlink a child', tag: 'Parents', access: 'permission:guardian.manage' },
+  'POST /v1/guardians/:id/invite': { summary: 'Create a login for a parent', tag: 'Parents', access: 'permission:guardian.manage' },
+
+  'GET /v1/members': { summary: 'People with access to this school', tag: 'Users', access: 'permission:user.view', query: listMembersQuerySchema },
+  'POST /v1/members': { summary: 'Invite someone', tag: 'Users', access: 'permission:user.manage', body: inviteMemberSchema },
+  'PATCH /v1/members/:id': { summary: 'Change roles or suspend', tag: 'Users', access: 'permission:user.manage', body: updateMemberSchema },
+  'GET /v1/roles': { summary: 'Roles and their permissions', tag: 'Users', access: 'permission:user.view' },
+  'POST /v1/roles': { summary: 'Create a custom role', tag: 'Users', access: 'permission:role.manage', body: createRoleSchema },
+  'PATCH /v1/roles/:id': { summary: 'Rename a role', tag: 'Users', access: 'permission:role.manage', body: updateRoleSchema },
+  'PUT /v1/roles/:id/permissions': { summary: 'Set role permissions', tag: 'Users', access: 'permission:role.manage', body: setRolePermissionsSchema },
+  'DELETE /v1/roles/:id': { summary: 'Delete an unused custom role', tag: 'Users', access: 'permission:role.manage' },
+  'GET /v1/permissions': { summary: 'Permission catalog', tag: 'Users', access: 'permission:user.view' },
+
+  'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 
   'POST /v1/files/upload-url': { summary: 'Get a signed upload link', tag: 'Files', access: 'school', body: requestUploadSchema },
   'POST /v1/files/:id/complete': { summary: 'Verify an uploaded file', tag: 'Files', access: 'school' },

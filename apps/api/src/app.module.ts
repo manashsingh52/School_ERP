@@ -30,7 +30,15 @@ import { FilesController, LocalStorageController } from './modules/files/files.c
 import { FilesService } from './modules/files/files.service.js';
 import { MeController } from './modules/me/me.controller.js';
 import { PublicController } from './modules/public/public.controller.js';
+import { GuardiansController } from './modules/guardians/guardians.controller.js';
+import { GuardiansService } from './modules/guardians/guardians.service.js';
+import { MembersController, PermissionsController, RolesController } from './modules/members/members.controller.js';
+import { MembersService } from './modules/members/members.service.js';
+import { IdentityService } from './modules/schools/identity.service.js';
 import { SchoolsService } from './modules/schools/schools.service.js';
+import { SearchController, SearchService } from './modules/search/search.controller.js';
+import { TeachersController } from './modules/teachers/teachers.controller.js';
+import { TeachersService } from './modules/teachers/teachers.service.js';
 import { StudentsController } from './modules/students/students.controller.js';
 import { StudentsService } from './modules/students/students.service.js';
 
@@ -88,21 +96,51 @@ export class AuthModule {}
 @Module({ controllers: [PublicController] })
 export class PublicModule {}
 
-@Module({ providers: [SchoolsService], exports: [SchoolsService] })
+/** Platform provisioning + identity (the only feature-level users of the platform client). */
+@Module({ providers: [SchoolsService, IdentityService], exports: [SchoolsService, IdentityService] })
 export class SchoolsModule {}
 
-@Module({ controllers: [StudentsController], providers: [StudentsService] })
+@Module({ controllers: [FilesController, LocalStorageController], providers: [FilesService], exports: [FilesService] })
+export class FilesModule {}
+
+@Module({ imports: [SchoolsModule], controllers: [GuardiansController], providers: [GuardiansService], exports: [GuardiansService] })
+export class GuardiansModule {}
+
+@Module({
+  imports: [SchoolsModule, FilesModule, GuardiansModule],
+  controllers: [StudentsController],
+  providers: [StudentsService],
+  exports: [StudentsService],
+})
 export class StudentsModule {}
 
-@Module({ controllers: [FilesController, LocalStorageController], providers: [FilesService] })
-export class FilesModule {}
+@Module({ imports: [SchoolsModule, FilesModule], controllers: [TeachersController], providers: [TeachersService], exports: [TeachersService] })
+export class TeachersModule {}
+
+@Module({ imports: [SchoolsModule], controllers: [MembersController, RolesController, PermissionsController], providers: [MembersService] })
+export class MembersModule {}
+
+@Module({ imports: [StudentsModule, TeachersModule, GuardiansModule], controllers: [SearchController], providers: [SearchService] })
+export class SearchModule {}
 
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
     return {
       module: AppModule,
-      imports: [CoreModule.forRoot(env, logger), AuthModule, PublicModule, SchoolsModule, StudentsModule, FilesModule, AcademicsModule],
+      imports: [
+        CoreModule.forRoot(env, logger),
+        AuthModule,
+        PublicModule,
+        SchoolsModule,
+        FilesModule,
+        AcademicsModule,
+        GuardiansModule,
+        StudentsModule,
+        TeachersModule,
+        MembersModule,
+        SearchModule,
+      ],
     };
   }
 }

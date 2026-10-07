@@ -16,7 +16,8 @@ const tokens: Record<'adminA' | 'teacherA' | 'parentA' | 'accountantA' | 'adminB
  * A new module that adds an :id route without an entry FAILS the "registry is complete" test,
  * so cross-tenant coverage can't be forgotten.
  */
-const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => string> = {
+type Probe = string | { id: string; body: object };
+const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'GET /v1/students/:id': (b) => b.students.s1,
   'PATCH /v1/students/:id': (b) => b.students.s1,
   'PATCH /v1/academic-years/:id': (b) => b.yearId,
@@ -28,6 +29,18 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => string> = {
   'DELETE /v1/sections/:id': (b) => b.sectionA,
   'PATCH /v1/subjects/:id': (b) => b.subjectId,
   'DELETE /v1/teaching-assignments/:id': (b) => b.assignmentId,
+  'GET /v1/teachers/:id': (b) => b.teacherId,
+  'PATCH /v1/teachers/:id': (b) => b.teacherId,
+  'POST /v1/teachers/:id/invite': (b) => b.teacherId,
+  'GET /v1/guardians/:id': (b) => b.guardianId,
+  'PATCH /v1/guardians/:id': (b) => b.guardianId,
+  'POST /v1/guardians/:id/children': (b) => ({ id: b.guardianId, body: { studentId: b.students.s1, relation: 'FATHER' } }),
+  'DELETE /v1/guardians/:id/children/:studentId': (b) => b.guardianId,
+  'POST /v1/guardians/:id/invite': (b) => b.guardianId,
+  'PATCH /v1/members/:id': (b) => b.adminMembershipId,
+  'PATCH /v1/roles/:id': (b) => b.teacherRoleId,
+  'PUT /v1/roles/:id/permissions': (b) => ({ id: b.teacherRoleId, body: { permissions: [] } }),
+  'DELETE /v1/roles/:id': (b) => b.teacherRoleId,
   'POST /v1/files/:id/complete': (b) => b.fileId,
   'GET /v1/files/:id/download-url': (b) => b.fileId,
 };
@@ -105,14 +118,16 @@ describe('cross-tenant access (School A → School B)', () => {
 
   it.each(Object.keys(CROSS_TENANT_PROBES))('%s with a B id → 404', async (key) => {
     const [method, path] = key.split(' ') as [string, string];
-    const url = path.replace(':id', CROSS_TENANT_PROBES[key]!(B));
+    const probe = CROSS_TENANT_PROBES[key]!(B);
+    const { id, body } = typeof probe === 'string' ? { id: probe, body: {} } : probe;
+    const url = path.replace(':id', id).replace(':studentId', B.students.s1);
     const client = t.as(tokens.adminA, A.slug);
     const res =
       method === 'GET' ? await client.get(url)
-      : method === 'PATCH' ? await client.patch(url, {})
-      : method === 'PUT' ? await client.put(url, {})
+      : method === 'PATCH' ? await client.patch(url, body)
+      : method === 'PUT' ? await client.put(url, body)
       : method === 'DELETE' ? await client.delete(url)
-      : await client.post(url, {});
+      : await client.post(url, body);
     expect(res.status).toBe(404);
   });
 });

@@ -113,6 +113,9 @@ export interface Tenant {
   subjectId: string;
   teacherId: string;
   assignmentId: string;
+  guardianId: string;
+  adminMembershipId: string;
+  teacherRoleId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
 }
 
@@ -200,5 +203,8 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     subjectId: subject.id,
     teacherId: teacher.id,
     assignmentId: assignment.id,
+    guardianId: guardian.id,
+    adminMembershipId: adminMembership.id,
+    teacherRoleId: (await db.role.findFirstOrThrow({ where: { schoolId, key: 'teacher' } })).id,
   };
 }

@@ -119,6 +119,30 @@ export class FilesService {
     return { url, expiresAt: new Date(Date.now() + DOWNLOAD_TTL_SEC * 1000).toISOString() };
   }
 
+  /**
+   * Signed inline link for an image the caller is already allowed to see through its owner
+   * (e.g. a student photo on a profile they can view). 1-hour link so pages can cache it.
+   */
+  async inlineUrl(fileId: string): Promise<string | null> {
+    const file = await this.prisma.db.file.findUnique({ where: { id: fileId } });
+    if (!file || file.status !== 'READY') return null;
+    return this.storage.downloadUrl({
+      key: file.objectKey,
+      fileName: file.originalName,
+      contentType: file.mimeType,
+      expiresInSec: 3600,
+      inline: true,
+    });
+  }
+
+  /** A file attached to a record must be a verified upload of the right purpose in this school. */
+  async assertReady(fileId: string, purpose: FilePurpose): Promise<void> {
+    const file = await this.prisma.db.file.findUnique({ where: { id: fileId } });
+    if (!file || file.status !== 'READY' || purposeOf(file.objectKey) !== purpose) {
+      throw AppError.invalidReference('photoFileId', 'photo');
+    }
+  }
+
   private allowed(purpose: FilePurpose): FilePurposeRule {
     const rule: FilePurposeRule = FILE_PURPOSES[purpose];
     if (!RequestContextStore.tenant().permissions[rule.permission]) throw AppError.forbidden();
