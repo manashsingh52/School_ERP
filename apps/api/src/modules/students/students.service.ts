@@ -13,14 +13,13 @@ import { OutboxService } from '../../core/outbox/outbox.service.js';
 import { AppError } from '../../core/errors/app-error.js';
 import { ScopeService } from '../../core/permissions/scope.service.js';
 import { PrismaService } from '../../core/prisma/prisma.service.js';
+import { fromDate, toDate } from '../../core/util/dates.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 
 type CreateInput = z.output<typeof createStudentSchema>;
 type UpdateInput = z.output<typeof updateStudentSchema>;
 type ListQuery = z.output<typeof listStudentsQuerySchema>;
 
-const toDate = (value: string | undefined) => (value ? new Date(`${value}T00:00:00.000Z`) : undefined);
-const fromDate = (value: Date | null) => (value ? value.toISOString().slice(0, 10) : null);
 
 const enrollmentSelect = (yearId: string | null) => ({
   where: { academicYearId: yearId ?? '00000000-0000-0000-0000-000000000000' },

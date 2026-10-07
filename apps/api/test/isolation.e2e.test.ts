@@ -19,6 +19,15 @@ const tokens: Record<'adminA' | 'teacherA' | 'parentA' | 'accountantA' | 'adminB
 const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => string> = {
   'GET /v1/students/:id': (b) => b.students.s1,
   'PATCH /v1/students/:id': (b) => b.students.s1,
+  'PATCH /v1/academic-years/:id': (b) => b.yearId,
+  'POST /v1/academic-years/:id/activate': (b) => b.yearId,
+  'POST /v1/academic-years/:id/close': (b) => b.yearId,
+  'PATCH /v1/classes/:id': (b) => b.classId,
+  'DELETE /v1/classes/:id': (b) => b.classId,
+  'PATCH /v1/sections/:id': (b) => b.sectionA,
+  'DELETE /v1/sections/:id': (b) => b.sectionA,
+  'PATCH /v1/subjects/:id': (b) => b.subjectId,
+  'DELETE /v1/teaching-assignments/:id': (b) => b.assignmentId,
   'POST /v1/files/:id/complete': (b) => b.fileId,
   'GET /v1/files/:id/download-url': (b) => b.fileId,
 };

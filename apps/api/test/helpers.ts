@@ -108,6 +108,11 @@ export interface Tenant {
   students: { s1: string; s2: string; s3: string };
   /** A READY file uploaded by the admin. */
   fileId: string;
+  yearId: string;
+  classId: string;
+  subjectId: string;
+  teacherId: string;
+  assignmentId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
 }
 
@@ -175,5 +180,25 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     },
   });
 
-  return { slug, schoolId, sectionA: a!.id, sectionB: b!.id, students: { s1, s2, s3 }, users, fileId: file.id };
+  const subject = await db.subject.create({ data: { schoolId, name: 'Mathematics', code: 'MATH' } });
+  // A second teacher (no login) teaches Maths in 8-B, so the main teacher's scope stays 8-A only.
+  const teacher2 = await db.teacher.create({ data: { schoolId, employeeId: 'T2', firstName: 'Second', phone: randomPhone() } });
+  const assignment = await db.teachingAssignment.create({
+    data: { schoolId, academicYearId: year.id, sectionId: b!.id, subjectId: subject.id, teacherId: teacher2.id },
+  });
+
+  return {
+    slug,
+    schoolId,
+    sectionA: a!.id,
+    sectionB: b!.id,
+    students: { s1, s2, s3 },
+    users,
+    fileId: file.id,
+    yearId: year.id,
+    classId: cls.id,
+    subjectId: subject.id,
+    teacherId: teacher.id,
+    assignmentId: assignment.id,
+  };
 }
