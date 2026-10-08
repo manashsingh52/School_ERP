@@ -58,7 +58,7 @@ export class MeController {
                   firstName: true,
                   lastName: true,
                   status: true,
-                  enrollments: { select: { academicYearId: true, section: { select: { name: true, class: { select: { name: true } } } } } },
+                  enrollments: { select: { academicYearId: true, section: { select: { id: true, name: true, class: { select: { name: true } } } } } },
                 },
               },
             },
@@ -76,6 +76,7 @@ export class MeController {
           firstName: s.firstName,
           name: [s.firstName, s.lastName].filter(Boolean).join(' '),
           classLabel: e ? `${e.section.class.name.replace(/^Class\s+/i, '')}-${e.section.name}` : null,
+          sectionId: e?.section.id ?? null,
         };
       }),
     };

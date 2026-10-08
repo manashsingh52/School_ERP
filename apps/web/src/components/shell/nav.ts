@@ -48,6 +48,15 @@ export const NAV: NavItem[] = [
   { href: '/reports', label: 'Reports', icon: BarChart3, any: ['report.academic', 'report.finance'], scopes: STAFF, ready: false, phase: 'Phase 6' },
 ];
 
+/** Parent web view (docs/06 §4): one child at a time, chosen in the header. */
+export const PARENT_NAV: NavItem[] = [
+  { href: '/dashboard', label: 'Home', icon: LayoutDashboard, any: [], ready: true },
+  { href: '/my/attendance', label: 'Attendance', icon: CalendarCheck, any: [], ready: true },
+  { href: '/my/homework', label: 'Homework', icon: NotebookPen, any: [], ready: true },
+  { href: '/my/timetable', label: 'Timetable', icon: CalendarClock, any: [], ready: true },
+  { href: '/notices', label: 'Notices', icon: Megaphone, any: [], ready: true },
+];
+
 export const SETTINGS_NAV: NavItem = {
   href: '/settings',
   label: 'Settings',

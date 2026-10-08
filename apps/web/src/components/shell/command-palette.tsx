@@ -9,7 +9,8 @@ import { useEffect, useState } from 'react';
 import { apiFetch, apiPost } from '@/lib/api-client';
 import { classSection } from '@/lib/format';
 import { useMe } from '@/lib/me';
-import { ALL_NAV, visibleNav } from './nav';
+import { useIsParentView } from '@/lib/child';
+import { ALL_NAV, PARENT_NAV, visibleNav } from './nav';
 
 function useDebounced<T>(value: T, ms: number): T {
   const [v, setV] = useState(value);
@@ -24,6 +25,7 @@ function useDebounced<T>(value: T, ms: number): T {
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const router = useRouter();
   const { can } = useMe();
+  const parentView = useIsParentView();
   const [search, setSearch] = useState('');
   const q = useDebounced(search.trim(), 150);
 
@@ -44,7 +46,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   };
 
   const needle = q.toLowerCase();
-  const pages = visibleNav(can, ALL_NAV).filter((n) => !needle || n.label.toLowerCase().includes(needle));
+  const pages = (parentView ? PARENT_NAV : visibleNav(can, ALL_NAV)).filter((n) => !needle || n.label.toLowerCase().includes(needle));
   const found = q.length >= 2 ? results.data : undefined;
   const studentResults = found?.students ?? [];
   const teacherResults = found?.teachers ?? [];

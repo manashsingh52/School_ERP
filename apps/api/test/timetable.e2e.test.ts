@@ -32,7 +32,7 @@ describe('/me profile', () => {
     const teacher = await t.as(tok.teacher, A.slug).get('/v1/me');
     expect(teacher.body.data.membership).toMatchObject({ teacherId: A.teacherId, children: [] });
     const parent = await t.as(tok.parent, A.slug).get('/v1/me');
-    expect(parent.body.data.membership).toMatchObject({ teacherId: null, children: [{ id: A.students.s1, firstName: 'Student1', classLabel: '8-A' }] });
+    expect(parent.body.data.membership).toMatchObject({ teacherId: null, children: [{ id: A.students.s1, firstName: 'Student1', classLabel: '8-A', sectionId: A.sectionA }] });
   });
 });
 

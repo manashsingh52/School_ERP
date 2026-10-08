@@ -37,6 +37,8 @@ import { BellSchedulesController, TimetablesController } from './modules/timetab
 import { TimetableService } from './modules/timetable/timetable.service.js';
 import { NoticesController } from './modules/notices/notices.controller.js';
 import { NoticesService } from './modules/notices/notices.service.js';
+import { DashboardController } from './modules/dashboard/dashboard.controller.js';
+import { DashboardService } from './modules/dashboard/dashboard.service.js';
 import { MeController } from './modules/me/me.controller.js';
 import { PublicController } from './modules/public/public.controller.js';
 import { GuardiansController } from './modules/guardians/guardians.controller.js';
@@ -146,11 +148,14 @@ export class SchoolModule {}
 @Module({ imports: [FilesModule, NotificationsModule], controllers: [HomeworkController], providers: [HomeworkService] })
 export class HomeworkModule {}
 
-@Module({ controllers: [BellSchedulesController, TimetablesController], providers: [TimetableService] })
+@Module({ controllers: [BellSchedulesController, TimetablesController], providers: [TimetableService], exports: [TimetableService] })
 export class TimetableModule {}
 
 @Module({ imports: [FilesModule, NotificationsModule], controllers: [NoticesController], providers: [NoticesService] })
 export class NoticesModule {}
+
+@Module({ imports: [AttendanceModule, TimetableModule], controllers: [DashboardController], providers: [DashboardService] })
+export class DashboardModule {}
 
 @Module({})
 export class AppModule {
@@ -176,6 +181,7 @@ export class AppModule {
         HomeworkModule,
         TimetableModule,
         NoticesModule,
+        DashboardModule,
       ],
     };
   }

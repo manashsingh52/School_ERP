@@ -64,6 +64,25 @@ Known follow-ups (small): detaining individual students in the promotion wizard 
 
 **Next: Phase 3 (daily operations)** — attendance, homework, timetable, notices, notification engine, parent web view.
 
+### 2026-10-08: Phase 3 complete — daily operations ✅ (249 tests)
+
+API and web, tested end to end (229 API + 15 contracts + 5 permissions tests, browser checks on desktop and phone width):
+
+- [x] **Notification engine**: per-school rules (event on/off, channels), templated in-app inbox with unread badge, one queued delivery per extra channel through a single `ChannelGateway` (push / SMS / email providers are ⏸ placeholders), dedupe keys, settings page
+- [x] **Attendance**: fast register (mark rest present, P/A/L/H/V keys, reasons), draft/submit, roster as of the date, edit window vs "edit past", class-teacher-only marking (configurable), offline replay (`clientMutationId`), audited corrections, school overview, monthly grid, staff attendance, settings; parents of absent/late students alerted once per child per day
+- [x] **Homework**: sections × subject a teacher actually teaches, attachments, publish now / schedule / draft, archive on delete, parents notified per child
+- [x] **Timetable**: bell schedules, weekly grid editor, teacher clash detection by clock time (works across different bell schedules), publish, teacher week, "today" for teachers and parents
+- [x] **Notices**: audiences (everyone, all parents/teachers/staff, role, class, section, person), teachers limited to their sections, schedule, pin, attachments, safe markdown, read receipts and read stats
+- [x] **Dashboard v1**: role-aware KPIs, "attention required" (pending registers, absences, students under 75 % this month, unpublished timetables, scheduled/draft notices), the teacher's open registers and today's classes
+- [x] **Parent web view**: own navigation, child switcher, home (today's status, the child's day, homework, notices), attendance calendar, homework, timetable (day view on phones)
+- [x] Demo data: bell schedule, published clash-free timetables for all 30 sections, 20 days of attendance, 60 homework, 3 notices (seed stays idempotent)
+
+Scheduled publishing uses **delayed queue jobs** (no cron): each job re-checks the item is still scheduled for that time, so rescheduling or deleting is safe.
+
+Known follow-ups (small): homework submissions/review by students (schema is ready), attendance reports export (Phase 6 reports), push to devices once Firebase exists (Phase 7).
+
+**Next: Phase 4 (exams)** — exam setup, marks entry, grading, report cards.
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

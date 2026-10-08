@@ -223,7 +223,188 @@ async function topUp(db: PlatformPrismaService, schoolId: string): Promise<strin
     await db.teachingAssignment.createMany({ data: rows, skipDuplicates: true });
     notes.push(`${rows.length} subject assignments`);
   }
-  return notes.join(', ');
+  notes.push(...(await dailyOps(db, schoolId, yearId)));
+  return notes.filter(Boolean).join(', ');
+}
+
+/** Deterministic pseudo-random numbers, so re-seeding gives the same demo. */
+function rng(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const PERIODS = [
+  ['P1', '08:00', '08:40', false], ['P2', '08:40', '09:20', false], ['P3', '09:20', '10:00', false], ['Break', '10:00', '10:20', true],
+  ['P4', '10:20', '11:00', false], ['P5', '11:00', '11:40', false], ['Lunch', '11:40', '12:10', true], ['P6', '12:10', '12:50', false], ['P7', '12:50', '13:30', false],
+] as const;
+const HOMEWORK: Record<string, string[]> = {
+  Mathematics: ['Exercise 3.2, questions 1–12', 'Worksheet: fractions and decimals', 'Practice problems on page 58'],
+  English: ['Write a paragraph on "My favourite festival"', 'Read chapter 4 and answer the questions', 'Learn the spellings from lesson 6'],
+  Hindi: ['पाठ 5 के प्रश्न-उत्तर लिखिए', 'Write 10 sentences on "मेरा विद्यालय"'],
+  Science: ['Draw and label the parts of a plant cell', 'Activity 2.3: record your observations', 'Revise chapter 6 for the class test'],
+  'Social Science': ['Map work: mark the major rivers of India', 'Answer the questions at the end of chapter 3'],
+  Computer: ['Type and save the letter from page 22', 'Make a flowchart for making tea'],
+};
+
+/**
+ * Phase 3 demo data, idempotent: a bell schedule, published clash-free timetables, about four
+ * weeks of attendance, recent homework and a few notices. Written directly (no notifications).
+ */
+async function dailyOps(db: PlatformPrismaService, schoolId: string, yearId: string): Promise<string[]> {
+  const notes: string[] = [];
+  const random = rng(42);
+  const admin = await db.membership.findFirstOrThrow({ where: { schoolId, roles: { some: { role: { key: 'school_admin' } } } } });
+  const sections = await db.section.findMany({ where: { schoolId, academicYearId: yearId }, include: { class: true }, orderBy: [{ class: { displayOrder: 'asc' } }, { name: 'asc' }] });
+  const subjects = await db.subject.findMany({ where: { schoolId, isActive: true }, orderBy: { name: 'asc' } });
+  const assignments = await db.teachingAssignment.findMany({ where: { schoolId, academicYearId: yearId }, orderBy: { id: 'asc' } });
+
+  // Bell schedule
+  let bell = await db.bellSchedule.findFirst({ where: { schoolId, isDefault: true }, include: { periods: { orderBy: { order: 'asc' } } } });
+  if (!bell) {
+    bell = await db.bellSchedule.create({
+      data: {
+        schoolId,
+        name: 'Regular',
+        isDefault: true,
+        periods: { create: PERIODS.map(([name, startTime, endTime, isBreak], i) => ({ schoolId, name, startTime, endTime, isBreak, order: i + 1 })) },
+      },
+      include: { periods: { orderBy: { order: 'asc' } } },
+    });
+    notes.push('bell schedule');
+  }
+
+  // Timetables (Mon–Sat) for sections that don't have one, never double-booking a teacher.
+  const existing = await db.timetable.findMany({ where: { schoolId, academicYearId: yearId }, include: { entries: { include: { period: true } } } });
+  const busy = new Set(existing.flatMap((t) => t.entries.filter((e) => e.teacherId).map((e) => `${e.teacherId}|${e.dayOfWeek}|${e.period.startTime}`)));
+  const has = new Set(existing.map((t) => t.sectionId));
+  let built = 0;
+  for (const [si, section] of sections.entries()) {
+    if (has.has(section.id)) continue;
+    const entries: { schoolId: string; dayOfWeek: number; periodId: string; subjectId: string; teacherId: string | null }[] = [];
+    for (let day = 1; day <= 6; day++) {
+      for (const [pi, period] of bell.periods.filter((p) => !p.isBreak).entries()) {
+        for (let k = 0; k < subjects.length; k++) {
+          const subject = subjects[(si + day * 2 + pi + k) % subjects.length]!;
+          const teacherId = assignments.find((a) => a.sectionId === section.id && a.subjectId === subject.id)?.teacherId ?? section.classTeacherId;
+          const key = `${teacherId}|${day}|${period.startTime}`;
+          if (teacherId && busy.has(key)) continue;
+          if (teacherId) busy.add(key);
+          entries.push({ schoolId, dayOfWeek: day, periodId: period.id, subjectId: subject.id, teacherId });
+          break;
+        }
+      }
+    }
+    await db.timetable.create({
+      data: {
+        schoolId,
+        academicYearId: yearId,
+        sectionId: section.id,
+        bellScheduleId: bell.id,
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        effectiveFrom: date('2026-04-01'),
+        entries: { create: entries.map(({ schoolId: _s, ...e }) => ({ ...e, schoolId })) },
+      },
+    });
+    built++;
+  }
+  if (built) notes.push(`${built} timetables`);
+
+  // Attendance: the last 20 school days before today (Sunday off).
+  const year = await db.academicYear.findUniqueOrThrow({ where: { id: yearId } });
+  const today = new Date().toISOString().slice(0, 10);
+  const days: string[] = [];
+  for (let d = new Date(`${today}T00:00:00Z`); days.length < 20; ) {
+    d = new Date(d.getTime() - 86_400_000);
+    if (d < year.startDate) break;
+    if (d.getUTCDay() !== 0) days.push(d.toISOString().slice(0, 10));
+  }
+  const enrollments = await db.studentEnrollment.findMany({ where: { schoolId, academicYearId: yearId, status: 'ENROLLED' }, select: { studentId: true, sectionId: true } });
+  const taken = new Set((await db.attendanceSession.findMany({ where: { schoolId, date: { in: days.map(date) } }, select: { sectionId: true, date: true } })).map((s) => `${s.sectionId}|${s.date.toISOString().slice(0, 10)}`));
+  let registers = 0;
+  for (const day of days) {
+    for (const section of sections) {
+      if (taken.has(`${section.id}|${day}`)) continue;
+      const roster = enrollments.filter((e) => e.sectionId === section.id);
+      if (!roster.length) continue;
+      const session = await db.attendanceSession.create({
+        data: { schoolId, sectionId: section.id, date: date(day), status: 'SUBMITTED', takenByMemberId: admin.id, submittedAt: new Date(`${day}T04:00:00Z`) },
+      });
+      await db.attendanceRecord.createMany({
+        data: roster.map((e) => {
+          const r = random();
+          const status = r < 0.9 ? 'PRESENT' : r < 0.95 ? 'ABSENT' : r < 0.97 ? 'LATE' : r < 0.985 ? 'LEAVE' : 'HALF_DAY';
+          return { schoolId, sessionId: session.id, studentId: e.studentId, date: date(day), status, remark: status === 'ABSENT' && r < 0.91 ? 'Unwell' : null };
+        }),
+      });
+      registers++;
+    }
+  }
+  if (registers) notes.push(`${registers} attendance registers`);
+
+  // Homework: two pieces per section in the last week.
+  if ((await db.homework.count({ where: { schoolId } })) < 10) {
+    let made = 0;
+    for (const [si, section] of sections.entries()) {
+      for (let k = 0; k < 2; k++) {
+        const subject = subjects[(si + k * 3) % subjects.length]!;
+        const teacherId = assignments.find((a) => a.sectionId === section.id && a.subjectId === subject.id)?.teacherId ?? section.classTeacherId;
+        if (!teacherId) continue;
+        const titles = HOMEWORK[subject.name] ?? [`${subject.name} revision`];
+        const published = new Date(Date.now() - (k * 3 + (si % 3) + 1) * 86_400_000);
+        const due = new Date(published.getTime() + (2 + (si % 3)) * 86_400_000).toISOString().slice(0, 10);
+        await db.homework.create({
+          data: {
+            schoolId,
+            academicYearId: yearId,
+            subjectId: subject.id,
+            teacherId,
+            title: titles[(si + k) % titles.length]!,
+            description: k === 0 ? 'Complete neatly in your notebook. Show all working.' : null,
+            dueDate: date(due),
+            status: 'PUBLISHED',
+            publishedAt: published,
+            createdAt: published,
+            sections: { create: [{ schoolId, sectionId: section.id }] },
+          },
+        });
+        made++;
+      }
+    }
+    notes.push(`${made} homework`);
+  }
+
+  // Notices
+  if ((await db.notice.count({ where: { schoolId } })) < 3) {
+    const notices = [
+      { title: 'Diwali holidays', body: 'School will remain **closed from 20 to 24 October** for Diwali.\nClasses resume on Monday, 27 October.\n\nWishing all our families a happy and safe Diwali!', type: 'CIRCULAR' as const, days: 1, pinned: true },
+      { title: 'Parent–teacher meeting', body: 'The term 1 parent–teacher meeting is on **Saturday, 18 October, 9 am – 12 pm**.\n- Meet the class teacher first\n- Bring the report card acknowledgement slip', type: 'NOTICE' as const, days: 3, pinned: false },
+      { title: 'Inter-house quiz results', body: 'Congratulations to **Tagore House** for winning the inter-house quiz! Certificates will be given in the assembly on Monday.', type: 'ANNOUNCEMENT' as const, days: 6, pinned: false },
+    ];
+    for (const n of notices) {
+      const at = new Date(Date.now() - n.days * 86_400_000);
+      await db.notice.create({
+        data: {
+          schoolId,
+          type: n.type,
+          title: n.title,
+          body: n.body,
+          status: 'PUBLISHED',
+          publishedAt: at,
+          createdAt: at,
+          isPinned: n.pinned,
+          createdByMemberId: admin.id,
+          audiences: { create: [{ schoolId, type: 'SCHOOL' }] },
+        },
+      });
+    }
+    notes.push('3 notices');
+  }
+  return notes;
 }
 
 await main();

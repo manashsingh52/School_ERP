@@ -218,6 +218,8 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/notices/:id/stats': { summary: 'How many recipients opened it', tag: 'Notices', access: 'permission:notice.create' },
   'GET /v1/notices/:id/attachments/:fileId': { summary: 'Download link for an attachment', tag: 'Notices', access: 'permission:notice.view' },
 
+  'GET /v1/dashboard': { summary: 'Home page numbers and attention items (role-aware)', tag: 'Dashboard', access: 'permission:dashboard.view' },
+
   'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 
   'POST /v1/files/upload-url': { summary: 'Get a signed upload link', tag: 'Files', access: 'school', body: requestUploadSchema },

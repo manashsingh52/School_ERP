@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "swc src -d dist --strip-leading-paths --copy-files",
+    "build": "rm -rf dist && swc src -d dist --strip-leading-paths --copy-files --ignore \"**/*.test.ts\"",
     "dev": "pnpm generate && concurrently -k -n swc,node \"swc src -d dist --strip-leading-paths -w\" \"node --enable-source-maps --env-file-if-exists=.env --watch-path=dist dist/main.js\"",
     "start": "node --enable-source-maps --env-file-if-exists=.env dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",

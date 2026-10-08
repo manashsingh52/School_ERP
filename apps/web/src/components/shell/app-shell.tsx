@@ -18,15 +18,26 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { apiPost } from '@/lib/api-client';
+import { ChildProvider, useIsParentView } from '@/lib/child';
 import { useMe } from '@/lib/me';
 import { CommandPalette } from './command-palette';
 import { NotificationsButton } from './notifications-button';
-import { SETTINGS_NAV, visibleNav, type NavItem } from './nav';
+import { ChildSwitcher } from './child-switcher';
+import { PARENT_NAV, SETTINGS_NAV, visibleNav, type NavItem } from './nav';
 
 const COLLAPSE_KEY = 'sos.sidebar.collapsed';
 
 export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <ChildProvider>
+      <Shell>{children}</Shell>
+    </ChildProvider>
+  );
+}
+
+function Shell({ children }: { children: ReactNode }) {
   const { me, can } = useMe();
+  const parentView = useIsParentView();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -64,8 +75,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const items = visibleNav(can);
-  const settings = visibleNav(can, [SETTINGS_NAV]);
+  const items = parentView ? PARENT_NAV : visibleNav(can);
+  const settings = parentView ? [] : visibleNav(can, [SETTINGS_NAV]);
   const school = me.membership!.school;
 
   const sidebar = (mobile: boolean) => (
@@ -155,6 +166,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Kbd className="hidden sm:inline-flex">⌘K</Kbd>
           </button>
           <div className="ml-auto flex shrink-0 items-center gap-1">
+            {parentView && <ChildSwitcher />}
             <NotificationsButton />
             <UserMenu />
           </div>

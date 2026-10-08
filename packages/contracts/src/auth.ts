@@ -104,7 +104,7 @@ export interface MeResponse {
         /** Set when this member is a teacher (for "my timetable", "my classes"). */
         teacherId: string | null;
         /** Set for parents: their children in this school (child switcher). */
-        children: { id: string; name: string; firstName: string; classLabel: string | null }[];
+        children: { id: string; name: string; firstName: string; classLabel: string | null; sectionId: string | null }[];
       })
     | null;
   memberships: MembershipSummary[];
