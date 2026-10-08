@@ -16,6 +16,8 @@ export const QUEUES = {
   imports: 'imports',
   /** One job per notification delivery (push / SMS / email). */
   notifications: 'notifications',
+  /** Fees: invoice generation, late fees, reminders, gateway reconciliation and webhooks. */
+  finance: 'finance',
   /** PDFs (report cards, receipts) — Chromium, so kept apart from quick jobs. */
   documents: 'documents',
 } as const;

@@ -45,6 +45,11 @@ import { ExamsService } from './modules/exams/exams.service.js';
 import { MarksService } from './modules/exams/marks.service.js';
 import { ReportCardsService } from './modules/exams/report-cards.service.js';
 import { ResultsService } from './modules/exams/results.service.js';
+import { FeesController } from './modules/fees/fees.controller.js';
+import { FeesService } from './modules/fees/fees.service.js';
+import { InvoicesController, PaymentsController, StudentFeesController } from './modules/finance/finance.controller.js';
+import { InvoicesService } from './modules/finance/invoices.service.js';
+import { PaymentsService } from './modules/finance/payments.service.js';
 import { MeController } from './modules/me/me.controller.js';
 import { PublicController } from './modules/public/public.controller.js';
 import { GuardiansController } from './modules/guardians/guardians.controller.js';
@@ -172,6 +177,14 @@ export class DashboardModule {}
 })
 export class ExamsModule {}
 
+@Module({
+  imports: [NotificationsModule, FilesModule],
+  controllers: [FeesController, InvoicesController, PaymentsController, StudentFeesController],
+  providers: [FeesService, InvoicesService, PaymentsService],
+  exports: [FeesService, InvoicesService, PaymentsService],
+})
+export class FinanceModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
@@ -198,6 +211,7 @@ export class AppModule {
         NoticesModule,
         DashboardModule,
         ExamsModule,
+        FinanceModule,
       ],
     };
   }

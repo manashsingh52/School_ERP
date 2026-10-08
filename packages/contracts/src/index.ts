@@ -14,3 +14,4 @@ export * from './timetable.js';
 export * from './notices.js';
 export * from './dashboard.js';
 export * from './exams.js';
+export * from './finance.js';

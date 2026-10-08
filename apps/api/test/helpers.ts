@@ -126,6 +126,14 @@ export interface Tenant {
   gradingScaleId: string;
   examId: string;
   examSubjectId: string;
+  /** Fees: Tuition head; published Class 8 structure (₹12,000/yr in 2 installments of ₹6,000); invoice for s1 (unpaid) and s2 (paid at the counter). */
+  feeHeadId: string;
+  feeStructureId: string;
+  installmentId: string;
+  invoiceId: string;
+  paymentId: string;
+  concessionTypeId: string;
+  concessionId: string;
   /** Published notice to everyone, by the admin. */
   noticeId: string;
   /** Published homework for 8-A (Maths, by the class teacher). */
@@ -259,6 +267,33 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
       const exam = await db.exam.create({ data: { schoolId, academicYearId: year.id, gradingScaleId: scale.id, name: 'Unit Test 1', status: 'MARKS_ENTRY' } });
       const es = await db.examSubject.create({ data: { schoolId, examId: exam.id, classId: cls.id, subjectId: subject.id, maxMarks: 50, passMarks: 17 } });
       return { gradingScaleId: scale.id, examId: exam.id, examSubjectId: es.id };
+    })()),
+    ...(await (async () => {
+      const head = await db.feeHead.create({ data: { schoolId, name: 'Tuition Fee', code: 'TUI', type: 'TUITION', frequency: 'RECURRING' } });
+      const structure = await db.feeStructure.create({ data: { schoolId, academicYearId: year.id, name: 'Class 8', status: 'PUBLISHED', classes: { create: [{ schoolId, classId: cls.id }] } } });
+      const item = await db.feeStructureItem.create({ data: { schoolId, feeStructureId: structure.id, feeHeadId: head.id, amountPaise: 1_200_000 } });
+      const [q1, q2] = await Promise.all(
+        [['Term 1', '2026-04-10', 1], ['Term 2', '2026-10-10', 2]].map(([name, due, order]) =>
+          db.feeInstallment.create({ data: { schoolId, feeStructureId: structure.id, name: name as string, dueDate: date(due as string), order: order as number, splits: { create: [{ schoolId, itemId: item.id, amountPaise: 600_000 }] } } }),
+        ),
+      );
+      const invoice = (number: string, studentId: string, paid: boolean) =>
+        db.invoice.create({
+          data: {
+            schoolId, number, studentId, academicYearId: year.id, installmentId: q1!.id, issueDate: date('2026-04-01'), dueDate: date('2026-04-10'),
+            status: paid ? 'PAID' : 'ISSUED', subtotalPaise: 600_000, totalPaise: 600_000, paidPaise: paid ? 600_000 : 0, balancePaise: paid ? 0 : 600_000,
+            lines: { create: [{ schoolId, kind: 'FEE', feeHeadId: head.id, description: 'Tuition Fee', amountPaise: 600_000 }] },
+          },
+        });
+      const inv1 = await invoice('INV/FX/000001', s1, false);
+      const inv2 = await invoice('INV/FX/000002', s2, true);
+      const payment = await db.payment.create({
+        data: { schoolId, studentId: s2, amountPaise: 600_000, method: 'CASH', status: 'CAPTURED', receivedAt: new Date(), collectedByMemberId: adminMembership.id,
+          allocations: { create: [{ schoolId, invoiceId: inv2.id, amountPaise: 600_000 }] }, receipt: { create: { schoolId, number: 'RCPT/FX/000001' } } },
+      });
+      const ctype = await db.concessionType.create({ data: { schoolId, name: 'Sibling 10%', kind: 'SIBLING', calc: 'PERCENT', valueBasisPoints: 1000 } });
+      const conc = await db.studentConcession.create({ data: { schoolId, studentId: s3, academicYearId: year.id, concessionTypeId: ctype.id, status: 'PENDING', requestedByMemberId: adminMembership.id } });
+      return { feeHeadId: head.id, feeStructureId: structure.id, installmentId: q2!.id, invoiceId: inv1.id, paymentId: payment.id, concessionTypeId: ctype.id, concessionId: conc.id };
     })()),
     noticeId: (
       await db.notice.create({
