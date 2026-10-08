@@ -1,17 +1,16 @@
 'use client';
 
-import type { FileInfo, HomeworkItem, HomeworkTargets } from '@schoolos/contracts';
+import type { HomeworkItem, HomeworkTargets } from '@schoolos/contracts';
 import { Button, DialogBody, DialogFooter, Field, Input, Select, Skeleton, Textarea, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { Paperclip, X } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { AttachmentsField, type Attachment } from '@/components/attachments-field';
 import { ApiError, apiPatch, apiPost } from '@/lib/api-client';
-import { useData, uploadFile } from '@/lib/hooks';
+import { useData } from '@/lib/hooks';
 import { fullName, todayISO } from '@/lib/format';
 import { useTeacherOptions } from '@/lib/academics';
 
 type Publish = 'NOW' | 'DRAFT' | 'SCHEDULE';
-type Attachment = { id: string; originalName: string };
 const MAX_FILES = 5;
 
 /** Local "YYYY-MM-DDTHH:mm" for <input type="datetime-local"> one hour from now. */
@@ -39,7 +38,6 @@ export function HomeworkForm({ existing, onDone }: { existing?: HomeworkItem; on
   const [publishAt, setPublishAt] = useState(inAnHour);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const sections = useMemo(() => targets.data?.sections ?? [], [targets.data]);
   /** Subjects available in every chosen section. */
@@ -60,22 +58,6 @@ export function HomeworkForm({ existing, onDone }: { existing?: HomeworkItem; on
     setSectionIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
     setErrors((e) => ({ ...e, sectionIds: '' }));
   };
-
-  async function addFiles(list: FileList | null) {
-    const picked = Array.from(list ?? []).slice(0, MAX_FILES - files.length);
-    if (!picked.length) return;
-    setUploading((n) => n + picked.length);
-    for (const file of picked) {
-      try {
-        const info: FileInfo = await uploadFile(file, 'homework_attachment');
-        setFiles((f) => [...f, { id: info.id, originalName: info.originalName }]);
-      } catch (err) {
-        toast.error(err instanceof ApiError ? `${file.name}: ${err.message}` : `${file.name} didn't upload.`);
-      } finally {
-        setUploading((n) => n - 1);
-      }
-    }
-  }
 
   async function save() {
     const next: Record<string, string> = {};
@@ -178,27 +160,15 @@ export function HomeworkForm({ existing, onDone }: { existing?: HomeworkItem; on
         <Field label="Instructions" htmlFor="hw-desc" hint="Optional">
           <Textarea id="hw-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={5000} />
         </Field>
-        <div>
-          <div className="mb-1.5 text-body font-medium">Attachments</div>
-          <div className="flex flex-wrap items-center gap-2">
-            {files.map((f) => (
-              <span key={f.id} className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-subtle pr-1 pl-2.5 text-small">
-                <Paperclip className="size-3.5 text-fg-tertiary" />
-                <span className="max-w-48 truncate">{f.originalName}</span>
-                <button type="button" onClick={() => setFiles((x) => x.filter((y) => y.id !== f.id))} className="rounded p-0.5 text-fg-tertiary hover:bg-hover hover:text-fg" aria-label={`Remove ${f.originalName}`}>
-                  <X className="size-3.5" />
-                </button>
-              </span>
-            ))}
-            {files.length < MAX_FILES && (
-              <Button type="button" variant="secondary" size="sm" onClick={() => fileInput.current?.click()} loading={uploading > 0}>
-                <Paperclip /> Attach file
-              </Button>
-            )}
-            <input ref={fileInput} type="file" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.webp,.docx,.xlsx" onChange={(e) => { void addFiles(e.target.files); e.target.value = ''; }} />
-          </div>
-          <p className="mt-1 text-caption text-fg-tertiary">PDF, images, Word or Excel · up to 15 MB each · {MAX_FILES} files</p>
-        </div>
+        <AttachmentsField
+          value={files}
+          onChange={setFiles}
+          purpose="homework_attachment"
+          accept=".pdf,.jpg,.jpeg,.png,.webp,.docx,.xlsx"
+          hint={`PDF, images, Word or Excel · up to 15 MB each · ${MAX_FILES} files`}
+          max={MAX_FILES}
+          onBusyChange={(b) => setUploading(b ? 1 : 0)}
+        />
         {!existing && targets.data.anyTeacher && (
           <Field label="From teacher" htmlFor="hw-teacher" hint="Leave as subject teacher unless someone else set it." error={errors.teacherId}>
             <Select id="hw-teacher" value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>

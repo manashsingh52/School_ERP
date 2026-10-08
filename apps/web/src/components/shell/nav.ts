@@ -43,7 +43,7 @@ export const NAV: NavItem[] = [
   { href: '/exams', label: 'Examinations', icon: ClipboardList, any: ['exam.view'], scopes: STAFF, ready: false, phase: 'Phase 4' },
   { href: '/fees', label: 'Fees', icon: IndianRupee, any: ['fee.manage', 'invoice.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },
   { href: '/payments', label: 'Payments', icon: CreditCard, any: ['payment.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },
-  { href: '/communication', label: 'Communication', icon: Megaphone, any: ['notice.create'], scopes: STAFF, ready: false, phase: 'Phase 3' },
+  { href: '/notices', label: 'Notices', icon: Megaphone, any: ['notice.view', 'notice.create'], scopes: STAFF, ready: true },
   { href: '/documents', label: 'Documents', icon: FileText, any: ['document.view'], scopes: STAFF, ready: false, phase: 'Phase 6' },
   { href: '/reports', label: 'Reports', icon: BarChart3, any: ['report.academic', 'report.finance'], scopes: STAFF, ready: false, phase: 'Phase 6' },
 ];

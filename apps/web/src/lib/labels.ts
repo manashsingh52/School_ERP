@@ -31,3 +31,10 @@ export const REGISTER_STATUS: Record<'NOT_TAKEN' | 'DRAFT' | 'SUBMITTED', { labe
   DRAFT: { label: 'Draft', tone: 'warning' },
   SUBMITTED: { label: 'Submitted', tone: 'success' },
 };
+
+export const NOTICE_TYPE: Record<'NOTICE' | 'CIRCULAR' | 'ANNOUNCEMENT' | 'EVENT', string> = {
+  NOTICE: 'Notice',
+  CIRCULAR: 'Circular',
+  ANNOUNCEMENT: 'Announcement',
+  EVENT: 'Event',
+};
