@@ -194,3 +194,37 @@ describe('counter payments', () => {
     expect((await as('parent').get('/v1/payments/day-close')).status).toBe(403);
   });
 });
+
+describe('finance reports', () => {
+  const report = (name: string, extra = '') => as('accountant').get(`/v1/finance/reports?report=${name}${extra}`);
+
+  it('collection, outstanding, defaulters, heads, concessions, reconciliation', async () => {
+    const collection = await report('collection');
+    expect(collection.status).toBe(200);
+    expect(collection.body.data.columns.map((c: { key: string }) => c.key)).toContain('CASH');
+    expect(collection.body.data.totals.total).toBeGreaterThanOrEqual(1_200_000);
+
+    const outstanding = (await report('outstanding')).body.data;
+    // 8-B's only open invoice was cancelled above, so it has nothing outstanding.
+    expect(outstanding.rows.map((r: { section: string }) => r.section)).toEqual(['8-A']);
+    expect(outstanding.rows[0]).toMatchObject({ students: 2, billed: 2_350_000 }); // s1: 6,000 + 5,500 · s2: 6,000 + 6,000
+    const defaulters = (await report('defaulters')).body.data;
+    expect(defaulters.rows[0]).toMatchObject({ name: 'Student1', section: '8-A', guardian: 'Parent' });
+
+    const heads = (await report('heads')).body.data;
+    expect(heads.rows.find((r: { head: string }) => r.head === 'Tuition Fee')).toBeTruthy();
+    const concessions = (await report('concessions')).body.data;
+    // The sibling concession was on s3's invoice, which was cancelled — so only the scholarship counts.
+    expect(concessions.rows).toEqual([{ concession: 'Scholarship ₹500', students: 1, amount: 50_000 }]);
+    expect((await report('reconciliation')).body.data.rows).toHaveLength(10);
+    expect((await t.as(tok.teacher, A.slug).get('/v1/finance/reports?report=collection')).status).toBe(403);
+  });
+
+  it('exports CSV in rupees', async () => {
+    const res = await report('defaulters', '&format=csv');
+    expect(res.headers['content-type']).toContain('text/csv');
+    expect(res.text.charCodeAt(0)).toBe(0xfeff);
+    expect(res.text).toContain('Overdue (₹)');
+    expect(res.text).toContain('6000.00');
+  });
+});

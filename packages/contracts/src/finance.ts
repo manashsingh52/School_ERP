@@ -412,3 +412,18 @@ export function rupeesInWords(paiseValue: number): string {
   const words = parts.join(' ') || 'Zero';
   return `Rupees ${words}${p ? ` and ${twoDigits(p)} Paise` : ''} Only`;
 }
+
+export const FINANCE_REPORTS = ['collection', 'outstanding', 'defaulters', 'heads', 'concessions', 'reconciliation'] as const;
+export type FinanceReportKey = (typeof FINANCE_REPORTS)[number];
+export const financeReportQuerySchema = reportRangeQuerySchema.extend({ report: z.enum(FINANCE_REPORTS) });
+
+/** One shape for every finance report, so the web renders any of them (and CSV export is generic). */
+export interface FinanceReport {
+  key: FinanceReportKey;
+  title: string;
+  description: string;
+  range: { from: string; to: string } | null;
+  columns: { key: string; label: string; type: 'text' | 'money' | 'number' | 'date' | 'percent' }[];
+  rows: Record<string, string | number | null>[];
+  totals: Record<string, number> | null;
+}

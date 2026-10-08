@@ -9,10 +9,12 @@ import { AppModule } from './app.module.js';
 import { loadEnv } from './config/env.js';
 import { createLogger } from './core/logger/logger.js';
 import { QueueService } from './core/queue/queue.service.js';
+import { SchedulerService } from './core/queue/scheduler.service.js';
 
 const env = loadEnv({ ...process.env, RUN_WORKERS: 'true' });
 const logger = createLogger(env.LOG_LEVEL, env.NODE_ENV === 'development');
 const app = await NestFactory.createApplicationContext(AppModule.forRoot(env, logger), { logger: false });
 app.enableShutdownHooks();
 await app.get(QueueService).startWorkers();
+app.get(SchedulerService).start();
 logger.info('SchoolOS worker running');

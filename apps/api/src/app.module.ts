@@ -24,6 +24,7 @@ import { BasicPdfRenderer, ChromiumPdfRenderer, PdfRenderer } from './core/pdf/p
 import { GatewayClient, MockGatewayClient, RazorpayClient } from './core/payments/gateway-client.js';
 import { SecretBox } from './core/payments/secret-box.js';
 import { QueueService } from './core/queue/queue.service.js';
+import { SchedulerService } from './core/queue/scheduler.service.js';
 import { MemoryRateLimitStore, RateLimitGuard } from './core/rate-limit/rate-limit.js';
 import { AcademicsModule } from './modules/academics/academics.module.js';
 import { AttendanceModule } from './modules/attendance/attendance.module.js';
@@ -49,7 +50,9 @@ import { ReportCardsService } from './modules/exams/report-cards.service.js';
 import { ResultsService } from './modules/exams/results.service.js';
 import { FeesController } from './modules/fees/fees.controller.js';
 import { FeesService } from './modules/fees/fees.service.js';
-import { GatewayController, InvoicesController, OnlinePaymentsController, PaymentsController, StudentFeesController } from './modules/finance/finance.controller.js';
+import { FinanceJobsController, FinanceReportsController, GatewayController, InvoicesController, OnlinePaymentsController, PaymentsController, StudentFeesController } from './modules/finance/finance.controller.js';
+import { FinanceJobsService } from './modules/finance/finance-jobs.service.js';
+import { FinanceReportsService } from './modules/finance/finance-reports.service.js';
 import { GatewayService } from './modules/finance/gateway.service.js';
 import { OnlinePaymentsService } from './modules/finance/online-payments.service.js';
 import { WebhooksController } from './modules/webhooks/webhooks.controller.js';
@@ -94,6 +97,7 @@ export class CoreModule {
       RequestContextMiddleware,
       RouteAccessCheck,
       QueueService,
+      SchedulerService,
       OutboxService,
       IdempotencyInterceptor,
       ChannelGateway,
@@ -190,8 +194,8 @@ export class WebhooksModule {}
 
 @Module({
   imports: [NotificationsModule, FilesModule, WebhooksModule],
-  controllers: [FeesController, InvoicesController, PaymentsController, StudentFeesController, GatewayController, OnlinePaymentsController],
-  providers: [FeesService, InvoicesService, PaymentsService, GatewayService, OnlinePaymentsService],
+  controllers: [FeesController, InvoicesController, PaymentsController, StudentFeesController, GatewayController, OnlinePaymentsController, FinanceJobsController, FinanceReportsController],
+  providers: [FeesService, InvoicesService, PaymentsService, GatewayService, OnlinePaymentsService, FinanceJobsService, FinanceReportsService],
   exports: [FeesService, InvoicesService, PaymentsService, GatewayService, OnlinePaymentsService],
 })
 export class FinanceModule {}
