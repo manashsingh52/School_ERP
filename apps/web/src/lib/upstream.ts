@@ -12,6 +12,8 @@ export interface UpstreamOptions {
   clientIp?: string | null;
   userAgent?: string | null;
   requestId?: string | null;
+  /** Passed through so retries of money-moving requests are safe (docs/05 §4). */
+  idempotencyKey?: string | null;
 }
 
 /** One place that talks to the API from the web server (BFF, proxy refresh, server components). */
@@ -22,6 +24,7 @@ export function upstream(opts: UpstreamOptions): Promise<Response> {
   if (opts.contentType) headers.set('content-type', opts.contentType);
   if (opts.userAgent) headers.set('user-agent', opts.userAgent);
   if (opts.requestId) headers.set('x-request-id', opts.requestId);
+  if (opts.idempotencyKey) headers.set('idempotency-key', opts.idempotencyKey);
   if (serverEnv.bffSecret && opts.clientIp) {
     headers.set('x-bff-key', serverEnv.bffSecret);
     headers.set('x-client-ip', opts.clientIp);

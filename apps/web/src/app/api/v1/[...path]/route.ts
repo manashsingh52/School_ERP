@@ -39,6 +39,7 @@ async function handle(req: NextRequest, ctx: { params: Promise<{ path: string[] 
       clientIp: clientIpFrom(req.headers),
       userAgent: req.headers.get('user-agent'),
       requestId: req.headers.get('x-request-id'),
+      idempotencyKey: mutating ? req.headers.get('idempotency-key') : null,
     });
     return relay(res);
   } catch {

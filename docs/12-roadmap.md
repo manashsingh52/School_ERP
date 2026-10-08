@@ -101,6 +101,27 @@ Known follow-ups (small): co-scholastic areas and term-wise (multi-exam) consoli
 
 **Next: Phase 5 (finance)** — fee structures, invoices, Razorpay online payments, counter collection, receipts.
 
+### 2026-10-08: Phase 5 complete — finance ✅ (347 tests)
+
+**Milestone M5 met:** a parent paid ₹18,800 online (sandbox gateway) and got receipt RCPT/2026-27/001453 as a PDF; the accountant collected ₹27,400 at the counter (RCPT/…/001454) and the day close balanced (by method = by person = payments).
+
+- [x] Fee heads; per-class structures with installments (exact per-fee splits), optional fees, late-fee rule; one live structure per class; editor with "split evenly"
+- [x] Concession types (flat / %, per fee) and student concessions: request → approve / reject / revoke
+- [x] Invoices: preview → issue (background job), gap-free `INV/2026-27/000001`, concessions applied per fee, append-only adjustments with reasons, cancellation without payments, overdue computed
+- [x] Payments: one `apply()` for all money — locks invoices, caps at balances, excess → student credit, gap-free receipts, audit, outbox. Counter (W6): whole invoices, Idempotency-Key, concurrency-safe; void; use credit; day close
+- [x] Receipts: A5 PDF (amount in words, method/reference, CANCELLED stamp after void), made in the worker, on demand for older payments
+- [x] Razorpay: each school's own keys (AES-256-GCM), webhook secret shown once, HMAC-verified webhooks stored before processing (dedupe), checkout → verify (signature + gateway fetch), reconciliation every 10 min, refunds (credit first, then reopen invoices), amount-mismatch → credit + security flag
+- [x] Scheduler: late fees 00:30, reminders 08:00 (7 and 1 days before, weekly overdue), reconciliation every 10 min — once per slot
+- [x] Reports: daily collection, outstanding, defaulters, head-wise, concessions, reconciliation (+ CSV)
+- [x] Parent: fees page with "Pay ₹X" (Razorpay Checkout, or the sandbox checkout in development), receipts
+- [x] Demo: 5 structures, 2,253 invoices, 1,452 payments, late fees, sandbox gateway on
+
+**Sandbox gateway:** `PAYMENTS_GATEWAY=mock` (default in development, refused in production) behaves like Razorpay — same signatures, states and webhooks — so everything is tested without an account. Switching to `razorpay` needs only each school's keys (⏸ SETUP-LATER).
+
+Known follow-ups (small): duplicate-receipt marking on reprints, settlement (payout → bank UTR) reconciliation (V1.1), convenience fee (open question in docs/11).
+
+**Pilot point reached** (docs/12): a school can run fees, attendance, homework, exams and parent communication on the web while the mobile apps are built. **Next: Phase 6 (platform)** — super-admin, plans/subscriptions, documents, reports engine.
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

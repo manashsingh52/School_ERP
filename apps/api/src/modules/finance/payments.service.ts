@@ -390,7 +390,12 @@ export class PaymentsService implements OnModuleInit {
   async receiptLink(paymentId: string): Promise<DownloadLink> {
     await this.get(paymentId); // visibility
     const receipt = await this.prisma.db.receipt.findUnique({ where: { paymentId } });
-    if (!receipt?.fileId) throw new AppError('RECEIPT_NOT_READY', 409, 'The receipt is still being prepared. Try again in a moment.');
+    if (!receipt) throw AppError.notFound('receipt');
+    if (!receipt.fileId) {
+      // Made on demand if it was never rendered (e.g. imported or older payments); the job id dedupes.
+      await this.queues.add(QUEUES.documents, 'receipt', { schoolId: RequestContextStore.school().schoolId, paymentId }, { jobId: `receipt-${paymentId}-1` });
+      throw new AppError('RECEIPT_NOT_READY', 409, 'The receipt is being prepared. Try again in a moment.');
+    }
     return this.files.attachedLink(receipt.fileId);
   }
 

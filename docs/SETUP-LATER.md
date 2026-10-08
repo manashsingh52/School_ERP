@@ -17,7 +17,7 @@ Search the code for `⏸` to find every slot.
 | 8 | **Redis** (Upstash) — *optional* | Only if Postgres-backed queues ever become a bottleneck | `QUEUE_BACKEND=redis`, `REDIS_URL` | Queues run in PostgreSQL (BullMQ 6) — no Redis needed |
 | 9 | **Email provider** (Resend) + domain SPF/DKIM/DMARC | Notification emails | `apps/api/.env`: `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM` — code in `apps/api/src/core/notify/channel-gateway.ts` | `EMAIL_PROVIDER=console` logs emails; in-app inbox always works |
 | 10 | **Sentry** project | Error monitoring (deploy time) | `SENTRY_DSN` (added at deploy) | Errors in logs with `supportRef` |
-| 11 | **Razorpay test account** | Online fee payments (Phase 5) | Per-school keys entered in-app (docs/11 §2) | — |
+| 11 | **Razorpay account** (test, then live) per school | Real online fee payments | API: `PAYMENTS_GATEWAY=razorpay`, `PAYMENT_SECRETS_KEY` (⏸ Secret Manager), `PUBLIC_API_URL`; each school enters its keys in Payments → Online payments and adds the shown webhook URL + secret in Razorpay | `PAYMENTS_GATEWAY=mock` sandbox: same flow, no real money |
 | 12 | **Firebase project + Apple Developer account** | Push notifications, iOS app (Phase 7) | `PUSH_PROVIDER=fcm` + service account (slot in `channel-gateway.ts`) | `PUSH_PROVIDER=console` logs pushes; deliveries recorded as skipped |
 | 13 | **Legal review** — DPA, privacy policy, DPDP Act | Before the first real school goes live | docs/09 §7 | — |
 | 14 | **Product name** | Branding | Replace "SchoolOS" / `schoolos.in` | Placeholder |

@@ -25,6 +25,12 @@ import type { INestApplicationContext } from '@nestjs/common';
 import { RequestContextStore } from '../core/context/request-context.js';
 import { ExamsService } from '../modules/exams/exams.service.js';
 import { ResultsService } from '../modules/exams/results.service.js';
+import { FeesService } from '../modules/fees/fees.service.js';
+import { FinanceJobsService } from '../modules/finance/finance-jobs.service.js';
+import { GatewayService } from '../modules/finance/gateway.service.js';
+import { InvoicesService } from '../modules/finance/invoices.service.js';
+import { PaymentsService } from '../modules/finance/payments.service.js';
+import { PrismaService } from '../core/prisma/prisma.service.js';
 
 const FIRST = ['Aarav', 'Aditi', 'Arjun', 'Ananya', 'Diya', 'Ishaan', 'Kabir', 'Kavya', 'Meera', 'Neha', 'Nikhil',
   'Priya', 'Rahul', 'Riya', 'Rohan', 'Saanvi', 'Sahil', 'Sara', 'Tanvi', 'Vihaan', 'Vivaan', 'Yash', 'Zoya', 'Aisha', 'Dev'];
@@ -230,6 +236,7 @@ async function topUp(db: PlatformPrismaService, schoolId: string, app: INestAppl
   }
   notes.push(...(await dailyOps(db, schoolId, yearId)));
   notes.push(...(await exams(db, app, schoolId, yearId)));
+  notes.push(...(await finance(db, app, schoolId, yearId)));
   return notes.filter(Boolean).join(', ');
 }
 
@@ -465,6 +472,156 @@ async function exams(db: PlatformPrismaService, app: INestApplicationContext, sc
   const hy = await makeExam('Half-Yearly', 'Term 1', '2026-09-21', '2026-09-30', 80, 27, 'MARKS_ENTRY');
   const hyMarks = await fill(hy.subjects, (classId) => ['Class 8', 'Class 9'].includes(hy.subjects.find((s) => s.classId === classId)!.class.name));
   return [`exams (Unit Test 1 published, ${utMarks} + ${hyMarks} marks)`];
+}
+
+/**
+ * Phase 5 demo data, idempotent: fee heads, structures per class group (quarterly, late fee),
+ * concessions, invoices for Q1–Q3, counter/online payments (Q1 mostly paid, Q2 partly, some
+ * overdue — Rahul's Q2 is unpaid so the parent "Pay" flow has something to pay), sandbox gateway.
+ * Everything goes through the real services.
+ */
+async function finance(db: PlatformPrismaService, app: INestApplicationContext, schoolId: string, yearId: string): Promise<string[]> {
+  if (await db.feeHead.count({ where: { schoolId } })) return [];
+  const random = rng(11);
+  const admin = await db.membership.findFirstOrThrow({ where: { schoolId, roles: { some: { role: { key: 'school_admin' } } } } });
+  const accountant = await db.membership.findFirst({ where: { schoolId, roles: { some: { role: { key: 'accountant' } } } } });
+  const permissions = Object.fromEntries(PERMISSION_KEYS.map((k) => [k, 'ALL'])) as PermissionSet;
+  const asAdmin = <T>(fn: () => Promise<T>) =>
+    RequestContextStore.run({ requestId: `seed-${randomUUID()}`, schoolId, userId: admin.userId, membershipId: admin.id, permissions, actor: 'user' }, fn);
+  const fees = app.get(FeesService);
+  const R = (rupees: number) => rupees * 100;
+
+  const head = (name: string, code: string, type: 'TUITION' | 'ADMISSION' | 'EXAM' | 'TRANSPORT' | 'ACTIVITY' | 'OTHER', isOptional = false) =>
+    asAdmin(() => fees.saveHead(null, { name, code, type, frequency: 'RECURRING', isOptional, isActive: true }));
+  const tuition = await head('Tuition Fee', 'TUI', 'TUITION');
+  const dev = await head('Development Fee', 'DEV', 'OTHER');
+  const exam = await head('Examination Fee', 'EXM', 'EXAM');
+  const lab = await head('Computer Lab', 'LAB', 'ACTIVITY');
+  const transport = await head('Transport', 'TRN', 'TRANSPORT', true);
+
+  const classes = await db.schoolClass.findMany({ where: { schoolId }, orderBy: { displayOrder: 'asc' } });
+  const groups: { name: string; from: number; to: number; tuition: number; lab: number }[] = [
+    { name: 'Pre-primary', from: 0, to: 3, tuition: 24_000, lab: 0 },
+    { name: 'Classes 1–5', from: 4, to: 8, tuition: 30_000, lab: 0 },
+    { name: 'Classes 6–8', from: 9, to: 11, tuition: 36_000, lab: 2_400 },
+    { name: 'Classes 9–10', from: 12, to: 13, tuition: 42_000, lab: 2_400 },
+    { name: 'Classes 11–12', from: 14, to: 15, tuition: 48_000, lab: 3_600 },
+  ];
+  const dues = ['2026-04-10', '2026-07-10', '2026-10-10', '2027-01-10'];
+  const structures = [];
+  for (const g of groups) {
+    const classIds = classes.filter((c) => c.displayOrder >= g.from && c.displayOrder <= g.to).map((c) => c.id);
+    if (!classIds.length) continue;
+    const items = [
+      { feeHeadId: tuition.id, amountPaise: R(g.tuition), isOptional: false },
+      { feeHeadId: dev.id, amountPaise: R(3_000), isOptional: false },
+      { feeHeadId: exam.id, amountPaise: R(1_200), isOptional: false },
+      ...(g.lab ? [{ feeHeadId: lab.id, amountPaise: R(g.lab), isOptional: false }] : []),
+      { feeHeadId: transport.id, amountPaise: R(9_600), isOptional: true },
+    ];
+    const installments = dues.map((dueDate, q) => ({
+      name: `Quarter ${q + 1}`,
+      dueDate,
+      splits: {
+        [tuition.id]: R(g.tuition / 4),
+        [transport.id]: R(2_400),
+        ...(q === 0 ? { [dev.id]: R(3_000) } : {}),
+        ...(q === 1 || q === 3 ? { [exam.id]: R(600) } : {}),
+        ...(g.lab && q === 0 ? { [lab.id]: R(g.lab) } : {}),
+      },
+    }));
+    const st = await asAdmin(() =>
+      fees.saveStructure(null, { name: `${g.name} · 2026–27`, classIds, items, installments, lateFee: { calc: 'PER_DAY', graceDays: 7, valuePaise: R(10), maxPaise: R(200) } }),
+    );
+    await asAdmin(() => fees.publishStructure(st.id));
+    structures.push(await asAdmin(() => fees.getStructure(st.id)));
+  }
+
+  // Concessions
+  const sibling = await asAdmin(() => fees.saveConcessionType(null, { name: 'Sibling 10%', kind: 'SIBLING', calc: 'PERCENT', valueBasisPoints: 1_000, feeHeadIds: [tuition.id], requiresApproval: true, isActive: true }));
+  const staff = await asAdmin(() => fees.saveConcessionType(null, { name: 'Staff ward 50%', kind: 'STAFF_WARD', calc: 'PERCENT', valueBasisPoints: 5_000, feeHeadIds: [tuition.id], requiresApproval: true, isActive: true }));
+  const merit = await asAdmin(() => fees.saveConcessionType(null, { name: 'Merit scholarship', kind: 'MERIT', calc: 'FLAT', valuePaise: R(2_000), feeHeadIds: [tuition.id], requiresApproval: true, isActive: true }));
+  const students = await db.studentEnrollment.findMany({ where: { schoolId, academicYearId: yearId, status: 'ENROLLED' }, select: { studentId: true, student: { select: { firstName: true, lastName: true } } } });
+  const ananya = students.find((s) => s.student.firstName === 'Ananya' && s.student.lastName === 'Kumar');
+  const rahul = await db.student.findFirst({ where: { schoolId, firstName: 'Rahul', lastName: 'Kumar', admissionNo: '1501' } });
+  const give = (studentId: string, concessionTypeId: string, reason: string) => asAdmin(() => fees.requestConcession({ studentId, concessionTypeId, reason })).catch(() => undefined);
+  if (ananya) await give(ananya.studentId, sibling.id, 'Younger sibling of Rahul Kumar (8-A)');
+  for (const s of students.filter(() => random() < 0.012)) await give(s.studentId, sibling.id, 'Sibling studies here');
+  for (const s of students.filter(() => random() < 0.004)) await give(s.studentId, staff.id, 'Child of staff member');
+  for (const s of students.filter(() => random() < 0.003)) await give(s.studentId, merit.id, 'Topped the class last year');
+  // A request waiting for approval, so the approvals list isn't empty.
+  const waiting = students.find((s) => s.studentId !== ananya?.studentId && s.studentId !== rahul?.id);
+  if (waiting) {
+    await RequestContextStore.run(
+      { requestId: `seed-${randomUUID()}`, schoolId, userId: admin.userId, membershipId: accountant?.id ?? admin.id, permissions: { ...permissions, 'concession.approve': undefined }, actor: 'user' },
+      () => fees.requestConcession({ studentId: waiting.studentId, concessionTypeId: merit.id, reason: 'Scored 98% in the last exam' }),
+    ).catch(() => undefined);
+  }
+  // Transport for about a third of the students
+  for (const s of students) {
+    if (random() >= 0.35) continue;
+    const st = await fees.structureFor(s.studentId).catch(() => null);
+    const item = st?.items.find((i) => i.feeHeadId === transport.id);
+    if (item) await asAdmin(() => fees.setOptions(s.studentId, [item.id]));
+  }
+
+  // Invoices for Q1–Q3
+  const invoices = app.get(InvoicesService);
+  let issued = 0;
+  for (const st of structures) for (const ins of st.installments.slice(0, 3)) issued += await asAdmin(() => invoices.generateNow(ins.id, undefined, admin.id));
+
+  // Payments: Q1 mostly paid in April, Q2 most in July, a few Q3 early in October.
+  const payments = app.get(PaymentsService);
+  const prisma = app.get(PrismaService);
+  const all = await db.invoice.findMany({ where: { schoolId, academicYearId: yearId }, include: { installment: { select: { order: true } } }, orderBy: { number: 'asc' } });
+  const methods = ['CASH', 'CASH', 'CASH', 'UPI_DIRECT', 'UPI_DIRECT', 'ONLINE', 'ONLINE', 'BANK_TRANSFER', 'POS_CARD'] as const;
+  const plan = all.filter((inv) => {
+    const q = inv.installment?.order ?? 1;
+    if (inv.studentId === rahul?.id) return q === 1;
+    if (inv.studentId === ananya?.studentId) return q <= 2;
+    return random() < (q === 1 ? 0.96 : q === 2 ? 0.82 : 0.18);
+  });
+  let paid = 0;
+  for (let i = 0; i < plan.length; i += 100) {
+    await asAdmin(() =>
+      prisma.tenantTx(
+        async (tx) => {
+          for (const inv of plan.slice(i, i + 100)) {
+            const q = inv.installment?.order ?? 1;
+            const month = q === 1 ? '04' : q === 2 ? '07' : '10';
+            const day = String(1 + Math.floor(random() * (q === 3 ? 7 : 24))).padStart(2, '0');
+            const receivedAt = new Date(`2026-${month}-${day}T${String(9 + Math.floor(random() * 6)).padStart(2, '0')}:${String(Math.floor(random() * 60)).padStart(2, '0')}:00+05:30`);
+            const method = methods[Math.floor(random() * methods.length)]!;
+            await payments.apply(tx, {
+              studentId: inv.studentId,
+              amountPaise: inv.balancePaise,
+              method,
+              invoiceIds: [inv.id],
+              receivedAt,
+              collectedByMemberId: method === 'ONLINE' ? null : (accountant?.id ?? admin.id),
+              referenceNo: method === 'UPI_DIRECT' || method === 'BANK_TRANSFER' ? `UTR${Math.floor(random() * 1e12)}` : method === 'POS_CARD' ? `POS${Math.floor(random() * 1e6)}` : null,
+              gatewayPaymentId: method === 'ONLINE' ? `pay_seed${randomUUID().replace(/-/g, '').slice(0, 14)}` : undefined,
+              gatewayMethod: method === 'ONLINE' ? (random() < 0.7 ? 'upi' : 'card') : null,
+            });
+            paid++;
+          }
+        },
+        { timeout: 120_000 },
+      ),
+    );
+  }
+  // Seed payments don't send receipts or notifications; receipts are made on demand.
+  await db.outboxEvent.updateMany({ where: { schoolId, type: 'payment.captured', status: 'PENDING' }, data: { status: 'DISPATCHED', dispatchedAt: new Date() } });
+  const late = await asAdmin(() => app.get(FinanceJobsService).lateFees());
+
+  // Sandbox gateway, verified and on, so parents can try paying online.
+  const gateway = app.get(GatewayService);
+  if ((await asAdmin(() => gateway.status())).driver === 'mock') {
+    await asAdmin(() => gateway.connect({ mode: 'TEST', keyId: 'rzp_test_DemoSchool01', keySecret: 'demo-sandbox-secret' }));
+    await asAdmin(() => gateway.sendTestWebhook('TEST'));
+    await asAdmin(() => gateway.activate('TEST', true));
+  }
+  return [`fees (${structures.length} structures, ${issued} invoices, ${paid} payments, ${late.invoices} late fees, sandbox gateway on)`];
 }
 
 await main();

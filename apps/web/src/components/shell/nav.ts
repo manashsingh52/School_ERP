@@ -41,8 +41,8 @@ export const NAV: NavItem[] = [
   { href: '/homework', label: 'Homework', icon: NotebookPen, any: ['homework.view'], scopes: STAFF, ready: true },
   { href: '/timetable', label: 'Timetable', icon: CalendarClock, any: ['timetable.view'], scopes: STAFF, ready: true },
   { href: '/exams', label: 'Examinations', icon: ClipboardList, any: ['exam.view', 'exam.manage'], scopes: STAFF, ready: true },
-  { href: '/fees', label: 'Fees', icon: IndianRupee, any: ['fee.manage', 'invoice.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },
-  { href: '/payments', label: 'Payments', icon: CreditCard, any: ['payment.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },
+  { href: '/fees', label: 'Fees', icon: IndianRupee, any: ['fee.manage', 'invoice.view'], scopes: ['ALL'], ready: true },
+  { href: '/payments', label: 'Payments', icon: CreditCard, any: ['payment.view', 'payment.collect'], scopes: ['ALL'], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: ['notice.view', 'notice.create'], scopes: STAFF, ready: true },
   { href: '/documents', label: 'Documents', icon: FileText, any: ['document.view'], scopes: STAFF, ready: false, phase: 'Phase 6' },
   { href: '/reports', label: 'Reports', icon: BarChart3, any: ['report.academic', 'report.finance'], scopes: STAFF, ready: false, phase: 'Phase 6' },
@@ -55,6 +55,7 @@ export const PARENT_NAV: NavItem[] = [
   { href: '/my/homework', label: 'Homework', icon: NotebookPen, any: [], ready: true },
   { href: '/my/timetable', label: 'Timetable', icon: CalendarClock, any: [], ready: true },
   { href: '/my/results', label: 'Results', icon: ClipboardList, any: [], ready: true },
+  { href: '/my/fees', label: 'Fees', icon: IndianRupee, any: [], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: [], ready: true },
 ];
 
