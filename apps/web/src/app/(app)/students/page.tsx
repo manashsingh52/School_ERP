@@ -19,11 +19,14 @@ import {
   TableSkeleton,
 } from '@schoolos/ui';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { Search, Users, X } from 'lucide-react';
+import { ArrowUpRight, Plus, Search, Upload, Users, X } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { ApiError, apiFetch } from '@/lib/api-client';
+import { PeopleTabs } from '@/components/people-tabs';
 import { classSection, formatNumber, fullName } from '@/lib/format';
+import { useMe } from '@/lib/me';
 
 const PAGE_SIZE = 25;
 
@@ -37,6 +40,7 @@ export default function StudentsPage() {
 
 function Students() {
   const router = useRouter();
+  const { can } = useMe();
   const pathname = usePathname();
   const params = useSearchParams();
   const page = Math.max(1, Number(params.get('page') ?? 1) || 1);
@@ -77,7 +81,15 @@ function Students() {
       <PageHeader
         title="Students"
         description={total === undefined ? 'Loading…' : `${formatNumber(total)} ${q ? 'matching' : 'active'} students in this academic year`}
+        actions={
+          <>
+            {can('student.promote') && <Button variant="ghost" asChild><Link href="/students/promotion"><ArrowUpRight /> Promote</Link></Button>}
+            {can('import.run') && <Button variant="secondary" asChild><Link href="/imports/new?entity=STUDENTS"><Upload /> Import</Link></Button>}
+            {can('student.create') && <Button asChild><Link href="/students/new"><Plus /> Add student</Link></Button>}
+          </>
+        }
       />
+      <PeopleTabs />
 
       <Card className="overflow-hidden">
         <div className="flex items-center gap-2 border-b border-border p-3">
@@ -115,7 +127,15 @@ function Students() {
             <EmptyState
               icon={<Users />}
               title="No students yet"
-              description="Students added to this school will appear here. Adding and importing from Excel arrives with the onboarding wizard."
+              description="Add students one by one or import your Excel sheet."
+              action={
+                can('student.create') && (
+                  <>
+                    <Button asChild><Link href="/students/new"><Plus /> Add student</Link></Button>
+                    {can('import.run') && <Button variant="secondary" asChild><Link href="/imports/new?entity=STUDENTS"><Upload /> Import</Link></Button>}
+                  </>
+                )
+              }
             />
           )
         ) : (

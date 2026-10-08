@@ -25,3 +25,4 @@ export {
   Toaster,
   toast,
 } from './components/overlays';
+export { Select, Textarea, Checkbox, Tabs, Stepper, DialogBody, DialogFooter } from './components/form-controls';

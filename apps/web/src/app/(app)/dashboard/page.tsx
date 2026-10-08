@@ -1,11 +1,12 @@
 'use client';
 
-import type { PageResponse, StudentListItem } from '@schoolos/contracts';
+import type { OnboardingState, PageResponse, StudentListItem } from '@schoolos/contracts';
 import { Avatar, Button, Card, CardHeader, EmptyState, Kbd, Skeleton } from '@schoolos/ui';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, CheckCircle2, Search, Users } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Rocket, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api-client';
+import { useData, useSchool } from '@/lib/hooks';
 import { classLabel, formatNumber, fullName, greeting, today } from '@/lib/format';
 import { useMe } from '@/lib/me';
 
@@ -27,6 +28,26 @@ export default function DashboardPage() {
   );
 }
 
+/** Shown until the school goes live (Master Prompt §22). */
+function SetupCard() {
+  const { can } = useMe();
+  const school = useSchool();
+  const enabled = can('school.settings.manage') && school.data?.status === 'ONBOARDING';
+  const state = useData<OnboardingState>(['onboarding'], '/onboarding', { enabled });
+  if (!enabled || !state.data) return null;
+  const done = state.data.checklist.filter((c) => c.done).length;
+  return (
+    <Card className="flex flex-wrap items-center gap-4 border-accent bg-accent-tint p-5">
+      <span className="flex size-10 items-center justify-center rounded-lg bg-surface text-accent-strong shadow-e1"><Rocket className="size-5" /></span>
+      <div className="min-w-0 flex-1">
+        <div className="font-medium">Finish setting up your school</div>
+        <div className="text-small text-fg-secondary">{done} of {state.data.checklist.length} done · step {state.data.step} of 10</div>
+      </div>
+      <Button asChild><Link href="/onboarding">Continue setup <ArrowRight /></Link></Button>
+    </Card>
+  );
+}
+
 function StaffHome() {
   const { can } = useMe();
   const students = useQuery({
@@ -37,6 +58,7 @@ function StaffHome() {
 
   return (
     <>
+      <SetupCard />
       <section aria-label="Key numbers" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {can('student.view') && (
           <Link href="/students" className="group rounded-lg border border-border bg-surface p-5 transition-colors hover:border-border-strong">

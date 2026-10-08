@@ -1,13 +1,13 @@
 'use client';
 
-import type { PageResponse, StudentListItem } from '@schoolos/contracts';
+import type { SearchResults } from '@schoolos/contracts';
 import { Avatar, CommandDialog, CommandEmpty, CommandGroup, CommandItem } from '@schoolos/ui';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, LogOut } from 'lucide-react';
+import { ArrowRight, GraduationCap, LogOut, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { apiFetch, apiPost } from '@/lib/api-client';
-import { classSection, fullName } from '@/lib/format';
+import { classSection } from '@/lib/format';
 import { useMe } from '@/lib/me';
 import { ALL_NAV, visibleNav } from './nav';
 
@@ -26,16 +26,15 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   const { can } = useMe();
   const [search, setSearch] = useState('');
   const q = useDebounced(search.trim(), 150);
-  const canSearchStudents = can('student.view');
 
   useEffect(() => {
     if (!open) setSearch('');
   }, [open]);
 
-  const students = useQuery({
-    queryKey: ['palette-students', q],
-    queryFn: () => apiFetch<PageResponse<StudentListItem>>(`/students?pageSize=5&q=${encodeURIComponent(q)}`),
-    enabled: open && canSearchStudents && q.length >= 2,
+  const results = useQuery({
+    queryKey: ['palette-search', q],
+    queryFn: () => apiFetch<{ data: SearchResults }>(`/search?q=${encodeURIComponent(q)}`).then((r) => r.data),
+    enabled: open && q.length >= 2,
     staleTime: 10_000,
   });
 
@@ -46,11 +45,18 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
 
   const needle = q.toLowerCase();
   const pages = visibleNav(can, ALL_NAV).filter((n) => !needle || n.label.toLowerCase().includes(needle));
-  const studentResults = q.length >= 2 ? (students.data?.data ?? []) : [];
+  const found = q.length >= 2 ? results.data : undefined;
+  const studentResults = found?.students ?? [];
+  const teacherResults = found?.teachers ?? [];
+  const guardianResults = found?.guardians ?? [];
   const showSignOut = !needle || 'sign out log out'.includes(needle);
 
   // Keep the first result highlighted as results arrive, so Enter always does something.
-  const values = [...studentResults.map((s) => `student-${s.id}`), ...pages.map((p) => `nav-${p.href}`), ...(showSignOut ? ['sign-out'] : [])];
+  const values = [
+    ...studentResults.map((s) => `student-${s.id}`),
+    ...teacherResults.map((t) => `teacher-${t.id}`),
+    ...guardianResults.map((g) => `guardian-${g.id}`),
+    ...pages.map((p) => `nav-${p.href}`), ...(showSignOut ? ['sign-out'] : [])];
   const [selected, setSelected] = useState('');
   const valuesKey = values.join('|');
   useEffect(() => {
@@ -64,7 +70,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       onOpenChange={onOpenChange}
       search={search}
       onSearchChange={setSearch}
-      loading={students.isFetching}
+      loading={results.isFetching}
       selected={selected}
       onSelectedChange={setSelected}
     >
@@ -75,11 +81,33 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
               key={s.id}
               value={`student-${s.id}`}
               onSelect={() => go(`/students/${s.id}`)}
-              icon={<Avatar name={fullName(s.firstName, s.lastName)} size={22} />}
+              icon={<Avatar name={s.name} size={22} />}
               hint={<span className="tabular">{classSection(s.className, s.sectionName)}</span>}
             >
-              {fullName(s.firstName, s.lastName)}
+              {s.name}
               <span className="ml-2 font-mono text-small text-fg-tertiary">{s.admissionNo}</span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      )}
+
+      {teacherResults.length > 0 && (
+        <CommandGroup heading="Teachers">
+          {teacherResults.map((t) => (
+            <CommandItem key={t.id} value={`teacher-${t.id}`} onSelect={() => go(`/teachers/${t.id}`)} icon={<GraduationCap />} hint={t.department ?? undefined}>
+              {t.name}
+              <span className="ml-2 font-mono text-small text-fg-tertiary">{t.employeeId}</span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      )}
+
+      {guardianResults.length > 0 && (
+        <CommandGroup heading="Parents">
+          {guardianResults.map((g) => (
+            <CommandItem key={g.id} value={`guardian-${g.id}`} onSelect={() => go(`/guardians/${g.id}`)} icon={<UserRound />} hint={`${g.childCount} ${g.childCount === 1 ? 'child' : 'children'}`}>
+              {g.name}
+              {g.phone && <span className="ml-2 text-small text-fg-tertiary">{g.phone}</span>}
             </CommandItem>
           ))}
         </CommandGroup>
@@ -120,7 +148,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       )}
 
       <CommandEmpty>
-        {q.length >= 2 && students.isFetching ? 'Searching…' : `No matches for “${search}”. Try a name or admission number.`}
+        {q.length >= 2 && results.isFetching ? 'Searching…' : `No matches for “${search}”. Try a name, admission number or phone.`}
       </CommandEmpty>
     </CommandDialog>
   );

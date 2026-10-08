@@ -35,8 +35,8 @@ const STAFF: PermissionScope[] = ['ALL', 'ASSIGNED', 'SELF'];
 export const NAV: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, any: ['dashboard.view'], scopes: ['ALL'], ready: true },
   { href: '/students', label: 'Students', icon: Users, any: ['student.view'], scopes: STAFF, ready: true },
-  { href: '/teachers', label: 'Teachers', icon: GraduationCap, any: ['teacher.view'], scopes: STAFF, ready: false, phase: 'Phase 2' },
-  { href: '/academics', label: 'Academics', icon: BookOpen, any: ['academic.view'], scopes: STAFF, ready: false, phase: 'Phase 2' },
+  { href: '/teachers', label: 'Teachers', icon: GraduationCap, any: ['teacher.view'], scopes: STAFF, ready: true },
+  { href: '/academics', label: 'Academics', icon: BookOpen, any: ['academic.view'], scopes: STAFF, ready: true },
   { href: '/attendance', label: 'Attendance', icon: CalendarCheck, any: ['attendance.view'], scopes: STAFF, ready: false, phase: 'Phase 3' },
   { href: '/homework', label: 'Homework', icon: NotebookPen, any: ['homework.view'], scopes: STAFF, ready: false, phase: 'Phase 3' },
   { href: '/timetable', label: 'Timetable', icon: CalendarClock, any: ['timetable.view'], scopes: STAFF, ready: false, phase: 'Phase 3' },
@@ -54,8 +54,7 @@ export const SETTINGS_NAV: NavItem = {
   icon: Settings,
   any: ['school.settings.view'],
   scopes: STAFF,
-  ready: false,
-  phase: 'Phase 6',
+  ready: true,
 };
 
 export const ALL_NAV = [...NAV, SETTINGS_NAV];
