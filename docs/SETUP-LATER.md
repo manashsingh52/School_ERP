@@ -21,6 +21,7 @@ Search the code for `⏸` to find every slot.
 | 12 | **Firebase project + Apple Developer account** | Push notifications, iOS app (Phase 7) | `PUSH_PROVIDER=fcm` + service account (slot in `channel-gateway.ts`) | `PUSH_PROVIDER=console` logs pushes; deliveries recorded as skipped |
 | 13 | **Legal review** — DPA, privacy policy, DPDP Act | Before the first real school goes live | docs/09 §7 | — |
 | 14 | **Product name** | Branding | Replace "SchoolOS" / `schoolos.in` | Placeholder |
+| 15 | **DNS for `admin.<domain>`** (super-admin console), ideally behind Cloudflare Access / an IP allow-list | Platform console in staging/prod | Same `APP_BASE_DOMAIN`; the console is served by the web app on the `admin` subdomain | `http://admin.localhost:3000` (seed: `superadmin@schoolos.local`, `support@schoolos.local`) |
 
 ## Secrets that must be **regenerated** for staging/production
 

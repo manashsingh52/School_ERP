@@ -122,6 +122,26 @@ Known follow-ups (small): duplicate-receipt marking on reprints, settlement (pay
 
 **Pilot point reached** (docs/12): a school can run fees, attendance, homework, exams and parent communication on the web while the mobile apps are built. **Next: Phase 6 (platform)** — super-admin, plans/subscriptions, documents, reports engine.
 
+### 2026-10-08: Phase 6 — platform ✅ (382 API tests)
+
+**Milestone M6 (API proven by tests; console walkthrough in the browser still to do):** a super admin onboards a school (admin invited, trial started), sets its plan, limits and features, suspends/reactivates it, and gets support access only with the school's approval — all from `admin.localhost`, with every action audited.
+
+- [x] Platform console at `admin.<domain>` (platform accounts only, password sign-in; school hosts never serve `/platform`): overview, schools (onboard, status, subscription, per-school feature overrides, usage), plans, feature flags (kill switch > override > plan > default), user lookup, support access, system (queues, dead-letter retry, outbox, webhooks, DB), cross-school audit
+- [x] `@RequirePlatform` access rule (SUPER_ADMIN / SUPPORT), contract-checked like every route
+- [x] Entitlements: student, storage and monthly SMS limits enforced (`PLAN_LIMIT_*`), per-school overrides, usage counters; a school with no subscription is never locked out
+- [x] Support access: request with reason → school admin approves in Settings → time-boxed read-only membership (no contact details) → ends on revoke or expiry (delayed job + 15-min sweep); audited on both sides
+- [x] Documents for students, guardians, teachers and the school; categories; "share with parents"; scope-aware; signed downloads; parent "Documents" page
+- [x] Report engine: one table shape for 12 reports (students, attendance, exams, the 6 finance reports), on-screen preview, background PDF/Excel/CSV exports run **as the requester** (scopes re-checked), export history; spreadsheet formula injection neutralised
+- [x] Audit viewers: school (Settings → Audit log, student Activity tab) and platform
+- [x] Import v2: classes + sections, subjects + classes taught, students' optional fees; rows to fix as Excel
+- [x] Settings sections: general (principal, affiliation, working days), fees (reminder schedule, receipt note), examinations (report card note, attendance), branding (signature image, logo on receipts), plan & usage, support access — reminders, receipts and report cards follow them
+- [x] Dark mode: match device / light / dark, from a cookie (no flash)
+- [x] Demo seed: Basic / Professional / Enterprise plans, 4 flags, demo school on Professional, `support@schoolos.local`
+
+Known follow-ups (small): online subscription billing (V1.1), staff documents for non-teaching staff, AI-call metering once Phase 8 exists, saved/scheduled reports.
+
+**Next: Phase 7 (mobile apps).**
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |
