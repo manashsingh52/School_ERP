@@ -30,13 +30,54 @@ export class MeController {
       this.platform.platformAdmin.findUnique({ where: { userId: ctx.userId } }),
     ]);
     const current = memberships.find((m) => m.membershipId === ctx.membershipId);
+    const profile = current ? await this.profile(current.membershipId) : null;
     return {
       data: {
         user,
-        membership: current ? { ...current, permissions: ctx.permissions ?? {} } : null,
+        membership: current && profile ? { ...current, permissions: ctx.permissions ?? {}, ...profile } : null,
         memberships,
         platformRole: platformAdmin?.role ?? null,
       },
+    };
+  }
+
+  /** Teacher record and children of this membership (platform client: scoped by membership id). */
+  private async profile(membershipId: string) {
+    const [teacher, guardian] = await Promise.all([
+      this.platform.teacher.findUnique({ where: { membershipId }, select: { id: true } }),
+      this.platform.guardian.findUnique({
+        where: { membershipId },
+        select: {
+          school: { select: { currentAcademicYearId: true } },
+          children: {
+            orderBy: { student: { firstName: 'asc' } },
+            select: {
+              student: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  status: true,
+                  enrollments: { select: { academicYearId: true, section: { select: { name: true, class: { select: { name: true } } } } } },
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+    const yearId = guardian?.school.currentAcademicYearId;
+    return {
+      teacherId: teacher?.id ?? null,
+      children: (guardian?.children ?? []).map(({ student: s }) => {
+        const e = s.enrollments.find((x) => x.academicYearId === yearId);
+        return {
+          id: s.id,
+          firstName: s.firstName,
+          name: [s.firstName, s.lastName].filter(Boolean).join(' '),
+          classLabel: e ? `${e.section.class.name.replace(/^Class\s+/i, '')}-${e.section.name}` : null,
+        };
+      }),
     };
   }
 

@@ -98,7 +98,15 @@ export interface OtpSendResponse {
 
 export interface MeResponse {
   user: { id: string; name: string; phone: string | null; email: string | null };
-  membership: (MembershipSummary & { permissions: Partial<Record<Permission, PermissionScope>> }) | null;
+  membership:
+    | (MembershipSummary & {
+        permissions: Partial<Record<Permission, PermissionScope>>;
+        /** Set when this member is a teacher (for "my timetable", "my classes"). */
+        teacherId: string | null;
+        /** Set for parents: their children in this school (child switcher). */
+        children: { id: string; name: string; firstName: string; classLabel: string | null }[];
+      })
+    | null;
   memberships: MembershipSummary[];
   platformRole: 'SUPER_ADMIN' | 'SUPPORT' | null;
 }

@@ -27,6 +27,15 @@ const P = (name: string) => periods.find((p) => p.name === name)!.id;
 // today() is asked for a fixed Monday so the test doesn't depend on the current weekday.
 const MONDAY = '2026-10-05';
 
+describe('/me profile', () => {
+  it('tells teachers their teacher id and parents their children', async () => {
+    const teacher = await t.as(tok.teacher, A.slug).get('/v1/me');
+    expect(teacher.body.data.membership).toMatchObject({ teacherId: A.teacherId, children: [] });
+    const parent = await t.as(tok.parent, A.slug).get('/v1/me');
+    expect(parent.body.data.membership).toMatchObject({ teacherId: null, children: [{ id: A.students.s1, firstName: 'Student1', classLabel: '8-A' }] });
+  });
+});
+
 describe('bell schedules', () => {
   it('validates periods and lists schedules with usage', async () => {
     const bad = await t.as(tok.admin, A.slug).post('/v1/bell-schedules', {
