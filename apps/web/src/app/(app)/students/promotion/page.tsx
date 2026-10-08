@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import type { PromotionPlan, PromotionResult } from '@schoolos/contracts';
 import { Button, Card, EmptyState, Field, PageHeader, Select, Skeleton, Stepper, TD, TH, THead, TR, Table, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,7 +17,7 @@ const GRADUATE = 'graduate';
  * Year-end promotion (docs/02 D4). Last year's records are kept; students get a new enrollment in
  * the next year. Safe to run again — students already moved are skipped.
  */
-export default function PromotionPage() {
+function PromotionPageContent() {
   const years = useYears();
   const qc = useQueryClient();
   const [fromId, setFromId] = useState('');
@@ -142,5 +143,13 @@ export default function PromotionPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+export default function PromotionPage() {
+  return (
+    <Gate any={['student.promote']}>
+      <PromotionPageContent />
+    </Gate>
   );
 }

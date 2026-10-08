@@ -41,7 +41,7 @@ export function ClassesTab({ canManage }: { canManage: boolean }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-body text-fg-secondary">
-          {year ? <>Sections for <span className="font-medium text-fg">{year.name}</span>. Classes stay the same every year.</> : 'Create an academic year to add sections.'}
+          {school.isPending ? '\u00a0' : year ? <>Sections for <span className="font-medium text-fg">{year.name}</span>. Classes stay the same every year.</> : 'Create an academic year to add sections.'}
         </p>
         {canManage && (
           <div className="flex gap-2">

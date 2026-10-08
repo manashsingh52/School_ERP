@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import { PageHeader, Tabs } from '@schoolos/ui';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -11,7 +12,7 @@ import { YearsTab } from './years-tab';
 
 type Tab = 'classes' | 'subjects' | 'assignments' | 'years';
 
-export default function AcademicsPage() {
+function AcademicsPageContent() {
   return (
     <Suspense>
       <Academics />
@@ -45,5 +46,13 @@ function Academics() {
       {tab === 'assignments' && <AssignmentsTab canManage={canManage} />}
       {tab === 'years' && <YearsTab canManage={canManage} />}
     </div>
+  );
+}
+
+export default function AcademicsPage() {
+  return (
+    <Gate any={['academic.view']} scopes={['ALL', 'ASSIGNED']}>
+      <AcademicsPageContent />
+    </Gate>
   );
 }

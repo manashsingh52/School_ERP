@@ -30,8 +30,15 @@ export function StudentForm({
   const sections = (classes.data ?? []).flatMap((c) => c.sections.map((s) => ({ id: s.id, label: sectionLabel(c.name, s.name), count: s.studentCount })));
   const editing = !!student;
 
+  const baseResolver = editing ? contractResolver(updateStudentSchema) : contractResolver(createStudentSchema);
   const form = useForm<CreateValues>({
-    resolver: (editing ? contractResolver(updateStudentSchema) : contractResolver(createStudentSchema)) as never,
+    // A parent row left completely blank is ignored rather than reported as missing.
+    resolver: ((values: CreateValues, ctx: unknown, opts: unknown) =>
+      (baseResolver as (v: unknown, c: unknown, o: unknown) => unknown)(
+        { ...values, guardians: values.guardians?.filter((g) => g.name?.trim() || g.phone?.trim()) },
+        ctx,
+        opts,
+      )) as never,
     defaultValues: student
       ? {
           admissionNo: student.admissionNo,

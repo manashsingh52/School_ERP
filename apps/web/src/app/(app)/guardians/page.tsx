@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import type { GuardianItem, PageResponse } from '@schoolos/contracts';
 import { Avatar, Badge, Card, EmptyState, ErrorState, Input, PageHeader, Pagination, TD, TH, THead, TR, Table, TableSkeleton } from '@schoolos/ui';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
@@ -11,7 +12,7 @@ import { ApiError, apiFetch } from '@/lib/api-client';
 import { classSection, formatNumber } from '@/lib/format';
 import { LOGIN_BADGE, RELATION_LABEL } from '@/lib/labels';
 
-export default function GuardiansPage() {
+function GuardiansPageContent() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
@@ -75,5 +76,13 @@ export default function GuardiansPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function GuardiansPage() {
+  return (
+    <Gate any={['guardian.view']} scopes={['ALL', 'ASSIGNED']}>
+      <GuardiansPageContent />
+    </Gate>
   );
 }

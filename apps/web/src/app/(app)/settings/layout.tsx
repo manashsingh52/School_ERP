@@ -5,6 +5,7 @@ import { PageHeader, cn } from '@schoolos/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { Gate } from '@/components/gate';
 import { useMe } from '@/lib/me';
 
 const SECTIONS: { href: string; label: string; any: Permission[] }[] = [
@@ -38,7 +39,9 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="min-w-0 flex-1">{children}</div>
+        <div className="min-w-0 flex-1">
+          <Gate any={['school.settings.view', 'user.view', 'school.branding.manage']}>{children}</Gate>
+        </div>
       </div>
     </div>
   );

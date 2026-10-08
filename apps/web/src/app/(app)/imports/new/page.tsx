@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import type { ImportEntity, ImportJobItem } from '@schoolos/contracts';
 import { Button, Card, PageHeader, Spinner, Stepper, cn, toast } from '@schoolos/ui';
 import { Download, FileSpreadsheet, GraduationCap, Upload, Users } from 'lucide-react';
@@ -8,7 +9,7 @@ import { Suspense, useRef, useState, type DragEvent } from 'react';
 import { ApiError, apiPost } from '@/lib/api-client';
 import { uploadFile } from '@/lib/hooks';
 
-export default function NewImportPage() {
+function NewImportPageContent() {
   return (
     <Suspense>
       <NewImport />
@@ -111,5 +112,13 @@ function NewImport() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function NewImportPage() {
+  return (
+    <Gate any={['import.run']}>
+      <NewImportPageContent />
+    </Gate>
   );
 }

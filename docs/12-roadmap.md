@@ -47,6 +47,23 @@ Built and verified (70 automated tests passing; checked in the browser at deskto
 
 Phase 1 is complete apart from items that need your accounts (see SETUP-LATER.md). **Next: Phase 2 (core school).**
 
+### 2026-10-08: Phase 2 complete — core school ✅ (177 tests)
+
+API and web, both tested end to end (tests + browser):
+
+- [x] Academic years (create, make current, close), classes, per-year sections with class teacher, subjects, class × subject grid, teaching assignments (they widen a teacher's ASSIGNED scope instantly)
+- [x] Teachers (invite to sign in, profile, photo, "left" ends access); parents (one per phone, many children, primary contact, link/unlink, invite); full student records (parents inline with sibling reuse, photo, address, emergency contact)
+- [x] Users (invite, roles, suspend) and a roles editor with per-permission scope, confirmation before broadening student access, and a lockout guard (permission-based)
+- [x] Excel/CSV import for students and teachers: auto column matching, every row checked with plain reasons, duplicates flagged, background commit, rows-to-fix CSV, Excel templates
+- [x] School profile and branding (live colour preview, logo on sign-in page), 10-step onboarding wizard + dashboard prompt, go-live checklist
+- [x] Year-end promotion (promote / graduate / detain; history kept; safe to re-run)
+- [x] ⌘K search across students, teachers and parents; page-level "no access" gates
+- [x] Demo data: 40 teachers, class teachers for all 30 sections, subjects for every class, subject teachers for Classes 6–12 (seed top-up is idempotent)
+
+Known follow-ups (small): detaining individual students in the promotion wizard (API supports it), per-class subject editing UI beyond the grid, parent web view (Phase 3).
+
+**Next: Phase 3 (daily operations)** — attendance, homework, timetable, notices, notification engine, parent web view.
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

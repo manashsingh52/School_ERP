@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import type { StudentDetail } from '@schoolos/contracts';
 import { Card, EmptyState, PageHeader, Button, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -11,7 +12,7 @@ import { useClasses } from '@/lib/academics';
 import { apiFetch, idempotencyKey } from '@/lib/api-client';
 import { StudentForm } from '../student-form';
 
-export default function NewStudentPage() {
+function NewStudentPageContent() {
   const router = useRouter();
   const qc = useQueryClient();
   const classes = useClasses();
@@ -52,5 +53,13 @@ export default function NewStudentPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function NewStudentPage() {
+  return (
+    <Gate any={['student.create']}>
+      <NewStudentPageContent />
+    </Gate>
   );
 }

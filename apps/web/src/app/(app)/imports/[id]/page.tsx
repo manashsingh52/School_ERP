@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import { IMPORT_FIELDS, type ImportJobItem, type ImportRowItem, type PageResponse } from '@schoolos/contracts';
 import {
   Badge,
@@ -33,7 +34,7 @@ import { useAction } from '@/lib/hooks';
 
 type RowStatus = 'VALID' | 'INVALID' | 'DUPLICATE' | 'IMPORTED';
 
-export default function ImportPage({ params }: { params: Promise<{ id: string }> }) {
+function ImportPageContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const job = useQuery({
     queryKey: ['import', id],
@@ -268,5 +269,13 @@ function ResultStep({ job }: { job: ImportJobItem }) {
       </div>
       {stats?.failed ? <Badge tone="danger">{stats.failed} rows failed during import — see the CSV</Badge> : null}
     </Card>
+  );
+}
+
+export default function ImportPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Gate any={['import.run']}>
+      <ImportPageContent params={params} />
+    </Gate>
   );
 }

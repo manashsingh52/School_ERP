@@ -69,7 +69,8 @@ export const identifierSchema = z
   });
 export type Identifier = z.output<typeof identifierSchema>;
 
-export const uuidSchema = z.uuid({ message: 'Invalid id' });
+/** Ids from pickers: empty → "Choose one" (shown under the field), malformed → "Invalid id". */
+export const uuidSchema = z.uuid({ error: (issue) => (issue.input === undefined ? 'Choose one' : 'Invalid id') });
 
 export const pageQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

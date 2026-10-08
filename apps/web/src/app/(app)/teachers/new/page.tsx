@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import type { TeacherDetail } from '@schoolos/contracts';
 import { Card, PageHeader, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,7 +11,7 @@ import { useState } from 'react';
 import { apiFetch, idempotencyKey } from '@/lib/api-client';
 import { TeacherForm } from '../teacher-form';
 
-export default function NewTeacherPage() {
+function NewTeacherPageContent() {
   const router = useRouter();
   const qc = useQueryClient();
   // One key per attempt: a double-click can't create two teachers; after an error the corrected form gets a new key.
@@ -40,5 +41,13 @@ export default function NewTeacherPage() {
         />
       </Card>
     </div>
+  );
+}
+
+export default function NewTeacherPage() {
+  return (
+    <Gate any={['teacher.manage']}>
+      <NewTeacherPageContent />
+    </Gate>
   );
 }

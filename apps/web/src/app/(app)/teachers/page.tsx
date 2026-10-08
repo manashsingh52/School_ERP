@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import type { PageResponse, TeacherListItem } from '@schoolos/contracts';
 import {
   Avatar,
@@ -28,7 +29,7 @@ import { formatNumber, fullName } from '@/lib/format';
 import { LOGIN_BADGE } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 
-export default function TeachersPage() {
+function TeachersPageContent() {
   const router = useRouter();
   const { can } = useMe();
   const [search, setSearch] = useState('');
@@ -127,5 +128,13 @@ export default function TeachersPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function TeachersPage() {
+  return (
+    <Gate any={['teacher.view']} scopes={['ALL', 'ASSIGNED']}>
+      <TeachersPageContent />
+    </Gate>
   );
 }

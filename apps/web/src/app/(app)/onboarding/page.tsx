@@ -1,5 +1,6 @@
 'use client';
 
+import { Gate } from '@/components/gate';
 import { BOARDS, ONBOARDING_STEPS, type OnboardingState, type SchoolProfile } from '@schoolos/contracts';
 import { Button, Card, Checkbox, EmptyState, Field, Input, Select, Skeleton, Stepper, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -18,7 +19,7 @@ const SUBJECT_PRESETS = [
 ] as const;
 
 /** Guided setup (Master Prompt §22, docs/08 W9). Every step saves as you go; you can come back any time. */
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const state = useData<OnboardingState>(['onboarding'], '/onboarding');
   const school = useSchool();
   const qc = useQueryClient();
@@ -330,5 +331,13 @@ function GoLiveStep({ state }: { state: OnboardingState }) {
         )}
       </div>
     </>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Gate any={['school.settings.manage']}>
+      <OnboardingPageContent />
+    </Gate>
   );
 }

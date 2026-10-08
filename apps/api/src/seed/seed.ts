@@ -44,8 +44,10 @@ async function main() {
   const schools = app.get(SchoolsService);
   const passwords = app.get(PasswordService);
 
-  if (await db.school.findUnique({ where: { slug: 'demo' } })) {
-    console.log('Demo school already exists — nothing to do.');
+  const existing = await db.school.findUnique({ where: { slug: 'demo' } });
+  if (existing) {
+    const added = await topUp(db, existing.id);
+    console.log(added ? `Demo school topped up: ${added}.` : 'Demo school is complete — nothing to do.');
     await app.close();
     return;
   }
@@ -136,9 +138,92 @@ async function main() {
     data: [rahul, ananya].map((s) => ({ schoolId, studentId: s.id, guardianId: guardian.id, relation: 'FATHER' as const, isPrimary: true })),
   });
 
+  const added = await topUp(db, schoolId);
+  console.log(`Added: ${added}`);
   console.log(`Seeded "Demo Public School": ${CLASSES.length} classes, ${sectionIds.size} sections, ${students.length} students, 5 staff/parent logins + super admin.`);
   console.log('Open http://demo.localhost:3000 — logins are listed at the top of src/seed/seed.ts (password = SEED_PASSWORD).');
   await app.close();
+}
+
+
+const TEACHER_FIRST = ['Anil', 'Bhavna', 'Chetan', 'Deepa', 'Farhan', 'Gauri', 'Harish', 'Indu', 'Jatin', 'Kiran', 'Lata', 'Manoj', 'Nandini',
+  'Om', 'Pallavi', 'Qasim', 'Rekha', 'Sanjay', 'Tara', 'Uday', 'Vandana', 'Waseem', 'Yamini', 'Zubin', 'Asha', 'Bharat', 'Charu', 'Dinesh',
+  'Esha', 'Gopal', 'Hema', 'Imran', 'Jaya', 'Kunal', 'Leela', 'Mohan', 'Neeta', 'Prakash', 'Ritu'];
+const TEACHER_LAST = ['Bhatt', 'Chauhan', 'Deshpande', 'Fernandes', 'Ghosh', 'Hegde', 'Jain', 'Kapoor', 'Lal', 'Mishra', 'Naidu', 'Oberoi', 'Pandey'];
+const DEPARTMENTS = ['English', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'Computer'];
+
+/**
+ * Phase 2 demo data, idempotent: 40 teachers, a class teacher for every section, subjects for every
+ * class, and subject teachers for Classes 6–12. Safe to run on an existing demo school.
+ */
+async function topUp(db: PlatformPrismaService, schoolId: string): Promise<string> {
+  const notes: string[] = [];
+  const school = await db.school.findUniqueOrThrow({ where: { id: schoolId } });
+  const yearId = school.currentAcademicYearId!;
+
+  const teacherCount = await db.teacher.count({ where: { schoolId } });
+  if (teacherCount < 40) {
+    const rows = Array.from({ length: 40 - teacherCount }, (_, i) => {
+      const n = teacherCount + i + 1;
+      return {
+        schoolId,
+        employeeId: `EMP-${String(n).padStart(3, '0')}`,
+        firstName: TEACHER_FIRST[(n * 7) % TEACHER_FIRST.length]!,
+        lastName: TEACHER_LAST[(n * 5) % TEACHER_LAST.length]!,
+        phone: `+9190000${String(10000 + n).slice(-5)}`,
+        department: DEPARTMENTS[n % DEPARTMENTS.length]!,
+        designation: n % 3 === 0 ? 'PGT' : n % 3 === 1 ? 'TGT' : 'PRT',
+        joiningDate: date(`${2012 + (n % 12)}-06-01`),
+        gender: (n % 2 ? 'FEMALE' : 'MALE') as 'FEMALE' | 'MALE',
+      };
+    }).filter((r) => r.employeeId !== 'EMP-001');
+    await db.teacher.createMany({ data: rows, skipDuplicates: true });
+    notes.push(`${rows.length} teachers`);
+  }
+
+  const teachers = await db.teacher.findMany({ where: { schoolId }, orderBy: { employeeId: 'asc' } });
+  const sections = await db.section.findMany({ where: { schoolId, academicYearId: yearId }, include: { class: true }, orderBy: [{ class: { displayOrder: 'asc' } }, { name: 'asc' }] });
+
+  // Class teachers: one per section, never the same teacher twice.
+  const busy = new Set(sections.map((s) => s.classTeacherId).filter(Boolean));
+  const free = teachers.filter((t) => !busy.has(t.id));
+  let assignedClassTeachers = 0;
+  for (const s of sections) {
+    if (s.classTeacherId) continue;
+    const t = free.shift();
+    if (!t) break;
+    await db.section.update({ where: { id: s.id }, data: { classTeacherId: t.id } });
+    assignedClassTeachers++;
+  }
+  if (assignedClassTeachers) notes.push(`${assignedClassTeachers} class teachers`);
+
+  // Subjects for every class this year
+  const subjects = await db.subject.findMany({ where: { schoolId } });
+  if ((await db.classSubject.count({ where: { schoolId, academicYearId: yearId } })) === 0) {
+    const classes = await db.schoolClass.findMany({ where: { schoolId } });
+    await db.classSubject.createMany({
+      data: classes.flatMap((c) => subjects.map((s) => ({ schoolId, academicYearId: yearId, classId: c.id, subjectId: s.id }))),
+    });
+    notes.push('subjects for every class');
+  }
+
+  // Subject teachers for Classes 6–12, by department
+  if ((await db.teachingAssignment.count({ where: { schoolId, academicYearId: yearId } })) <= 1) {
+    const senior = sections.filter((s) => s.class.displayOrder >= 9); // Class 6+
+    const byDept = (dept: string) => teachers.filter((t) => t.department === dept);
+    const rows: { schoolId: string; academicYearId: string; sectionId: string; subjectId: string; teacherId: string }[] = [];
+    for (const [i, s] of senior.entries()) {
+      for (const subject of subjects) {
+        const dept = DEPARTMENTS.find((d) => d.toLowerCase().startsWith(subject.name.toLowerCase().slice(0, 4))) ?? subject.name;
+        const pool = byDept(dept);
+        const teacher = pool[i % Math.max(pool.length, 1)];
+        if (teacher) rows.push({ schoolId, academicYearId: yearId, sectionId: s.id, subjectId: subject.id, teacherId: teacher.id });
+      }
+    }
+    await db.teachingAssignment.createMany({ data: rows, skipDuplicates: true });
+    notes.push(`${rows.length} subject assignments`);
+  }
+  return notes.join(', ');
 }
 
 await main();
