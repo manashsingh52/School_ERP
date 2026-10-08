@@ -83,6 +83,24 @@ Known follow-ups (small): homework submissions/review by students (schema is rea
 
 **Next: Phase 4 (exams)** — exam setup, marks entry, grading, report cards.
 
+### 2026-10-08: Phase 4 complete — exams ✅ (294 tests)
+
+**Milestone M4 met:** a branded report card PDF for a whole class is generated in one click (25 cards in ~3 s with Chromium; "Download all" merges them into one printable PDF).
+
+- [x] Grading scales with presets (CBSE 9-point, A–E, percentage only); a scale can't change once results are published with it
+- [x] Exams: draft → date sheet published → marks entry → results published (archived instead of deleted once marks exist); class × subject grid with max/pass marks, dates and times, "copy to other classes"
+- [x] Marks entry sheet: subject teacher (or class teacher where no subject teacher), Enter/↓ to move, A = absent, E = exempt, inline validation, 409 on stale sheets, audited corrections, lock/unlock, progress per teacher
+- [x] Results: compute → preview → publish; totals, %, grade, pass/fail (absent fails the subject, exempt is left out), INCOMPLETE blocks publishing, competition ranks per section and class, attendance %, teacher/principal remarks, withhold one result, unpublish or forced (audited) recompute; parents notified
+- [x] Report cards: Chromium HTML→PDF in the worker (`documents` queue), versioned files, merged section PDF, parent download after publishing
+- [x] Parent web view: date sheet and results per child, report card download
+- [x] Demo data: CBSE scale, "Unit Test 1" published for all 751 students, "Half-Yearly" in marks entry with Classes 8–9 still to fill
+
+PDFs use **puppeteer-core** with the machine's Chrome locally and the container's Chromium in production (`CHROMIUM_PATH`). `PDF_RENDERER=basic` gives plain-text PDFs for CI without a browser.
+
+Known follow-ups (small): co-scholastic areas and term-wise (multi-exam) consolidated report cards, custom report card layouts per school, marks import from Excel.
+
+**Next: Phase 5 (finance)** — fee structures, invoices, Razorpay online payments, counter collection, receipts.
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

@@ -40,7 +40,7 @@ export const NAV: NavItem[] = [
   { href: '/attendance', label: 'Attendance', icon: CalendarCheck, any: ['attendance.view', 'staff_attendance.manage'], scopes: STAFF, ready: true },
   { href: '/homework', label: 'Homework', icon: NotebookPen, any: ['homework.view'], scopes: STAFF, ready: true },
   { href: '/timetable', label: 'Timetable', icon: CalendarClock, any: ['timetable.view'], scopes: STAFF, ready: true },
-  { href: '/exams', label: 'Examinations', icon: ClipboardList, any: ['exam.view'], scopes: STAFF, ready: false, phase: 'Phase 4' },
+  { href: '/exams', label: 'Examinations', icon: ClipboardList, any: ['exam.view', 'exam.manage'], scopes: STAFF, ready: true },
   { href: '/fees', label: 'Fees', icon: IndianRupee, any: ['fee.manage', 'invoice.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },
   { href: '/payments', label: 'Payments', icon: CreditCard, any: ['payment.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: ['notice.view', 'notice.create'], scopes: STAFF, ready: true },
@@ -54,6 +54,7 @@ export const PARENT_NAV: NavItem[] = [
   { href: '/my/attendance', label: 'Attendance', icon: CalendarCheck, any: [], ready: true },
   { href: '/my/homework', label: 'Homework', icon: NotebookPen, any: [], ready: true },
   { href: '/my/timetable', label: 'Timetable', icon: CalendarClock, any: [], ready: true },
+  { href: '/my/results', label: 'Results', icon: ClipboardList, any: [], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: [], ready: true },
 ];
 

@@ -20,6 +20,11 @@ import { createLogger } from '../core/logger/logger.js';
 import { PasswordService } from '../core/auth/password.service.js';
 import { PlatformPrismaService } from '../core/prisma/prisma.service.js';
 import { SchoolsService } from '../modules/schools/schools.service.js';
+import { PERMISSION_KEYS, type PermissionSet } from '@schoolos/permissions';
+import type { INestApplicationContext } from '@nestjs/common';
+import { RequestContextStore } from '../core/context/request-context.js';
+import { ExamsService } from '../modules/exams/exams.service.js';
+import { ResultsService } from '../modules/exams/results.service.js';
 
 const FIRST = ['Aarav', 'Aditi', 'Arjun', 'Ananya', 'Diya', 'Ishaan', 'Kabir', 'Kavya', 'Meera', 'Neha', 'Nikhil',
   'Priya', 'Rahul', 'Riya', 'Rohan', 'Saanvi', 'Sahil', 'Sara', 'Tanvi', 'Vihaan', 'Vivaan', 'Yash', 'Zoya', 'Aisha', 'Dev'];
@@ -46,7 +51,7 @@ async function main() {
 
   const existing = await db.school.findUnique({ where: { slug: 'demo' } });
   if (existing) {
-    const added = await topUp(db, existing.id);
+    const added = await topUp(db, existing.id, app);
     console.log(added ? `Demo school topped up: ${added}.` : 'Demo school is complete — nothing to do.');
     await app.close();
     return;
@@ -138,7 +143,7 @@ async function main() {
     data: [rahul, ananya].map((s) => ({ schoolId, studentId: s.id, guardianId: guardian.id, relation: 'FATHER' as const, isPrimary: true })),
   });
 
-  const added = await topUp(db, schoolId);
+  const added = await topUp(db, schoolId, app);
   console.log(`Added: ${added}`);
   console.log(`Seeded "Demo Public School": ${CLASSES.length} classes, ${sectionIds.size} sections, ${students.length} students, 5 staff/parent logins + super admin.`);
   console.log('Open http://demo.localhost:3000 — logins are listed at the top of src/seed/seed.ts (password = SEED_PASSWORD).');
@@ -156,7 +161,7 @@ const DEPARTMENTS = ['English', 'Hindi', 'Mathematics', 'Science', 'Social Scien
  * Phase 2 demo data, idempotent: 40 teachers, a class teacher for every section, subjects for every
  * class, and subject teachers for Classes 6–12. Safe to run on an existing demo school.
  */
-async function topUp(db: PlatformPrismaService, schoolId: string): Promise<string> {
+async function topUp(db: PlatformPrismaService, schoolId: string, app: INestApplicationContext): Promise<string> {
   const notes: string[] = [];
   const school = await db.school.findUniqueOrThrow({ where: { id: schoolId } });
   const yearId = school.currentAcademicYearId!;
@@ -224,6 +229,7 @@ async function topUp(db: PlatformPrismaService, schoolId: string): Promise<strin
     notes.push(`${rows.length} subject assignments`);
   }
   notes.push(...(await dailyOps(db, schoolId, yearId)));
+  notes.push(...(await exams(db, app, schoolId, yearId)));
   return notes.filter(Boolean).join(', ');
 }
 
@@ -405,6 +411,60 @@ async function dailyOps(db: PlatformPrismaService, schoolId: string, yearId: str
     notes.push('3 notices');
   }
   return notes;
+}
+
+/**
+ * Phase 4 demo data, idempotent: CBSE 9-point scale; "Unit Test 1" with marks and published
+ * results (computed by the real ResultsService); "Half-Yearly" open for marks entry with a date
+ * sheet and some sheets still to fill.
+ */
+async function exams(db: PlatformPrismaService, app: INestApplicationContext, schoolId: string, yearId: string): Promise<string[]> {
+  if (await db.exam.count({ where: { schoolId } })) return [];
+  const random = rng(7);
+  const admin = await db.membership.findFirstOrThrow({ where: { schoolId, roles: { some: { role: { key: 'school_admin' } } } } });
+  const permissions = Object.fromEntries(PERMISSION_KEYS.map((k) => [k, 'ALL'])) as PermissionSet;
+  const asAdmin = <T>(fn: () => Promise<T>) =>
+    RequestContextStore.run({ requestId: `seed-${randomUUID()}`, schoolId, userId: admin.userId, membershipId: admin.id, permissions, actor: 'user' }, fn);
+
+  const scale = await asAdmin(() => app.get(ExamsService).createPreset('CBSE_9'));
+  const classSubjects = await db.classSubject.findMany({ where: { schoolId, academicYearId: yearId }, include: { subject: true, class: true }, orderBy: { subject: { name: 'asc' } } });
+  const enrollments = await db.studentEnrollment.findMany({ where: { schoolId, academicYearId: yearId, status: 'ENROLLED' }, select: { studentId: true, classId: true, sectionId: true } });
+  const ability = new Map(enrollments.map((e) => [e.studentId, 0.45 + random() * 0.5]));
+
+  const makeExam = async (name: string, term: string, start: string, end: string, max: number, pass: number, status: 'MARKS_ENTRY') => {
+    const exam = await db.exam.create({ data: { schoolId, academicYearId: yearId, gradingScaleId: scale.id, name, term, startDate: date(start), endDate: date(end), rankingEnabled: true, status } });
+    const days = Array.from({ length: 8 }, (_, i) => new Date(Date.parse(`${start}T00:00:00Z`) + i * 86_400_000)).filter((d) => d.getUTCDay() !== 0).map((d) => d.toISOString().slice(0, 10));
+    const byClass = new Map<string, typeof classSubjects>();
+    for (const cs of classSubjects) byClass.set(cs.classId, [...(byClass.get(cs.classId) ?? []), cs]);
+    const rows = [...byClass.values()].flatMap((list) =>
+      list.map((cs, i) => ({ schoolId, examId: exam.id, classId: cs.classId, subjectId: cs.subjectId, maxMarks: max, passMarks: pass, examDate: date(days[i % days.length]!), startTime: '09:00', endTime: max > 50 ? '12:00' : '10:00' })),
+    );
+    await db.examSubject.createMany({ data: rows });
+    return { exam, subjects: await db.examSubject.findMany({ where: { examId: exam.id }, include: { class: true } }) };
+  };
+  const fill = async (subjects: { id: string; classId: string; maxMarks: unknown }[], skip?: (classId: string) => boolean) => {
+    const data = [];
+    for (const es of subjects) {
+      if (skip?.(es.classId)) continue;
+      const max = Number(es.maxMarks);
+      for (const e of enrollments.filter((x) => x.classId === es.classId)) {
+        const absent = random() < 0.015;
+        const raw = ability.get(e.studentId)! * max + (random() - 0.5) * max * 0.25;
+        data.push({ schoolId, examSubjectId: es.id, studentId: e.studentId, marksObtained: absent ? null : Math.max(0, Math.min(max, Math.round(raw))), isAbsent: absent, enteredByMemberId: admin.id });
+      }
+    }
+    for (let i = 0; i < data.length; i += 2000) await db.mark.createMany({ data: data.slice(i, i + 2000) });
+    return data.length;
+  };
+
+  const ut = await makeExam('Unit Test 1', 'Term 1', '2026-07-14', '2026-07-21', 25, 9, 'MARKS_ENTRY');
+  const utMarks = await fill(ut.subjects);
+  await asAdmin(() => app.get(ResultsService).compute(ut.exam.id, false));
+  await asAdmin(() => app.get(ResultsService).publish(ut.exam.id));
+
+  const hy = await makeExam('Half-Yearly', 'Term 1', '2026-09-21', '2026-09-30', 80, 27, 'MARKS_ENTRY');
+  const hyMarks = await fill(hy.subjects, (classId) => ['Class 8', 'Class 9'].includes(hy.subjects.find((s) => s.classId === classId)!.class.name));
+  return [`exams (Unit Test 1 published, ${utMarks} + ${hyMarks} marks)`];
 }
 
 await main();

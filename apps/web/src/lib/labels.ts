@@ -38,3 +38,18 @@ export const NOTICE_TYPE: Record<'NOTICE' | 'CIRCULAR' | 'ANNOUNCEMENT' | 'EVENT
   ANNOUNCEMENT: 'Announcement',
   EVENT: 'Event',
 };
+
+export const EXAM_STATUS: Record<'DRAFT' | 'SCHEDULED' | 'MARKS_ENTRY' | 'RESULTS_PUBLISHED' | 'ARCHIVED', { label: string; tone: 'neutral' | 'info' | 'warning' | 'success' }> = {
+  DRAFT: { label: 'Draft', tone: 'neutral' },
+  SCHEDULED: { label: 'Scheduled', tone: 'info' },
+  MARKS_ENTRY: { label: 'Marks entry', tone: 'warning' },
+  RESULTS_PUBLISHED: { label: 'Results out', tone: 'success' },
+  ARCHIVED: { label: 'Archived', tone: 'neutral' },
+};
+
+export const RESULT_STATUS: Record<'PASS' | 'FAIL' | 'INCOMPLETE' | 'WITHHELD', { label: string; tone: 'success' | 'danger' | 'warning' | 'neutral' }> = {
+  PASS: { label: 'Pass', tone: 'success' },
+  FAIL: { label: 'Fail', tone: 'danger' },
+  INCOMPLETE: { label: 'Incomplete', tone: 'warning' },
+  WITHHELD: { label: 'Withheld', tone: 'neutral' },
+};
