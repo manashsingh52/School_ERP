@@ -17,8 +17,9 @@ const passwordSchema = z.object({
   password: z.string().min(1, 'Enter your password'),
 });
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({ next, passwordOnly = false }: { next: string; passwordOnly?: boolean }) {
   const [mode, setMode] = useState<Mode>('password');
+  if (passwordOnly) return <PasswordForm next={next} />;
   return (
     <div className="flex flex-col gap-5">
       {mode !== 'reset' && (
@@ -54,7 +55,7 @@ function useSignedIn(next: string) {
   };
 }
 
-function PasswordForm({ next, onForgot }: { next: string; onForgot: () => void }) {
+function PasswordForm({ next, onForgot }: { next: string; onForgot?: () => void }) {
   const done = useSignedIn(next);
   const [show, setShow] = useState(false);
   const [formError, setFormError] = useState<string>();
@@ -81,9 +82,11 @@ function PasswordForm({ next, onForgot }: { next: string; onForgot: () => void }
         htmlFor="password"
         error={errors.password?.message}
         action={
-          <button type="button" onClick={onForgot} className="text-small text-accent-strong hover:underline">
-            Forgot password?
-          </button>
+          onForgot && (
+            <button type="button" onClick={onForgot} className="text-small text-accent-strong hover:underline">
+              Forgot password?
+            </button>
+          )
         }
       >
         <div className="relative">

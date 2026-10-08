@@ -14,8 +14,13 @@ const SECTIONS: { href: string; label: string; any: Permission[] }[] = [
   { href: '/settings/users', label: 'Users', any: ['user.view'] },
   { href: '/settings/roles', label: 'Roles & permissions', any: ['user.view'] },
   { href: '/settings/attendance', label: 'Attendance', any: ['school.settings.view'] },
+  { href: '/settings/fees', label: 'Fees', any: ['school.settings.view'] },
+  { href: '/settings/examinations', label: 'Examinations', any: ['school.settings.view'] },
   { href: '/settings/notifications', label: 'Notifications', any: ['notification.settings.manage'] },
   { href: '/academics?tab=years', label: 'Academic years', any: ['academic.view'] },
+  { href: '/settings/billing', label: 'Plan & usage', any: ['billing.view'] },
+  { href: '/settings/support-access', label: 'Support access', any: ['user.manage'] },
+  { href: '/settings/audit', label: 'Audit log', any: ['audit.view'] },
 ];
 
 export default function SettingsLayout({ children }: { children: ReactNode }) {
@@ -42,7 +47,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="min-w-0 flex-1">
-          <Gate any={['school.settings.view', 'user.view', 'school.branding.manage', 'notification.settings.manage']}>{children}</Gate>
+          <Gate any={['school.settings.view', 'user.view', 'school.branding.manage', 'notification.settings.manage', 'billing.view', 'audit.view']}>{children}</Gate>
         </div>
       </div>
     </div>

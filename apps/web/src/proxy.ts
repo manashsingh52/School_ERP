@@ -2,14 +2,15 @@ import type { TokenPair } from '@schoolos/contracts';
 import { NextResponse, type NextRequest } from 'next/server';
 import { serverEnv } from '@/lib/server-env';
 import { ACCESS_COOKIE, REFRESH_COOKIE, clearSessionCookies, setSessionCookies } from '@/lib/session-cookies';
-import { SCHOOL_SLUG_HEADER, slugFromHost } from '@/lib/tenant';
+import { CONSOLE_HEADER, SCHOOL_SLUG_HEADER, isConsoleHost, slugFromHost } from '@/lib/tenant';
 import { clientIpFrom, upstream } from '@/lib/upstream';
 
 const PUBLIC_PAGES = ['/login'];
 
 /**
  * Runs before every page and BFF call:
- *  1. Subdomain → school slug, passed downstream in X-School-Slug (any browser-sent value is dropped)
+ *  1. Subdomain → school slug, passed downstream in X-School-Slug (any browser-sent value is dropped);
+ *     admin.<domain> is the super-admin console (X-SchoolOS-Console), which only serves /platform
  *  2. If the short-lived access cookie is gone but a refresh cookie exists, refresh here so the
  *     page renders with a valid token (server components can't set cookies themselves)
  *  3. Signed-out visitors go to /login
@@ -20,12 +21,20 @@ export async function proxy(req: NextRequest) {
   const isApi = path.startsWith('/api/');
   const isPublicPage = PUBLIC_PAGES.includes(path);
 
+  const consoleHost = isConsoleHost(req.headers.get('host'), serverEnv.baseDomain);
   const requestHeaders = new Headers(req.headers);
   requestHeaders.delete(SCHOOL_SLUG_HEADER);
+  requestHeaders.delete(CONSOLE_HEADER);
   if (slug) requestHeaders.set(SCHOOL_SLUG_HEADER, slug);
+  if (consoleHost) requestHeaders.set(CONSOLE_HEADER, '1');
+
+  // The super-admin console only serves /platform (and sign-in); schools never serve /platform.
+  const isPlatformPage = path === '/platform' || path.startsWith('/platform/');
+  if (consoleHost && !isApi && !isPublicPage && !isPlatformPage) return NextResponse.redirect(new URL('/platform', req.url));
+  if (!consoleHost && isPlatformPage) return NextResponse.redirect(new URL('/login', req.url));
 
   // The bare domain only serves "Find your school".
-  if (!slug) {
+  if (!slug && !consoleHost) {
     if (isApi || path === '/login') return NextResponse.next({ request: { headers: requestHeaders } });
     return NextResponse.redirect(new URL('/login', req.url));
   }

@@ -3,7 +3,7 @@
 import { Gate } from '@/components/gate';
 import type { ImportEntity, ImportJobItem } from '@schoolos/contracts';
 import { Button, Card, PageHeader, Spinner, Stepper, cn, toast } from '@schoolos/ui';
-import { Download, FileSpreadsheet, GraduationCap, Upload, Users } from 'lucide-react';
+import { BookOpen, Download, FileSpreadsheet, GraduationCap, IndianRupee, LayoutGrid, Upload, Users } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, type DragEvent } from 'react';
 import { ApiError, apiPost } from '@/lib/api-client';
@@ -20,12 +20,15 @@ function NewImportPageContent() {
 const ENTITIES: { value: ImportEntity; label: string; description: string; icon: typeof Users }[] = [
   { value: 'STUDENTS', label: 'Students', description: 'With class, section and parents', icon: Users },
   { value: 'TEACHERS', label: 'Teachers', description: 'With mobile numbers for sign-in', icon: GraduationCap },
+  { value: 'CLASSES', label: 'Classes & sections', description: 'e.g. “Class 8 — A, B, C”, with seats', icon: LayoutGrid },
+  { value: 'SUBJECTS', label: 'Subjects', description: 'With the classes that study each one', icon: BookOpen },
+  { value: 'FEE_ASSIGNMENTS', label: 'Optional fees', description: 'Which students take transport, lab…', icon: IndianRupee },
 ];
 
 function NewImport() {
   const router = useRouter();
   const params = useSearchParams();
-  const [entity, setEntity] = useState<ImportEntity>(params.get('entity') === 'TEACHERS' ? 'TEACHERS' : 'STUDENTS');
+  const [entity, setEntity] = useState<ImportEntity>(ENTITIES.find((e) => e.value === params.get('entity'))?.value ?? 'STUDENTS');
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -58,7 +61,7 @@ function NewImport() {
       <PageHeader title="Import from Excel" description="Bring in a whole list at once. Nothing is saved until you've reviewed every row." />
       <Stepper steps={['Upload', 'Match columns', 'Review', 'Import']} current={0} />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="What are you importing?">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label="What are you importing?">
         {ENTITIES.map((e) => {
           const Icon = e.icon;
           return (

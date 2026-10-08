@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, BookOpen, Pencil, Send, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { use, useState, type ReactNode } from 'react';
+import { DocumentsPanel } from '@/components/documents/documents-panel';
 import { PhotoUpload } from '@/components/photo-upload';
 import { ApiError, apiPatch, apiPost } from '@/lib/api-client';
 import { formatDate, fullName } from '@/lib/format';
@@ -16,7 +17,7 @@ import { TeacherForm } from '../teacher-form';
 
 export default function TeacherProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { can } = useMe();
+  const { can, me } = useMe();
   const qc = useQueryClient();
   const teacher = useData<TeacherDetail>(['teacher', id], `/teachers/${id}`);
   const [editing, setEditing] = useState(false);
@@ -102,6 +103,8 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
           </div>
         </Card>
       </div>
+
+      {(can('document.manage') || me.membership?.teacherId === id) && <DocumentsPanel ownerType="TEACHER" ownerId={id} title="Staff documents" />}
 
       {t && (
         <Dialog open={editing} onOpenChange={setEditing}>

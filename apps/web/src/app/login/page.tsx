@@ -1,9 +1,10 @@
 import type { MeResponse } from '@schoolos/contracts';
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { currentSlug, schoolBranding, serverApi } from '@/lib/server-api';
 import { ACCESS_COOKIE } from '@/lib/session-cookies';
+import { CONSOLE_HEADER } from '@/lib/tenant';
 import { AuthFrame, FindSchool, UnknownSchool } from './find-school';
 import { LoginForm } from './login-form';
 
@@ -15,7 +16,18 @@ function safeNext(next: string | undefined): string {
 }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const [{ next }, slug] = await Promise.all([searchParams, currentSlug()]);
+  const [{ next }, slug, headerStore] = await Promise.all([searchParams, currentSlug(), headers()]);
+  if (headerStore.get(CONSOLE_HEADER) === '1') {
+    if ((await cookies()).has(ACCESS_COOKIE)) {
+      const me = await serverApi<MeResponse>('/v1/me');
+      if (me.ok && me.data.platformRole) redirect('/platform');
+    }
+    return (
+      <AuthFrame schoolName="SchoolOS Admin" subtitle="Platform console — staff only">
+        <LoginForm next={next?.startsWith('/platform') ? safeNext(next) : '/platform'} passwordOnly />
+      </AuthFrame>
+    );
+  }
   if (!slug) return <FindSchool />;
 
   const school = await schoolBranding(slug);

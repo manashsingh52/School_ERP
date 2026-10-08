@@ -50,23 +50,75 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Dark theme — defined now, shipped in Phase 6 */
+/*
+ * Dark theme (docs/12 Phase 6). <html data-theme> is "light", "dark" or "system" (follows the OS).
+ * The same tokens appear twice because CSS can't share a block between a selector and a media query.
+ */
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --bg-app: #0b0b0d;
   --bg-surface: #141417;
   --bg-subtle: #1c1c20;
-  --bg-hover: #1a1a1e;
+  --bg-hover: #1f1f24;
   --border: #26262b;
-  --border-strong: #34343a;
+  --border-strong: #3a3a41;
   --text-primary: #f4f4f5;
   --text-secondary: #a1a1aa;
   --text-tertiary: #8b8b94;
+  --text-inverse: #0b0b0d;
+  --charcoal: #3f3f46;
+  --accent-700: oklch(from var(--accent-500) 0.78 calc(c * 0.8) h);
+  --accent-100: oklch(from var(--accent) 0.32 calc(c * 0.45) h);
   --accent-50: oklch(from var(--accent) 0.25 calc(c * 0.3) h);
-  --accent-100: oklch(from var(--accent) 0.3 calc(c * 0.45) h);
+  --success: #4ade80;
   --success-bg: #052e16;
+  --success-border: #14532d;
+  --warning: #fbbf24;
   --warning-bg: #2b1a05;
+  --warning-border: #713f12;
+  --danger: #f87171;
   --danger-bg: #2a0b0b;
+  --danger-border: #7f1d1d;
+  --info: #60a5fa;
   --info-bg: #0b1a3a;
+  --info-border: #1e3a8a;
+  --shadow-e1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-e2: 0 4px 12px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-e3: 0 12px 32px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] {
+    color-scheme: dark;
+    --bg-app: #0b0b0d;
+    --bg-surface: #141417;
+    --bg-subtle: #1c1c20;
+    --bg-hover: #1f1f24;
+    --border: #26262b;
+    --border-strong: #3a3a41;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --text-tertiary: #8b8b94;
+    --text-inverse: #0b0b0d;
+    --charcoal: #3f3f46;
+    --accent-700: oklch(from var(--accent-500) 0.78 calc(c * 0.8) h);
+    --accent-100: oklch(from var(--accent) 0.32 calc(c * 0.45) h);
+    --accent-50: oklch(from var(--accent) 0.25 calc(c * 0.3) h);
+    --success: #4ade80;
+    --success-bg: #052e16;
+    --success-border: #14532d;
+    --warning: #fbbf24;
+    --warning-bg: #2b1a05;
+    --warning-border: #713f12;
+    --danger: #f87171;
+    --danger-bg: #2a0b0b;
+    --danger-border: #7f1d1d;
+    --info: #60a5fa;
+    --info-bg: #0b1a3a;
+    --info-border: #1e3a8a;
+    --shadow-e1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-e2: 0 4px 12px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-e3: 0 12px 32px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+}
 }
 
 @theme inline {

@@ -1,7 +1,9 @@
 'use client';
 
 import { Gate } from '@/components/gate';
-import { PageHeader, Tabs } from '@schoolos/ui';
+import { Button, PageHeader, Tabs } from '@schoolos/ui';
+import { FileSpreadsheet } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useMe } from '@/lib/me';
@@ -30,7 +32,13 @@ function Academics() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Academics" description="Classes, sections, subjects and who teaches what — for the current academic year." />
+      <PageHeader
+        title="Academics"
+        description="Classes, sections, subjects and who teaches what — for the current academic year."
+        actions={canManage && can('import.run') && (tab === 'classes' || tab === 'subjects') && (
+          <Button variant="secondary" asChild><Link href={`/imports/new?entity=${tab === 'classes' ? 'CLASSES' : 'SUBJECTS'}`}><FileSpreadsheet /> Import from Excel</Link></Button>
+        )}
+      />
       <Tabs<Tab>
         value={tab}
         onChange={(t) => router.replace(`${pathname}?tab=${t}`)}

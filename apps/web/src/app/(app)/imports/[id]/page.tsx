@@ -1,5 +1,6 @@
 'use client';
 
+import { IMPORT_META } from '@/lib/imports';
 import { Gate } from '@/components/gate';
 import { IMPORT_FIELDS, type ImportJobItem, type ImportRowItem, type PageResponse } from '@schoolos/contracts';
 import {
@@ -45,14 +46,14 @@ function ImportPageContent({ params }: { params: Promise<{ id: string }> }) {
 
   if (job.isError) return <Card><ErrorState onRetry={() => void job.refetch()} /></Card>;
   const j = job.data;
-  const what = j?.entity === 'TEACHERS' ? 'teachers' : 'students';
+  const what = j ? IMPORT_META[j.entity].what : 'records';
   const showMapping = j && (j.status === 'MAPPING' || remap);
   const step = !j ? 1 : showMapping ? 1 : j.status === 'VALIDATED' ? 2 : 3;
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href={j?.entity === 'TEACHERS' ? '/teachers' : '/students'} className="inline-flex items-center gap-1.5 text-small text-fg-secondary hover:text-fg">
-        <ArrowLeft className="size-4" /> {j?.entity === 'TEACHERS' ? 'Teachers' : 'Students'}
+      <Link href={j ? IMPORT_META[j.entity].href : '/students'} className="inline-flex items-center gap-1.5 text-small text-fg-secondary hover:text-fg">
+        <ArrowLeft className="size-4" /> {j ? IMPORT_META[j.entity].backLabel : 'Back'}
       </Link>
       <PageHeader title={`Import ${what}`} description={j ? <span className="font-mono text-small">{j.fileName}</span> : undefined} />
       <Stepper steps={['Upload', 'Match columns', 'Review', 'Import']} current={step} />
@@ -86,10 +87,12 @@ function MappingStep({ job, onDone }: { job: ImportJobItem; onDone: () => void }
       if (!has('admissionNo')) m.push('Admission number');
       if (!has('fullName') && !has('firstName')) m.push('Student name');
       if (!has('classSection') && !has('class')) m.push('Class');
-    } else {
+    } else if (job.entity === 'TEACHERS') {
       if (!has('employeeId')) m.push('Employee ID');
       if (!has('fullName') && !has('firstName')) m.push('Name');
       if (!has('phone')) m.push('Mobile');
+    } else {
+      for (const f of IMPORT_FIELDS[job.entity]) if (f.required && !has(f.key)) m.push(f.label);
     }
     return m;
   }, [used, job.entity]);
@@ -134,12 +137,14 @@ function MappingStep({ job, onDone }: { job: ImportJobItem; onDone: () => void }
           ) : (
             <p className="flex items-center gap-2 text-small text-success"><CheckCircle2 className="size-4" /> All required fields are matched</p>
           )}
-          <Checkbox
-            checked={invite}
-            onChange={(e) => setInvite(e.target.checked)}
-            label={job.entity === 'STUDENTS' ? 'Invite parents to the parent app' : 'Invite teachers to sign in'}
-            description="They activate their login with a one-time code."
-          />
+          {IMPORT_META[job.entity].invite && (
+            <Checkbox
+              checked={invite}
+              onChange={(e) => setInvite(e.target.checked)}
+              label={IMPORT_META[job.entity].invite}
+              description="They activate their login with a one-time code."
+            />
+          )}
         </div>
         <Button disabled={missing.length > 0} loading={validate.isPending} onClick={() => validate.mutate(undefined)}>Check all rows</Button>
       </div>
@@ -165,7 +170,7 @@ function ReviewStep({ job, onRemap }: { job: ImportJobItem; onRemap: () => void 
     () => apiFetch(`/imports/${job.id}/commit`, { method: 'POST', headers: { 'idempotency-key': key } }),
     { invalidate: [['import', job.id]] },
   );
-  const what = job.entity === 'TEACHERS' ? 'teachers' : 'students';
+  const what = IMPORT_META[job.entity].what;
 
   return (
     <div className="flex flex-col gap-4">
@@ -191,7 +196,7 @@ function ReviewStep({ job, onRemap }: { job: ImportJobItem; onRemap: () => void 
           <div className="flex flex-wrap gap-2">
             <Button variant="ghost" onClick={onRemap}>Change column matching</Button>
             {(stats.invalid > 0 || stats.duplicate > 0) && (
-              <Button variant="secondary" asChild><a href={`/api/v1/imports/${job.id}/problems`} download><Download /> Rows to fix (CSV)</a></Button>
+              <Button variant="secondary" asChild><a href={`/api/v1/imports/${job.id}/problems?format=xlsx`} download><Download /> Rows to fix (Excel)</a></Button>
             )}
           </div>
           <div className="flex items-center gap-3">
@@ -241,7 +246,7 @@ function RowsTable({ jobId, status }: { jobId: string; status: RowStatus }) {
 }
 
 function ResultStep({ job }: { job: ImportJobItem }) {
-  const what = job.entity === 'TEACHERS' ? 'teachers' : 'students';
+  const what = IMPORT_META[job.entity].what;
   if (job.status === 'IMPORTING') {
     return (
       <Card className="flex flex-col items-center gap-3 py-14 text-center">
@@ -263,8 +268,8 @@ function ResultStep({ job }: { job: ImportJobItem }) {
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-2">
-        <Button asChild><Link href={job.entity === 'TEACHERS' ? '/teachers' : '/students'}>View {what}</Link></Button>
-        {skipped > 0 && <Button variant="secondary" asChild><a href={`/api/v1/imports/${job.id}/problems`} download><Download /> Rows to fix (CSV)</a></Button>}
+        <Button asChild><Link href={IMPORT_META[job.entity].href}>View {what}</Link></Button>
+        {skipped > 0 && <Button variant="secondary" asChild><a href={`/api/v1/imports/${job.id}/problems?format=xlsx`} download><Download /> Rows to fix (Excel)</a></Button>}
         <Button variant="ghost" asChild><Link href={`/imports/new?entity=${job.entity}`}>Import another file</Link></Button>
       </div>
       {stats?.failed ? <Badge tone="danger">{stats.failed} rows failed during import — see the CSV</Badge> : null}

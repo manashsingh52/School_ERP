@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { apiPatch } from '@/lib/api-client';
+import { GeneralExtrasCard } from '@/components/settings/section-forms';
 import { contractResolver } from '@/lib/forms';
 import { applyServerErrors, useSchool } from '@/lib/hooks';
 import { useMe } from '@/lib/me';
@@ -17,7 +18,12 @@ const FIELDS = ['name', 'legalName', 'board', 'phone', 'email', 'website', 'addr
 export default function GeneralSettingsPage() {
   const school = useSchool();
   if (!school.data) return <Skeleton className="h-96" />;
-  return <ProfileForm school={school.data} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <ProfileForm school={school.data} />
+      <GeneralExtrasCard />
+    </div>
+  );
 }
 
 function ProfileForm({ school }: { school: SchoolProfile }) {

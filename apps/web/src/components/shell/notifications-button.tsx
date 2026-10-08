@@ -48,7 +48,7 @@ export function NotificationsButton() {
         <Button variant="ghost" size="icon-sm" aria-label={count ? `Notifications, ${count} unread` : 'Notifications'} className="relative">
           <Bell />
           {count > 0 && (
-            <span className="tabular absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white">
+            <span className="tabular absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-fg-inverse">
               {count > 99 ? '99+' : count}
             </span>
           )}

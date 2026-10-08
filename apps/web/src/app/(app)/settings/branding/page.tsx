@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ImageUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { ApiError, apiPatch } from '@/lib/api-client';
+import { DocumentBrandingCard } from '@/components/settings/section-forms';
 import { uploadFile, useSchool } from '@/lib/hooks';
 
 const SWATCHES = ['#2F6FEB', '#0E7490', '#16A34A', '#7C3AED', '#C2410C', '#BE123C', '#1F2937', '#B45309'];
@@ -109,6 +110,8 @@ export default function BrandingPage() {
           <Button disabled={!changed || !HEX.test(color)} loading={saving} onClick={() => void save()}>Save colour</Button>
         </div>
       </Card>
+
+      <DocumentBrandingCard />
     </div>
   );
 }

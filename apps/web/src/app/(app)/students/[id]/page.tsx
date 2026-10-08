@@ -6,7 +6,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Pencil, Star, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { use, useState, type ReactNode } from 'react';
+import { DocumentsPanel } from '@/components/documents/documents-panel';
 import { PhotoUpload } from '@/components/photo-upload';
+import { AuditList } from '@/components/platform/audit-list';
 import { ApiError, apiPatch } from '@/lib/api-client';
 import { classLabel, formatDate, fullName } from '@/lib/format';
 import { useData } from '@/lib/hooks';
@@ -14,7 +16,8 @@ import { LOGIN_BADGE, RELATION_LABEL } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 import { StudentForm } from '../student-form';
 
-const TABS = ['Overview', 'Attendance', 'Homework', 'Exams', 'Fees', 'Documents', 'Activity'];
+const TABS = ['Overview', 'Attendance', 'Homework', 'Exams', 'Fees', 'Documents', 'Activity'] as const;
+type Tab = (typeof TABS)[number];
 
 export default function StudentProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -22,6 +25,8 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
   const qc = useQueryClient();
   const student = useData<StudentDetail>(['student', id], `/students/${id}`);
   const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState<Tab>('Overview');
+  const enabled = (t: Tab) => t === 'Overview' || (t === 'Documents' && can('document.view')) || (t === 'Activity' && can('audit.view'));
   const canEdit = can('student.edit');
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['student', id] }), qc.invalidateQueries({ queryKey: ['students'] })]);
 
@@ -84,21 +89,25 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
       </div>
 
       <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border" role="tablist">
-        {TABS.map((tab, i) => (
-          <Tooltip key={tab} content="Coming with its module" disabled={i === 0}>
+        {TABS.map((t) => (
+          <Tooltip key={t} content="Coming with its module" disabled={enabled(t)}>
             <button
               role="tab"
-              aria-selected={i === 0}
-              aria-disabled={i !== 0}
-              className={cn('-mb-px h-10 shrink-0 border-b-2 px-3 text-body', i === 0 ? 'border-accent font-medium text-fg' : 'cursor-not-allowed border-transparent text-fg-tertiary')}
+              aria-selected={tab === t}
+              aria-disabled={!enabled(t)}
+              onClick={() => enabled(t) && setTab(t)}
+              className={cn('-mb-px h-10 shrink-0 border-b-2 px-3 text-body', tab === t ? 'border-accent font-medium text-fg' : enabled(t) ? 'border-transparent text-fg-secondary hover:text-fg' : 'cursor-not-allowed border-transparent text-fg-tertiary')}
             >
-              {tab}
+              {t}
             </button>
           </Tooltip>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {tab === 'Documents' && <DocumentsPanel ownerType="STUDENT" ownerId={id} shareLabel="Parents can see and download this" />}
+      {tab === 'Activity' && <Card><CardHeader title="Activity" description="Every change to this student's record." /><div className="mt-3 border-t border-border"><AuditList path={`/audit?entityType=Student&entityId=${id}`} /></div></Card>}
+
+      <div className={cn('grid grid-cols-1 gap-4 lg:grid-cols-3', tab !== 'Overview' && 'hidden')}>
         <Card className="lg:col-span-2">
           <CardHeader title="Details" />
           <dl className="grid grid-cols-1 gap-x-8 gap-y-5 p-5 sm:grid-cols-2 lg:grid-cols-3">

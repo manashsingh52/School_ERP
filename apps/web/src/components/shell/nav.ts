@@ -44,8 +44,8 @@ export const NAV: NavItem[] = [
   { href: '/fees', label: 'Fees', icon: IndianRupee, any: ['fee.manage', 'invoice.view'], scopes: ['ALL'], ready: true },
   { href: '/payments', label: 'Payments', icon: CreditCard, any: ['payment.view', 'payment.collect'], scopes: ['ALL'], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: ['notice.view', 'notice.create'], scopes: STAFF, ready: true },
-  { href: '/documents', label: 'Documents', icon: FileText, any: ['document.view'], scopes: STAFF, ready: false, phase: 'Phase 6' },
-  { href: '/reports', label: 'Reports', icon: BarChart3, any: ['report.academic', 'report.finance'], scopes: STAFF, ready: false, phase: 'Phase 6' },
+  { href: '/documents', label: 'Documents', icon: FileText, any: ['document.view'], scopes: STAFF, ready: true },
+  { href: '/reports', label: 'Reports', icon: BarChart3, any: ['report.academic', 'report.finance'], scopes: STAFF, ready: true },
 ];
 
 /** Parent web view (docs/06 §4): one child at a time, chosen in the header. */
@@ -56,6 +56,7 @@ export const PARENT_NAV: NavItem[] = [
   { href: '/my/timetable', label: 'Timetable', icon: CalendarClock, any: [], ready: true },
   { href: '/my/results', label: 'Results', icon: ClipboardList, any: [], ready: true },
   { href: '/my/fees', label: 'Fees', icon: IndianRupee, any: [], ready: true },
+  { href: '/my/documents', label: 'Documents', icon: FileText, any: [], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: [], ready: true },
 ];
 

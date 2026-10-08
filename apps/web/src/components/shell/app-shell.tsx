@@ -20,6 +20,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { apiPost } from '@/lib/api-client';
 import { ChildProvider, useIsParentView } from '@/lib/child';
 import { useMe } from '@/lib/me';
+import { ThemeMenuItems } from '@/lib/theme';
 import { CommandPalette } from './command-palette';
 import { NotificationsButton } from './notifications-button';
 import { ChildSwitcher } from './child-switcher';
@@ -247,6 +248,8 @@ function UserMenu() {
             ))}
           </>
         )}
+        <MenuSeparator />
+        <ThemeMenuItems />
         <MenuSeparator />
         <MenuItem onSelect={signOut} disabled={signingOut}>
           <LogOut /> Sign out

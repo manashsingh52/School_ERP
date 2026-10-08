@@ -5,10 +5,10 @@ import { cn } from '@schoolos/ui';
 import { ATTENDANCE, ATTENDANCE_ORDER } from '@/lib/labels';
 
 const ACTIVE: Record<AttendanceStatus, string> = {
-  PRESENT: 'bg-success text-white border-success',
-  ABSENT: 'bg-danger text-white border-danger',
-  LATE: 'bg-warning text-white border-warning',
-  HALF_DAY: 'bg-info text-white border-info',
+  PRESENT: 'bg-success text-fg-inverse border-success',
+  ABSENT: 'bg-danger text-fg-inverse border-danger',
+  LATE: 'bg-warning text-fg-inverse border-warning',
+  HALF_DAY: 'bg-info text-fg-inverse border-info',
   LEAVE: 'bg-fg-secondary text-surface border-fg-secondary',
 };
 
