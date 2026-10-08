@@ -117,6 +117,10 @@ export interface Tenant {
   adminMembershipId: string;
   teacherRoleId: string;
   importJobId: string;
+  /** Default bell schedule (P1 08:00–08:40, P2 08:40–09:20, Break, P3 09:40–10:20). */
+  bellScheduleId: string;
+  /** Draft timetable for 8-A on that schedule (empty). */
+  timetableId: string;
   /** Published homework for 8-A (Maths, by the class teacher). */
   homeworkId: string;
   /** An in-app notification in the admin's inbox. */
@@ -211,6 +215,25 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     guardianId: guardian.id,
     adminMembershipId: adminMembership.id,
     teacherRoleId: (await db.role.findFirstOrThrow({ where: { schoolId, key: 'teacher' } })).id,
+    ...(await (async () => {
+      const bell = await db.bellSchedule.create({
+        data: {
+          schoolId,
+          name: 'Regular',
+          isDefault: true,
+          periods: {
+            create: [
+              { schoolId, name: 'P1', order: 1, startTime: '08:00', endTime: '08:40' },
+              { schoolId, name: 'P2', order: 2, startTime: '08:40', endTime: '09:20' },
+              { schoolId, name: 'Break', order: 3, startTime: '09:20', endTime: '09:40', isBreak: true },
+              { schoolId, name: 'P3', order: 4, startTime: '09:40', endTime: '10:20' },
+            ],
+          },
+        },
+      });
+      const tt = await db.timetable.create({ data: { schoolId, academicYearId: year.id, sectionId: a!.id, bellScheduleId: bell.id, effectiveFrom: date('2026-04-01') } });
+      return { bellScheduleId: bell.id, timetableId: tt.id };
+    })()),
     homeworkId: (
       await db.homework.create({
         data: {

@@ -58,6 +58,12 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'POST /v1/homework/:id/publish': (b) => b.homeworkId,
   'DELETE /v1/homework/:id': (b) => b.homeworkId,
   'GET /v1/homework/:id/attachments/:fileId': (b) => b.homeworkId,
+  'PUT /v1/bell-schedules/:id': (b) => ({ id: b.bellScheduleId, body: { name: 'X', periods: [{ name: 'P1', startTime: '08:00', endTime: '08:40' }] } }),
+  'DELETE /v1/bell-schedules/:id': (b) => b.bellScheduleId,
+  'PUT /v1/timetables/:id/entries': (b) => ({ id: b.timetableId, body: { entries: [] } }),
+  'POST /v1/timetables/:id/publish': (b) => b.timetableId,
+  'DELETE /v1/timetables/:id': (b) => b.timetableId,
+  'GET /v1/teachers/:id/timetable': (b) => b.teacherId,
 };
 
 /** Routes with :id that are not tenant data (e.g. scoped to the signed-in user). */

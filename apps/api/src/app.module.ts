@@ -33,6 +33,8 @@ import { FilesController, LocalStorageController } from './modules/files/files.c
 import { FilesService } from './modules/files/files.service.js';
 import { HomeworkController } from './modules/homework/homework.controller.js';
 import { HomeworkService } from './modules/homework/homework.service.js';
+import { BellSchedulesController, TimetablesController } from './modules/timetable/timetable.controller.js';
+import { TimetableService } from './modules/timetable/timetable.service.js';
 import { MeController } from './modules/me/me.controller.js';
 import { PublicController } from './modules/public/public.controller.js';
 import { GuardiansController } from './modules/guardians/guardians.controller.js';
@@ -142,6 +144,9 @@ export class SchoolModule {}
 @Module({ imports: [FilesModule, NotificationsModule], controllers: [HomeworkController], providers: [HomeworkService] })
 export class HomeworkModule {}
 
+@Module({ controllers: [BellSchedulesController, TimetablesController], providers: [TimetableService] })
+export class TimetableModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
@@ -164,6 +169,7 @@ export class AppModule {
         NotificationsModule,
         AttendanceModule,
         HomeworkModule,
+        TimetableModule,
       ],
     };
   }

@@ -35,6 +35,7 @@ import {
   updateAttendanceSettingsSchema,
 } from './attendance.js';
 import { requestUploadSchema } from './files.js';
+import { bellScheduleSchema, createTimetableSchema, saveTimetableSchema, timetableQuerySchema, todayQuerySchema } from './timetable.js';
 import { createHomeworkSchema, listHomeworkQuerySchema, publishHomeworkSchema, updateHomeworkSchema } from './homework.js';
 import { listNotificationsQuerySchema, updateNotificationRulesSchema } from './notifications.js';
 import { createImportSchema, listImportRowsQuerySchema, setImportMappingSchema } from './imports.js';
@@ -191,6 +192,19 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/homework/:id/publish': { summary: 'Publish a draft now or at a time', tag: 'Homework', access: 'permission:homework.manage', body: publishHomeworkSchema },
   'DELETE /v1/homework/:id': { summary: 'Delete homework (published → archived)', tag: 'Homework', access: 'permission:homework.manage' },
   'GET /v1/homework/:id/attachments/:fileId': { summary: 'Download link for an attachment', tag: 'Homework', access: 'permission:homework.view' },
+
+  'GET /v1/bell-schedules': { summary: 'Bell schedules and their periods', tag: 'Timetable', access: 'permission:timetable.view' },
+  'POST /v1/bell-schedules': { summary: 'Create a bell schedule', tag: 'Timetable', access: 'permission:timetable.manage', body: bellScheduleSchema },
+  'PUT /v1/bell-schedules/:id': { summary: 'Edit a bell schedule (periods matched by position)', tag: 'Timetable', access: 'permission:timetable.manage', body: bellScheduleSchema },
+  'DELETE /v1/bell-schedules/:id': { summary: 'Delete an unused bell schedule', tag: 'Timetable', access: 'permission:timetable.manage' },
+  'GET /v1/timetables/overview': { summary: 'Sections with their timetable status', tag: 'Timetable', access: 'permission:timetable.view' },
+  'GET /v1/timetables/today': { summary: "Today's classes (teacher) or a child's day (parent)", tag: 'Timetable', access: 'permission:timetable.view', query: todayQuerySchema },
+  'GET /v1/timetables': { summary: "A section's timetable (or null)", tag: 'Timetable', access: 'permission:timetable.view', query: timetableQuerySchema },
+  'POST /v1/timetables': { summary: 'Start a timetable for a section', tag: 'Timetable', access: 'permission:timetable.manage', body: createTimetableSchema },
+  'PUT /v1/timetables/:id/entries': { summary: 'Save the weekly grid (409 on teacher clash)', tag: 'Timetable', access: 'permission:timetable.manage', body: saveTimetableSchema },
+  'POST /v1/timetables/:id/publish': { summary: 'Publish to teachers and parents', tag: 'Timetable', access: 'permission:timetable.manage' },
+  'DELETE /v1/timetables/:id': { summary: 'Delete a timetable', tag: 'Timetable', access: 'permission:timetable.manage' },
+  'GET /v1/teachers/:id/timetable': { summary: "A teacher's week", tag: 'Timetable', access: 'permission:timetable.view' },
 
   'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 
