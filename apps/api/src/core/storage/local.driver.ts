@@ -83,7 +83,7 @@ export class LocalStorageDriver extends StorageDriver {
     return parsed;
   }
 
-  async write(key: string, data: Buffer): Promise<void> {
+  async write(key: string, data: Buffer, _contentType?: string): Promise<void> {
     const file = this.path(key);
     await mkdir(dirname(file), { recursive: true });
     await writeFile(file, data);

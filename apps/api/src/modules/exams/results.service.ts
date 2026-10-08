@@ -213,7 +213,7 @@ export class ResultsService implements OnModuleInit {
     return { data: await this.rows(examId, where), summary: await this.summary(examId) };
   }
 
-  private async rows(examId: string, where: Prisma.ExamResultWhereInput): Promise<ResultRow[]> {
+  async rows(examId: string, where: Prisma.ExamResultWhereInput): Promise<ResultRow[]> {
     const exam = await this.prisma.db.exam.findUniqueOrThrow({
       where: { id: examId },
       include: { subjects: { include: { subject: { select: { id: true, name: true } } } }, gradingScale: { include: { bands: true } } },

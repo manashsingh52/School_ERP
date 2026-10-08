@@ -16,6 +16,8 @@ export const QUEUES = {
   imports: 'imports',
   /** One job per notification delivery (push / SMS / email). */
   notifications: 'notifications',
+  /** PDFs (report cards, receipts) — Chromium, so kept apart from quick jobs. */
+  documents: 'documents',
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 

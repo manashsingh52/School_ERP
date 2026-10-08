@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import type { z } from 'zod';
 import {
   computeResultsSchema,
   createExamSchema,
+  generateReportCardsSchema,
   gradingPresetSchema,
   gradingScaleSchema,
   listExamsQuerySchema,
@@ -15,9 +17,11 @@ import {
   uuidSchema,
 } from '@schoolos/contracts';
 import { RequirePermission } from '../../core/auth/decorators.js';
+import { contentDisposition } from '../../core/storage/storage.js';
 import { ZodPipe } from '../../core/validation/zod.pipe.js';
 import { ExamsService } from './exams.service.js';
 import { MarksService } from './marks.service.js';
+import { ReportCardsService } from './report-cards.service.js';
 import { ResultsService } from './results.service.js';
 
 const id = new ZodPipe(uuidSchema);
@@ -171,6 +175,39 @@ export class ExamsController {
   @RequirePermission('results.publish')
   async unpublish(@Param('id', id) examId: string) {
     return { data: await this.results.unpublish(examId) };
+  }
+}
+
+@Controller('exams/:id/report-cards')
+export class ReportCardsController {
+  constructor(private readonly reportCards: ReportCardsService) {}
+
+  @Post()
+  @HttpCode(202)
+  @RequirePermission('report_card.generate')
+  async generate(@Param('id', id) examId: string, @Body(new ZodPipe(generateReportCardsSchema)) body: Out<typeof generateReportCardsSchema>) {
+    return { data: await this.reportCards.generate(examId, body.sectionId, body.studentIds) };
+  }
+
+  @Get()
+  @RequirePermission('report_card.generate')
+  async status(@Param('id', id) examId: string, @Query(new ZodPipe(resultsQuerySchema.required())) query: { sectionId: string }) {
+    return { data: await this.reportCards.status(examId, query.sectionId) };
+  }
+
+  @Get('bundle')
+  @RequirePermission('report_card.generate')
+  async bundle(@Param('id', id) examId: string, @Query(new ZodPipe(resultsQuerySchema.required())) query: { sectionId: string }, @Res() res: Response) {
+    const { data, fileName } = await this.reportCards.bundle(examId, query.sectionId);
+    res.setHeader('content-type', 'application/pdf');
+    res.setHeader('content-disposition', contentDisposition(fileName));
+    res.send(data);
+  }
+
+  @Get(':studentId')
+  @RequirePermission('results.view')
+  async link(@Param('id', id) examId: string, @Param('studentId', id) studentId: string) {
+    return { data: await this.reportCards.link(examId, studentId) };
   }
 }
 

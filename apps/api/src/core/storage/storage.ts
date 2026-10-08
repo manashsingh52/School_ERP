@@ -24,6 +24,8 @@ export abstract class StorageDriver {
   abstract readHead(key: string, bytes: number): Promise<Buffer>;
   /** Whole object (imports; bounded by the purpose's size limit). */
   abstract read(key: string): Promise<Buffer>;
+  /** Server-side write (generated documents such as report cards and receipts). */
+  abstract write(key: string, data: Buffer, contentType: string): Promise<void>;
   abstract delete(key: string): Promise<void>;
 }
 

@@ -32,6 +32,7 @@ export function testEnv(overrides: Record<string, string> = {}) {
     STORAGE_LOCAL_URL_BASE: '', // links become /v1/files/local/<token>, callable by supertest
     STORAGE_SIGNING_SECRET: randomBytes(32).toString('base64url'),
     RUN_WORKERS: 'false',
+    PDF_RENDERER: 'basic',
     ...overrides,
   });
 }

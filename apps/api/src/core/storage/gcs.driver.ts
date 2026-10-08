@@ -68,6 +68,10 @@ export class GcsStorageDriver extends StorageDriver {
     return buf;
   }
 
+  async write(key: string, data: Buffer, contentType: string): Promise<void> {
+    await this.gcsBucket.file(key).save(data, { contentType, resumable: false });
+  }
+
   async delete(key: string): Promise<void> {
     await this.gcsBucket.file(key).delete({ ignoreNotFound: true });
   }

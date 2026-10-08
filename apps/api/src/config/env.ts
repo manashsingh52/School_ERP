@@ -45,6 +45,10 @@ const envSchema = z.object({
 
   // File storage (docs/09 §3). Local disk in development; Google Cloud Storage in staging/production.
   STORAGE_DRIVER: z.enum(['local', 'gcs']).default('local'),
+  /** chromium = real PDFs (report cards, receipts); basic = plain-text PDFs for tests/CI without a browser. */
+  PDF_RENDERER: z.enum(['chromium', 'basic']).default('chromium'),
+  /** Chrome/Chromium binary. Empty = the usual install location for this OS. */
+  CHROMIUM_PATH: z.string().optional(),
   STORAGE_LOCAL_DIR: z.string().default('.data/storage'),
   /** Where the browser sends local-driver uploads (the web BFF proxies /api/v1/* to this API). */
   STORAGE_LOCAL_URL_BASE: z.string().default('/api'),

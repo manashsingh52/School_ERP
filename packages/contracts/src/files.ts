@@ -27,6 +27,7 @@ export const FILE_PURPOSES = {
   document: { label: 'Document', mimeTypes: [...PDF, ...IMAGES, ...DOCX], maxBytes: 15 * MB, permission: 'document.manage' },
   homework_attachment: { label: 'Homework attachment', mimeTypes: [...PDF, ...IMAGES, ...DOCX, ...XLSX], maxBytes: 15 * MB, permission: 'homework.manage' },
   notice_attachment: { label: 'Notice attachment', mimeTypes: [...PDF, ...IMAGES], maxBytes: 15 * MB, permission: 'notice.create' },
+  report_card: { label: 'Report card', mimeTypes: PDF, maxBytes: 10 * MB, permission: 'report_card.generate' },
   import: { label: 'Import file', mimeTypes: [...XLSX, ...CSV], maxBytes: 10 * MB, permission: 'import.run' },
 } as const satisfies Record<string, FilePurposeRule>;
 

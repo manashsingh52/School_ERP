@@ -38,6 +38,7 @@ import { requestUploadSchema } from './files.js';
 import {
   computeResultsSchema,
   createExamSchema,
+  generateReportCardsSchema,
   gradingPresetSchema,
   gradingScaleSchema,
   listExamsQuerySchema,
@@ -253,6 +254,10 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'PATCH /v1/exams/:id/results/:studentId': { summary: 'Remarks; withhold or release a result', tag: 'Exams', access: 'permission:results.view', body: updateResultSchema },
   'POST /v1/exams/:id/results/publish': { summary: 'Publish results (locks marks, tells parents)', tag: 'Exams', access: 'permission:results.publish' },
   'POST /v1/exams/:id/results/unpublish': { summary: 'Unpublish results for corrections', tag: 'Exams', access: 'permission:results.publish' },
+  'POST /v1/exams/:id/report-cards': { summary: 'Generate report cards for a section (background job)', tag: 'Exams', access: 'permission:report_card.generate', body: generateReportCardsSchema },
+  'GET /v1/exams/:id/report-cards': { summary: 'Report card status per student in a section', tag: 'Exams', access: 'permission:report_card.generate', query: resultsQuerySchema },
+  'GET /v1/exams/:id/report-cards/bundle': { summary: "A section's report cards as one PDF", tag: 'Exams', access: 'permission:report_card.generate', query: resultsQuerySchema },
+  'GET /v1/exams/:id/report-cards/:studentId': { summary: "Download link for a student's latest report card", tag: 'Exams', access: 'permission:results.view' },
   'GET /v1/students/:id/results': { summary: "A student's published results this year", tag: 'Exams', access: 'permission:results.view' },
   'POST /v1/exams/:id/subjects/:examSubjectId/unlock': { summary: 'Unlock marks for a subject', tag: 'Exams', access: 'permission:marks.edit_locked' },
 

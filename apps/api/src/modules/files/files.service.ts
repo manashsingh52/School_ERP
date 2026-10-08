@@ -146,6 +146,27 @@ export class FilesService {
     return { url, expiresAt: new Date(Date.now() + DOWNLOAD_TTL_SEC * 1000).toISOString() };
   }
 
+  /** Store a file the server produced (report card, receipt). Returns the file id. */
+  async storeGenerated(o: { purpose: FilePurpose; fileName: string; mimeType: string; data: Buffer; memberId: string }): Promise<string> {
+    const { schoolId } = RequestContextStore.school();
+    const id = randomUUID();
+    const objectKey = keyFor(schoolId, o.purpose, id);
+    await this.storage.write(objectKey, o.data, o.mimeType);
+    await this.prisma.tenantTx((tx) =>
+      tx.file.create({
+        data: { id, bucket: this.storage.bucket, objectKey, originalName: o.fileName, mimeType: o.mimeType, sizeBytes: BigInt(o.data.length), status: 'READY', uploadedByMemberId: o.memberId } as never,
+      }),
+    );
+    return id;
+  }
+
+  /** Raw bytes of a stored file (e.g. merging report cards). */
+  async bytes(fileId: string): Promise<Buffer> {
+    const file = await this.prisma.db.file.findUnique({ where: { id: fileId } });
+    if (!file || file.status !== 'READY') throw AppError.notFound('file');
+    return this.storage.read(file.objectKey);
+  }
+
   /** Every id must be a verified upload of this purpose in this school (for attachments). */
   async assertAllReady(fileIds: string[], purpose: FilePurpose, field: string): Promise<FileRow[]> {
     if (!fileIds.length) return [];
