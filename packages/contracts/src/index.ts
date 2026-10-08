@@ -13,3 +13,4 @@ export * from './homework.js';
 export * from './timetable.js';
 export * from './notices.js';
 export * from './dashboard.js';
+export * from './exams.js';

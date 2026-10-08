@@ -35,6 +35,19 @@ import {
   updateAttendanceSettingsSchema,
 } from './attendance.js';
 import { requestUploadSchema } from './files.js';
+import {
+  computeResultsSchema,
+  createExamSchema,
+  gradingPresetSchema,
+  gradingScaleSchema,
+  listExamsQuerySchema,
+  marksSheetQuerySchema,
+  saveMarksSchema,
+  resultsQuerySchema,
+  setExamSubjectsSchema,
+  updateExamSchema,
+  updateResultSchema,
+} from './exams.js';
 import { createNoticeSchema, listNoticesQuerySchema, publishNoticeSchema, updateNoticeSchema } from './notices.js';
 import { bellScheduleSchema, createTimetableSchema, saveTimetableSchema, timetableQuerySchema, todayQuerySchema } from './timetable.js';
 import { createHomeworkSchema, listHomeworkQuerySchema, publishHomeworkSchema, updateHomeworkSchema } from './homework.js';
@@ -219,6 +232,29 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/notices/:id/attachments/:fileId': { summary: 'Download link for an attachment', tag: 'Notices', access: 'permission:notice.view' },
 
   'GET /v1/dashboard': { summary: 'Home page numbers and attention items (role-aware)', tag: 'Dashboard', access: 'permission:dashboard.view' },
+
+  'GET /v1/grading-scales': { summary: 'Grading scales with their bands', tag: 'Exams', access: 'permission:exam.view' },
+  'POST /v1/grading-scales': { summary: 'Create a grading scale', tag: 'Exams', access: 'permission:exam.manage', body: gradingScaleSchema },
+  'POST /v1/grading-scales/presets': { summary: 'Add a ready-made scale (CBSE 9-point, A–E, percentage)', tag: 'Exams', access: 'permission:exam.manage', body: gradingPresetSchema },
+  'PUT /v1/grading-scales/:id': { summary: 'Edit a grading scale (until results are published with it)', tag: 'Exams', access: 'permission:exam.manage', body: gradingScaleSchema },
+  'DELETE /v1/grading-scales/:id': { summary: 'Delete an unused grading scale', tag: 'Exams', access: 'permission:exam.manage' },
+  'GET /v1/exams': { summary: 'Exams this year (parents: per child)', tag: 'Exams', access: 'permission:exam.view', query: listExamsQuerySchema },
+  'POST /v1/exams': { summary: 'Create an exam', tag: 'Exams', access: 'permission:exam.manage', body: createExamSchema },
+  'GET /v1/exams/marks': { summary: 'Marks sheet for one subject in one section', tag: 'Exams', access: 'permission:exam.view', query: marksSheetQuerySchema },
+  'PUT /v1/exams/marks': { summary: 'Save marks (409 VERSION_CONFLICT if someone saved meanwhile)', tag: 'Exams', access: 'permission:marks.enter', body: saveMarksSchema },
+  'GET /v1/exams/:id': { summary: 'Exam with its subject grid and date sheet', tag: 'Exams', access: 'permission:exam.view' },
+  'PATCH /v1/exams/:id': { summary: 'Edit an exam or move it to scheduled / marks entry', tag: 'Exams', access: 'permission:exam.manage', body: updateExamSchema },
+  'DELETE /v1/exams/:id': { summary: 'Delete a draft exam (archived once it has marks)', tag: 'Exams', access: 'permission:exam.manage' },
+  'PUT /v1/exams/:id/subjects': { summary: 'Set the class × subject grid (max/pass marks, dates)', tag: 'Exams', access: 'permission:exam.manage', body: setExamSubjectsSchema },
+  'GET /v1/exams/:id/progress': { summary: 'Marks entry progress per subject and section', tag: 'Exams', access: 'permission:exam.view' },
+  'POST /v1/exams/:id/subjects/:examSubjectId/lock': { summary: 'Lock marks for a subject', tag: 'Exams', access: 'permission:marks.enter' },
+  'POST /v1/exams/:id/results/compute': { summary: 'Compute results from marks (preview before publishing)', tag: 'Exams', access: 'permission:results.publish', body: computeResultsSchema },
+  'GET /v1/exams/:id/results': { summary: 'Results with per-subject marks', tag: 'Exams', access: 'permission:results.view', query: resultsQuerySchema },
+  'PATCH /v1/exams/:id/results/:studentId': { summary: 'Remarks; withhold or release a result', tag: 'Exams', access: 'permission:results.view', body: updateResultSchema },
+  'POST /v1/exams/:id/results/publish': { summary: 'Publish results (locks marks, tells parents)', tag: 'Exams', access: 'permission:results.publish' },
+  'POST /v1/exams/:id/results/unpublish': { summary: 'Unpublish results for corrections', tag: 'Exams', access: 'permission:results.publish' },
+  'GET /v1/students/:id/results': { summary: "A student's published results this year", tag: 'Exams', access: 'permission:results.view' },
+  'POST /v1/exams/:id/subjects/:examSubjectId/unlock': { summary: 'Unlock marks for a subject', tag: 'Exams', access: 'permission:marks.edit_locked' },
 
   'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 

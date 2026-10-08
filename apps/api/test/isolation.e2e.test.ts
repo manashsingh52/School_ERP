@@ -65,6 +65,21 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'DELETE /v1/timetables/:id': (b) => b.timetableId,
   'GET /v1/teachers/:id/timetable': (b) => b.teacherId,
   'GET /v1/notices/:id': (b) => b.noticeId,
+  'PUT /v1/grading-scales/:id': (b) => ({ id: b.gradingScaleId, body: { name: 'X', bands: [] } }),
+  'DELETE /v1/grading-scales/:id': (b) => b.gradingScaleId,
+  'GET /v1/exams/:id': (b) => b.examId,
+  'PATCH /v1/exams/:id': (b) => ({ id: b.examId, body: { name: 'X' } }),
+  'DELETE /v1/exams/:id': (b) => b.examId,
+  'PUT /v1/exams/:id/subjects': (b) => ({ id: b.examId, body: { classIds: [b.classId], rows: [] } }),
+  'GET /v1/exams/:id/progress': (b) => b.examId,
+  'POST /v1/exams/:id/subjects/:examSubjectId/lock': (b) => b.examId,
+  'POST /v1/exams/:id/subjects/:examSubjectId/unlock': (b) => b.examId,
+  'POST /v1/exams/:id/results/compute': (b) => b.examId,
+  'GET /v1/exams/:id/results': (b) => b.examId,
+  'PATCH /v1/exams/:id/results/:studentId': (b) => ({ id: b.examId, body: { teacherRemark: 'x' } }),
+  'POST /v1/exams/:id/results/publish': (b) => b.examId,
+  'POST /v1/exams/:id/results/unpublish': (b) => b.examId,
+  'GET /v1/students/:id/results': (b) => b.students.s1,
   'PATCH /v1/notices/:id': (b) => ({ id: b.noticeId, body: { title: 'x' } }),
   'POST /v1/notices/:id/publish': (b) => b.noticeId,
   'DELETE /v1/notices/:id': (b) => b.noticeId,
@@ -149,7 +164,7 @@ describe('cross-tenant access (School A → School B)', () => {
     const [method, path] = key.split(' ') as [string, string];
     const probe = CROSS_TENANT_PROBES[key]!(B);
     const { id, body = {}, query } = typeof probe === 'string' ? { id: probe } : probe;
-    const url = path.replace(':id', id).replace(':studentId', B.students.s1).replace(':fileId', B.fileId) + (query ? `?${query}` : '');
+    const url = path.replace(':id', id).replace(':studentId', B.students.s1).replace(':fileId', B.fileId).replace(':examSubjectId', B.examSubjectId) + (query ? `?${query}` : '');
     const client = t.as(tokens.adminA, A.slug);
     const res =
       method === 'GET' ? await client.get(url)

@@ -51,6 +51,16 @@ export const NOTIFICATION_EVENTS = {
     title: '{{subject}} homework for {{student}}',
     body: '{{title}}{{due}}',
   },
+  'exam.results_published': {
+    label: 'Exam results',
+    description: 'When the school publishes exam results.',
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH', 'SMS'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '{{exam}} results are out',
+    body: "{{student}}'s {{exam}} results and report card are now available.",
+  },
   'notice.published': {
     label: 'Notices',
     description: 'When the school publishes a notice to someone.',

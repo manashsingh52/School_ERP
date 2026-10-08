@@ -121,6 +121,10 @@ export interface Tenant {
   bellScheduleId: string;
   /** Draft timetable for 8-A on that schedule (empty). */
   timetableId: string;
+  /** CBSE 9-point scale; exam 'Unit Test 1' (marks entry open) with Class 8 Maths (max 50, pass 17). */
+  gradingScaleId: string;
+  examId: string;
+  examSubjectId: string;
   /** Published notice to everyone, by the admin. */
   noticeId: string;
   /** Published homework for 8-A (Maths, by the class teacher). */
@@ -235,6 +239,25 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
       });
       const tt = await db.timetable.create({ data: { schoolId, academicYearId: year.id, sectionId: a!.id, bellScheduleId: bell.id, effectiveFrom: date('2026-04-01') } });
       return { bellScheduleId: bell.id, timetableId: tt.id };
+    })()),
+    ...(await (async () => {
+      const scale = await db.gradingScale.create({
+        data: {
+          schoolId,
+          name: 'CBSE 9-point',
+          isDefault: true,
+          bands: {
+            create: (
+              [
+                ['A1', 91, 100], ['A2', 81, 90.99], ['B1', 71, 80.99], ['B2', 61, 70.99], ['C1', 51, 60.99], ['C2', 41, 50.99], ['D', 33, 40.99], ['E', 0, 32.99],
+              ] as const
+            ).map(([label, minPercent, maxPercent], i) => ({ schoolId, label, minPercent, maxPercent, order: i + 1 })),
+          },
+        },
+      });
+      const exam = await db.exam.create({ data: { schoolId, academicYearId: year.id, gradingScaleId: scale.id, name: 'Unit Test 1', status: 'MARKS_ENTRY' } });
+      const es = await db.examSubject.create({ data: { schoolId, examId: exam.id, classId: cls.id, subjectId: subject.id, maxMarks: 50, passMarks: 17 } });
+      return { gradingScaleId: scale.id, examId: exam.id, examSubjectId: es.id };
     })()),
     noticeId: (
       await db.notice.create({

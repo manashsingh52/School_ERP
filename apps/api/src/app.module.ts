@@ -39,6 +39,10 @@ import { NoticesController } from './modules/notices/notices.controller.js';
 import { NoticesService } from './modules/notices/notices.service.js';
 import { DashboardController } from './modules/dashboard/dashboard.controller.js';
 import { DashboardService } from './modules/dashboard/dashboard.service.js';
+import { ExamsController, GradingScalesController, StudentResultsController } from './modules/exams/exams.controller.js';
+import { ExamsService } from './modules/exams/exams.service.js';
+import { MarksService } from './modules/exams/marks.service.js';
+import { ResultsService } from './modules/exams/results.service.js';
 import { MeController } from './modules/me/me.controller.js';
 import { PublicController } from './modules/public/public.controller.js';
 import { GuardiansController } from './modules/guardians/guardians.controller.js';
@@ -157,6 +161,14 @@ export class NoticesModule {}
 @Module({ imports: [AttendanceModule, TimetableModule], controllers: [DashboardController], providers: [DashboardService] })
 export class DashboardModule {}
 
+@Module({
+  imports: [NotificationsModule],
+  controllers: [GradingScalesController, ExamsController, StudentResultsController],
+  providers: [ExamsService, MarksService, ResultsService],
+  exports: [ExamsService, MarksService, ResultsService],
+})
+export class ExamsModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
@@ -182,6 +194,7 @@ export class AppModule {
         TimetableModule,
         NoticesModule,
         DashboardModule,
+        ExamsModule,
       ],
     };
   }
