@@ -142,6 +142,8 @@ export interface Tenant {
   homeworkId: string;
   /** An in-app notification in the admin's inbox. */
   notificationId: string;
+  /** A pending support access request (from a made-up platform user). */
+  supportGrantId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
 }
 
@@ -328,6 +330,9 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
       await db.notification.create({
         data: { schoolId, membershipId: adminMembership.id, event: 'notice.published', title: 'Welcome', body: 'Hello', data: {} },
       })
+    ).id,
+    supportGrantId: (
+      await db.supportAccessGrant.create({ data: { schoolId, platformUserId: randomUUID(), reason: 'Fixture request', expiresAt: new Date(Date.now() + 3_600_000) } })
     ).id,
     importJobId: (
       await db.importJob.create({

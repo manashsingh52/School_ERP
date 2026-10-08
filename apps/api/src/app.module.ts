@@ -23,6 +23,7 @@ import { ChannelGateway } from './core/notify/channel-gateway.js';
 import { BasicPdfRenderer, ChromiumPdfRenderer, PdfRenderer } from './core/pdf/pdf-renderer.js';
 import { GatewayClient, MockGatewayClient, RazorpayClient } from './core/payments/gateway-client.js';
 import { SecretBox } from './core/payments/secret-box.js';
+import { EntitlementsService } from './core/entitlements/entitlements.service.js';
 import { QueueService } from './core/queue/queue.service.js';
 import { SchedulerService } from './core/queue/scheduler.service.js';
 import { MemoryRateLimitStore, RateLimitGuard } from './core/rate-limit/rate-limit.js';
@@ -67,6 +68,9 @@ import { ImportsController } from './modules/imports/imports.controller.js';
 import { ImportsService } from './modules/imports/imports.service.js';
 import { MembersController, PermissionsController, RolesController } from './modules/members/members.controller.js';
 import { MembersService } from './modules/members/members.service.js';
+import { PlatformController, SchoolPlanController } from './modules/platform/platform.controller.js';
+import { PlatformService } from './modules/platform/platform.service.js';
+import { SupportAccessService } from './modules/platform/support-access.service.js';
 import { IdentityService } from './modules/schools/identity.service.js';
 import { OnboardingController, PromotionsController, SchoolController } from './modules/school/school.controller.js';
 import { SchoolService } from './modules/school/school.service.js';
@@ -102,6 +106,7 @@ export class CoreModule {
       IdempotencyInterceptor,
       ChannelGateway,
       SecretBox,
+      EntitlementsService,
       { provide: GatewayClient, useClass: env.PAYMENTS_GATEWAY === 'razorpay' ? RazorpayClient : MockGatewayClient },
       { provide: PdfRenderer, useClass: env.PDF_RENDERER === 'chromium' ? ChromiumPdfRenderer : BasicPdfRenderer },
       {
@@ -200,6 +205,9 @@ export class WebhooksModule {}
 })
 export class FinanceModule {}
 
+@Module({ imports: [SchoolsModule, NotificationsModule], controllers: [PlatformController, SchoolPlanController], providers: [PlatformService, SupportAccessService] })
+export class PlatformModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
@@ -227,6 +235,7 @@ export class AppModule {
         DashboardModule,
         ExamsModule,
         FinanceModule,
+        PlatformModule,
       ],
     };
   }

@@ -28,6 +28,7 @@ export class AccessService {
   private readonly sessions = new TtlCache<SessionState | null>(30_000);
   private readonly memberships = new TtlCache<MembershipAccess | null>(30_000);
   private readonly slugs = new TtlCache<string | null>(5 * 60_000);
+  private readonly platformRoles = new TtlCache<'SUPER_ADMIN' | 'SUPPORT' | null>(30_000);
 
   constructor(private readonly platform: PlatformPrismaService) {}
 
@@ -82,6 +83,11 @@ export class AccessService {
     });
   }
 
+  /** SchoolOS staff role of a user (cached briefly), or null. */
+  platformRole(userId: string): Promise<'SUPER_ADMIN' | 'SUPPORT' | null> {
+    return this.platformRoles.getOrLoad(userId, async () => (await this.platform.platformAdmin.findUnique({ where: { userId }, select: { role: true } }))?.role ?? null);
+  }
+
   /** Call after logout, role changes, membership changes. */
   invalidateSession(sessionId: string): void {
     this.sessions.delete(sessionId);
@@ -95,5 +101,6 @@ export class AccessService {
     this.sessions.clear();
     this.memberships.clear();
     this.slugs.clear();
+    this.platformRoles.clear();
   }
 }

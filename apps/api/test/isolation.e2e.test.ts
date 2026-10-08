@@ -109,6 +109,8 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'POST /v1/notices/:id/read': (b) => b.noticeId,
   'GET /v1/notices/:id/stats': (b) => b.noticeId,
   'GET /v1/notices/:id/attachments/:fileId': (b) => b.noticeId,
+  'POST /v1/school/support-access/:id/approve': (b) => b.supportGrantId,
+  'POST /v1/school/support-access/:id/revoke': (b) => b.supportGrantId,
 };
 
 /** Routes with :id that are not tenant data (e.g. scoped to the signed-in user). */
@@ -121,6 +123,12 @@ const NON_TENANT_ID_ROUTES = new Set([
   // Authorised by the HMAC signature against the account the opaque id names (tested in payments-online)
   'POST /v1/webhooks/razorpay/:publicId',
   'GET /v1/files/local/:token',
+  // Platform console: cross-school by design, guarded by platform roles (tested in platform.e2e)
+  'GET /v1/platform/schools/:id',
+  'PUT /v1/platform/schools/:id/status',
+  'PUT /v1/platform/schools/:id/subscription',
+  'PUT /v1/platform/schools/:id/features/:key',
+  'PUT /v1/platform/plans/:id',
 ]);
 
 beforeAll(async () => {

@@ -15,6 +15,8 @@ export interface RequestContext {
   schoolId?: string;
   membershipId?: string;
   permissions?: PermissionSet;
+  /** Set on platform (super-admin console) routes. */
+  platformRole?: 'SUPER_ADMIN' | 'SUPPORT';
   /** 'system' for background jobs and scheduled work acting for a school. */
   actor?: 'user' | 'system';
   /** Set inside tenantTx(): the transaction already ran set_config on its connection. */

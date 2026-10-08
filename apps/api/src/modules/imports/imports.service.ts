@@ -13,6 +13,7 @@ import {
   type listImportRowsQuerySchema,
   type setImportMappingSchema,
 } from '@schoolos/contracts';
+import { EntitlementsService } from '../../core/entitlements/entitlements.service.js';
 import { AuditService } from '../../core/audit/audit.service.js';
 import { RequestContextStore } from '../../core/context/request-context.js';
 import { AppError } from '../../core/errors/app-error.js';
@@ -69,6 +70,7 @@ export class ImportsService implements OnModuleInit {
     private readonly audit: AuditService,
     private readonly outbox: OutboxService,
     @Inject(LOGGER) private readonly logger: Logger,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   onModuleInit(): void {
@@ -361,6 +363,7 @@ export class ImportsService implements OnModuleInit {
     if (!job) throw AppError.notFound('import');
     if (job.status !== 'VALIDATED') throw new AppError('IMPORT_NOT_READY', 409, 'Check the file before importing.');
     if (!(job.stats as unknown as ImportStats | null)?.valid) throw new AppError('NOTHING_TO_IMPORT', 422, 'There are no valid rows to import.');
+    if (job.entity === 'STUDENTS') await this.entitlements.assertStudents((job.stats as unknown as ImportStats).valid);
     // Conditional update: a double-click can't start two imports.
     const started = await this.prisma.db.importJob.updateMany({ where: { id, status: 'VALIDATED' }, data: { status: 'IMPORTING' } });
     if (started.count !== 1) throw new AppError('IMPORT_LOCKED', 409, 'This import has already started.');

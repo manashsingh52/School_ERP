@@ -35,6 +35,7 @@ const label = (className: string, section: string) => `${className.replace(/^Cla
 const GROUP_LABEL: Record<string, string> = { SCHOOL: 'Everyone', ALL_PARENTS: 'All parents', ALL_TEACHERS: 'All teachers', ALL_STAFF: 'All staff' };
 const ACTIVE_MEMBER = { status: { notIn: ['SUSPENDED', 'REMOVED'] } } satisfies Prisma.MembershipWhereInput;
 const NONE = '00000000-0000-0000-0000-000000000000';
+const PARENT_ONLY = ['parent'];
 
 /** "**Sports day** is on …" → "Sports day is on …" (for notification previews). */
 const plain = (md: string) => md.replace(/[*_`#>[\]()]/g, '').replace(/\s+/g, ' ').trim();
@@ -88,7 +89,8 @@ export class NoticesService implements OnModuleInit {
     ];
     if (guardian) or.push({ type: 'ALL_PARENTS' });
     if (teacherId) or.push({ type: 'ALL_TEACHERS' });
-    if (roleKeys.some((k) => k !== 'parent')) or.push({ type: 'ALL_STAFF' });
+    // Audience targeting (who a notice is addressed to), not authorisation.
+    if (roleKeys.some((k) => !PARENT_ONLY.includes(k))) or.push({ type: 'ALL_STAFF' });
     return { OR: or };
   }
 

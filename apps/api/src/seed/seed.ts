@@ -2,7 +2,8 @@
  * Local demo data: `pnpm db:seed`. Idempotent — does nothing if the demo school exists.
  * All demo users share SEED_PASSWORD from .env (local only).
  *
- *   superadmin@schoolos.local   Super Admin (platform)
+ *   superadmin@schoolos.local   Super Admin (platform console: http://admin.localhost:3000)
+ *   support@schoolos.local      Support (platform; read-only, needs a school's approval)
  *   admin@demo.school           School Admin        +91 90000 00001
  *   principal@demo.school       Principal           +91 90000 00002
  *   accountant@demo.school      Accountant          +91 90000 00003
@@ -237,7 +238,40 @@ async function topUp(db: PlatformPrismaService, schoolId: string, app: INestAppl
   notes.push(...(await dailyOps(db, schoolId, yearId)));
   notes.push(...(await exams(db, app, schoolId, yearId)));
   notes.push(...(await finance(db, app, schoolId, yearId)));
+  notes.push(...(await platform(db, app, schoolId)));
   return notes.filter(Boolean).join(', ');
+}
+
+/** Phase 6: plans, feature flags, the demo school's subscription and a support user. Idempotent. */
+async function platform(db: PlatformPrismaService, app: INestApplicationContext, schoolId: string): Promise<string[]> {
+  const notes: string[] = [];
+  const PLANS = [
+    { code: 'basic', name: 'Basic', priceMonthlyPaise: 4_999_00, limits: { students: 500, storageGb: 5, smsPerMonth: 2_000, aiCallsPerMonth: 0 }, features: [] },
+    { code: 'professional', name: 'Professional', priceMonthlyPaise: 12_999_00, limits: { students: 2_000, storageGb: 50, smsPerMonth: 10_000, aiCallsPerMonth: 500 }, features: ['online_payments', 'report_builder'] },
+    { code: 'enterprise', name: 'Enterprise', priceMonthlyPaise: null, limits: { students: null, storageGb: 500, smsPerMonth: null, aiCallsPerMonth: 5_000 }, features: ['online_payments', 'report_builder', 'ai_assistant'] },
+  ];
+  if (!(await db.plan.count())) {
+    for (const p of PLANS) await db.plan.create({ data: p });
+    notes.push('3 plans');
+  }
+  const FLAGS = [
+    { key: 'online_payments', description: 'Parents pay fees online through the school’s Razorpay account', defaultEnabled: false },
+    { key: 'report_builder', description: 'Reports centre with exports (PDF, Excel, CSV)', defaultEnabled: false },
+    { key: 'ai_assistant', description: 'AI assistant for staff (later phase)', defaultEnabled: false },
+    { key: 'documents', description: 'Student and staff documents', defaultEnabled: true },
+  ];
+  for (const f of FLAGS) await db.featureFlag.upsert({ where: { key: f.key }, create: f, update: {} });
+  if (!(await db.subscription.findUnique({ where: { schoolId } }))) {
+    const pro = await db.plan.findUniqueOrThrow({ where: { code: 'professional' } });
+    await db.subscription.create({ data: { schoolId, planId: pro.id, status: 'ACTIVE', currentPeriodStart: date('2026-04-01'), currentPeriodEnd: date('2027-03-31'), notes: 'Demo: annual, paid by bank transfer' } });
+    notes.push('demo subscription (Professional)');
+  }
+  if (!(await db.user.findUnique({ where: { email: 'support@schoolos.local' } }))) {
+    const support = await db.user.create({ data: { name: 'Sam Support', email: 'support@schoolos.local', passwordHash: await app.get(PasswordService).hash(process.env.SEED_PASSWORD!), status: 'ACTIVE' } });
+    await db.platformAdmin.create({ data: { userId: support.id, role: 'SUPPORT' } });
+    notes.push('support user');
+  }
+  return notes;
 }
 
 /** Deterministic pseudo-random numbers, so re-seeding gives the same demo. */

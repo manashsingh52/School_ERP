@@ -305,5 +305,5 @@ export function reportCsv(report: FinanceReport): string {
   const lines = [report.columns.map((c) => cell(c.type === 'money' ? `${c.label} (₹)` : c.label)).join(',')];
   for (const row of report.rows) lines.push(report.columns.map((c) => cell(value(c.type, row[c.key]))).join(','));
   if (report.totals) lines.push(report.columns.map((c, i) => cell(i === 0 ? 'Total' : value(c.type, report.totals![c.key] ?? null))).join(','));
-  return `﻿${lines.join('\r\n')}\r\n`;
+  return `\uFEFF${lines.join('\r\n')}\r\n`; // BOM: Excel opens UTF-8 (₹) correctly
 }

@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Logger } from 'pino';
 import { ENV, type Env } from '../../config/env.js';
+import { RequestContextStore } from '../context/request-context.js';
+import { EntitlementsService } from '../entitlements/entitlements.service.js';
 import { LOGGER } from '../logger/logger.js';
 import { PlatformPrismaService } from '../prisma/prisma.service.js';
 
@@ -36,17 +38,18 @@ export class ChannelGateway {
     @Inject(ENV) private readonly env: Env,
     @Inject(LOGGER) private readonly logger: Logger,
     private readonly platform: PlatformPrismaService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   async send(msg: OutboundMessage): Promise<SendResult> {
-    switch (msg.channel) {
-      case 'PUSH':
-        return this.push(msg);
-      case 'SMS':
-        return this.sms(msg);
-      case 'EMAIL':
-        return this.email(msg);
+    const schoolId = RequestContextStore.get()?.schoolId;
+    if (msg.channel === 'SMS' && schoolId && !(await this.entitlements.withinMonthly('sms', schoolId))) {
+      return { status: 'SKIPPED', provider: this.env.SMS_PROVIDER, reason: "This month's SMS allowance is used up" };
     }
+    const result = msg.channel === 'PUSH' ? await this.push(msg) : msg.channel === 'SMS' ? await this.sms(msg) : await this.email(msg);
+    // Metered for plan limits (push is free).
+    if (result.status === 'SENT' && schoolId && msg.channel !== 'PUSH') await this.entitlements.record(msg.channel === 'SMS' ? 'sms' : 'email', schoolId);
+    return result;
   }
 
   private async push(msg: OutboundMessage): Promise<SendResult> {

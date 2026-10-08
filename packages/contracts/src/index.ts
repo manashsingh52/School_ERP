@@ -15,3 +15,4 @@ export * from './notices.js';
 export * from './dashboard.js';
 export * from './exams.js';
 export * from './finance.js';
+export * from './platform.js';

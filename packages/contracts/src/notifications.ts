@@ -111,6 +111,16 @@ export const NOTIFICATION_EVENTS = {
     title: '{{title}}',
     body: '{{preview}}',
   },
+  'support.access_requested': {
+    label: 'Support access requests',
+    description: 'When SchoolOS support asks to look at your school to help with a problem.',
+    audience: 'School admins',
+    channels: ['IN_APP', 'EMAIL'],
+    defaultChannels: ['IN_APP', 'EMAIL'],
+    defaultEnabled: true,
+    title: 'SchoolOS support is asking for access',
+    body: '{{requester}} wants read-only access for {{hours}} hours: "{{reason}}". Approve or decline in Settings → Support access.',
+  },
 } as const satisfies Record<string, NotificationEventDef>;
 
 export type NotificationEvent = keyof typeof NOTIFICATION_EVENTS;

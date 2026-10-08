@@ -36,6 +36,20 @@ import {
 } from './attendance.js';
 import { requestUploadSchema } from './files.js';
 import {
+  featureFlagSchema,
+  listSchoolsQuerySchema,
+  planSchema,
+  platformAuditQuerySchema,
+  provisionSchoolSchema,
+  requestSupportAccessSchema,
+  retryJobSchema,
+  schoolFeatureSchema,
+  schoolStatusSchema,
+  subscriptionSchema,
+  supportGrantsQuerySchema,
+  userLookupQuerySchema,
+} from './platform.js';
+import {
   computeResultsSchema,
   createExamSchema,
   generateReportCardsSchema,
@@ -105,7 +119,7 @@ import { createStudentSchema, listStudentsQuerySchema, updateStudentSchema } fro
 export interface EndpointDef {
   summary: string;
   tag: string;
-  access: 'public' | 'authenticated' | 'school' | `permission:${string}`;
+  access: 'public' | 'authenticated' | 'school' | `permission:${string}` | `platform:${string}`;
   body?: ZodType;
   query?: ZodType;
   /** Send an Idempotency-Key header (docs/05 §4). */
@@ -335,4 +349,28 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/files/:id/download-url': { summary: 'Get a short-lived download link', tag: 'Files', access: 'school' },
   'PUT /v1/files/local/:token': { summary: 'Development storage upload (signed token)', tag: 'Files', access: 'public' },
   'GET /v1/files/local/:token': { summary: 'Development storage download (signed token)', tag: 'Files', access: 'public' },
+  'GET /v1/school/subscription': { summary: "This school's plan, limits and usage", tag: 'School', access: 'permission:billing.view' },
+  'GET /v1/school/features': { summary: 'Feature flags switched on for this school', tag: 'School', access: 'school' },
+  'GET /v1/school/support-access': { summary: 'Support access requests and grants', tag: 'School', access: 'permission:user.manage' },
+  'POST /v1/school/support-access/:id/approve': { summary: 'Let SchoolOS support look (read-only, time-boxed)', tag: 'School', access: 'permission:user.manage' },
+  'POST /v1/school/support-access/:id/revoke': { summary: 'Decline a request or end access now', tag: 'School', access: 'permission:user.manage' },
+
+  'GET /v1/platform/dashboard': { summary: 'Platform overview', tag: 'Platform', access: 'platform:platform.dashboard.view' },
+  'GET /v1/platform/schools': { summary: 'All schools', tag: 'Platform', access: 'platform:platform.dashboard.view', query: listSchoolsQuerySchema },
+  'POST /v1/platform/schools': { summary: 'Onboard a school (admin invited, trial started)', tag: 'Platform', access: 'platform:platform.schools.manage', body: provisionSchoolSchema },
+  'GET /v1/platform/schools/:id': { summary: 'One school: plan, usage, features, admins', tag: 'Platform', access: 'platform:platform.dashboard.view' },
+  'PUT /v1/platform/schools/:id/status': { summary: 'Activate, suspend or archive a school', tag: 'Platform', access: 'platform:platform.schools.manage', body: schoolStatusSchema },
+  'PUT /v1/platform/schools/:id/subscription': { summary: 'Set plan, status, dates and limit overrides (manual billing)', tag: 'Platform', access: 'platform:platform.subscriptions.manage', body: subscriptionSchema },
+  'PUT /v1/platform/schools/:id/features/:key': { summary: 'Per-school feature override (null clears)', tag: 'Platform', access: 'platform:platform.flags.manage', body: schoolFeatureSchema },
+  'GET /v1/platform/plans': { summary: 'Plans', tag: 'Platform', access: 'platform:platform.dashboard.view' },
+  'POST /v1/platform/plans': { summary: 'Create a plan', tag: 'Platform', access: 'platform:platform.subscriptions.manage', body: planSchema },
+  'PUT /v1/platform/plans/:id': { summary: 'Edit a plan', tag: 'Platform', access: 'platform:platform.subscriptions.manage', body: planSchema },
+  'GET /v1/platform/flags': { summary: 'Feature flags', tag: 'Platform', access: 'platform:platform.dashboard.view' },
+  'PUT /v1/platform/flags': { summary: 'Create or change a feature flag', tag: 'Platform', access: 'platform:platform.flags.manage', body: featureFlagSchema },
+  'GET /v1/platform/users': { summary: 'Find a user by name, phone or email', tag: 'Platform', access: 'platform:platform.schools.manage', query: userLookupQuerySchema },
+  'GET /v1/platform/audit': { summary: 'Audit log across schools', tag: 'Platform', access: 'platform:platform.audit.view', query: platformAuditQuerySchema },
+  'GET /v1/platform/system': { summary: 'Queues, failed jobs, outbox, webhooks, database', tag: 'Platform', access: 'platform:platform.system.view' },
+  'POST /v1/platform/system/retry': { summary: 'Retry a failed job', tag: 'Platform', access: 'platform:platform.schools.manage', body: retryJobSchema },
+  'GET /v1/platform/support-access': { summary: 'My support access requests (all=true: everyone’s)', tag: 'Platform', access: 'platform:platform.support_access.request', query: supportGrantsQuerySchema },
+  'POST /v1/platform/support-access': { summary: 'Ask a school for time-boxed read-only access', tag: 'Platform', access: 'platform:platform.support_access.request', body: requestSupportAccessSchema },
 };

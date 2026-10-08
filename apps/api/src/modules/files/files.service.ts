@@ -12,6 +12,7 @@ import {
   type requestUploadSchema,
   type UploadTicket,
 } from '@schoolos/contracts';
+import { EntitlementsService } from '../../core/entitlements/entitlements.service.js';
 import { RequestContextStore } from '../../core/context/request-context.js';
 import { AppError } from '../../core/errors/app-error.js';
 import { LOGGER } from '../../core/logger/logger.js';
@@ -40,11 +41,13 @@ export class FilesService {
     private readonly prisma: PrismaService,
     private readonly storage: StorageDriver,
     @Inject(LOGGER) private readonly logger: Logger,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   async requestUpload(input: z.output<typeof requestUploadSchema>): Promise<UploadTicket> {
     const rule = this.allowed(input.purpose);
     const ctx = RequestContextStore.tenant();
+    await this.entitlements.assertStorage(input.sizeBytes);
     const id = randomUUID();
     const objectKey = keyFor(ctx.schoolId, input.purpose, id);
 

@@ -2,6 +2,7 @@ import { type CanActivate, type ExecutionContext, Inject, Injectable } from '@ne
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { Logger } from 'pino';
+import { PLATFORM_ROLE_PERMISSIONS } from '@schoolos/permissions';
 import { RequestContextStore } from '../context/request-context.js';
 import { AppError } from '../errors/app-error.js';
 import { LOGGER } from '../logger/logger.js';
@@ -67,6 +68,12 @@ export class AuthGuard implements CanActivate {
         membershipId: membership.membershipId,
         permissions: membership.permissions,
       });
+    }
+
+    if (rule.kind === 'platform') {
+      const role = await this.access.platformRole(claims.sub);
+      if (!role || !(PLATFORM_ROLE_PERMISSIONS[role] as readonly string[]).includes(rule.permission)) throw AppError.forbidden();
+      RequestContextStore.patch({ platformRole: role });
     }
 
     if (rule.kind === 'permission' || rule.kind === 'school') {

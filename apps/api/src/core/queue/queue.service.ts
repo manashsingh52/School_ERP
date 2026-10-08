@@ -91,6 +91,32 @@ export class QueueService implements OnApplicationShutdown {
     return this.queue(queue).getJobCounts('waiting', 'active', 'delayed', 'failed', 'completed');
   }
 
+  /** Latest failed jobs across queues (super-admin system page). */
+  async failedJobs(limit = 50): Promise<{ queue: string; id: string; name: string; schoolId: string | null; attempts: number; reason: string; failedAt: string | null }[]> {
+    const all = await Promise.all(
+      Object.values(QUEUES).map(async (q) =>
+        (await this.queue(q).getFailed(0, limit - 1)).filter(Boolean).map((j) => ({
+          queue: q,
+          id: String(j.id),
+          name: j.name,
+          schoolId: (j.data?.schoolId as string | undefined) ?? null,
+          attempts: j.attemptsMade,
+          reason: (j.failedReason ?? 'unknown').slice(0, 300),
+          failedAt: j.finishedOn ? new Date(j.finishedOn).toISOString() : null,
+        })),
+      ),
+    );
+    return all.flat().sort((a, b) => (b.failedAt ?? '').localeCompare(a.failedAt ?? '')).slice(0, limit);
+  }
+
+  async retry(queue: string, jobId: string): Promise<boolean> {
+    if (!(Object.values(QUEUES) as string[]).includes(queue)) return false;
+    const job = await this.queue(queue as QueueName).getJob(jobId);
+    if (!job || !(await job.isFailed())) return false;
+    await job.retry();
+    return true;
+  }
+
   private queue(name: QueueName): Queue<JobData> {
     let queue = this.queues.get(name);
     if (!queue) {

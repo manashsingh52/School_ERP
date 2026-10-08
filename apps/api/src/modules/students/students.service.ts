@@ -12,6 +12,7 @@ import { AuditService, diff } from '../../core/audit/audit.service.js';
 import { OutboxService } from '../../core/outbox/outbox.service.js';
 import { AppError } from '../../core/errors/app-error.js';
 import { ScopeService } from '../../core/permissions/scope.service.js';
+import { EntitlementsService } from '../../core/entitlements/entitlements.service.js';
 import { PrismaService } from '../../core/prisma/prisma.service.js';
 import { fromDate, toDate } from '../../core/util/dates.js';
 import type { Prisma } from '../../generated/prisma/client.js';
@@ -45,6 +46,7 @@ export class StudentsService {
     private readonly guardians: GuardiansService,
     private readonly identity: IdentityService,
     private readonly files: FilesService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   async list(query: ListQuery): Promise<PageResponse<StudentListItem>> {
@@ -162,6 +164,7 @@ export class StudentsService {
   }
 
   async create(input: CreateInput): Promise<StudentDetail> {
+    await this.entitlements.assertStudents(1);
     // Foreign ids from the request are resolved through the tenant client first: another
     // school's section simply isn't found (docs/03 §2).
     const section = await this.prisma.db.section.findUnique({

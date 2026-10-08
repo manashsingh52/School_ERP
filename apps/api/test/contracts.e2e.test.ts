@@ -23,7 +23,7 @@ describe('API contract registry', () => {
   it('declares the same access rule as the code', () => {
     for (const route of t.app.get(RouteAccessCheck).routes()) {
       const key = `${route.method} ${route.path}`;
-      const expected = route.rule?.kind === 'permission' ? `permission:${route.rule.permission}` : route.rule?.kind;
+      const expected = route.rule?.kind === 'permission' || route.rule?.kind === 'platform' ? `${route.rule.kind}:${route.rule.permission}` : route.rule?.kind;
       expect(ENDPOINTS[key]?.access, key).toBe(expected);
     }
   });
