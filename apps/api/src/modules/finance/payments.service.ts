@@ -100,7 +100,7 @@ export class PaymentsService implements OnModuleInit {
    */
   async apply(tx: TenantTx, p: ApplyPayment): Promise<{ paymentId: string; created: boolean }> {
     if (p.gatewayPaymentId) {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`payment:${p.gatewayPaymentId}`}))`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`payment:${p.gatewayPaymentId}`}))`;
       const existing = await tx.payment.findUnique({ where: { gatewayPaymentId: p.gatewayPaymentId }, select: { id: true } });
       if (existing) return { paymentId: existing.id, created: false };
     }

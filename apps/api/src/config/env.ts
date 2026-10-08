@@ -59,6 +59,14 @@ const envSchema = z.object({
   GCS_PUBLIC_BUCKET: optional(z.string()),
 
   APP_BASE_DOMAIN: z.string().default('localhost'),
+  /** Public URL of this API (shown to schools as their Razorpay webhook URL). */
+  PUBLIC_API_URL: z.string().default('http://localhost:4000'),
+
+  // Payments (docs/11). mock = local sandbox (no real money, no Razorpay account needed);
+  // razorpay = real API with each school's own keys.
+  PAYMENTS_GATEWAY: z.enum(['mock', 'razorpay']).default('mock'),
+  /** AES-256-GCM key (base64, 32 bytes) for schools' gateway secrets — run keys:generate. ⏸ Secret Manager in production. */
+  PAYMENT_SECRETS_KEY: optional(z.string().min(40)),
 
   /** Shared with the web BFF so it can pass the real client IP (X-Client-IP) for rate limits & sessions. */
   BFF_SHARED_SECRET: optional(z.string().min(32)),
@@ -74,6 +82,7 @@ function checkProviders(env: Env): string[] {
   if (env.STORAGE_DRIVER === 'gcs' && (!env.GCS_PRIVATE_BUCKET || !env.GCS_PROJECT_ID)) {
     problems.push('STORAGE_DRIVER=gcs needs GCS_PROJECT_ID and GCS_PRIVATE_BUCKET');
   }
+  if (env.PAYMENT_SECRETS_KEY && Buffer.from(env.PAYMENT_SECRETS_KEY, 'base64').length !== 32) problems.push('PAYMENT_SECRETS_KEY must be 32 bytes, base64');
   if (env.EMAIL_PROVIDER === 'resend' && (!env.RESEND_API_KEY || !env.EMAIL_FROM)) problems.push('EMAIL_PROVIDER=resend needs RESEND_API_KEY and EMAIL_FROM');
   if (env.OTP_PROVIDER === 'msg91' && (!env.MSG91_AUTH_KEY || !env.MSG91_OTP_TEMPLATE_ID)) {
     problems.push('OTP_PROVIDER=msg91 needs MSG91_AUTH_KEY and MSG91_OTP_TEMPLATE_ID');
@@ -86,6 +95,9 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `  • ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Invalid configuration:\n${issues}`);
+  }
+  if (parsed.data.NODE_ENV === 'production' && parsed.data.PAYMENTS_GATEWAY === 'mock') {
+    throw new Error('PAYMENTS_GATEWAY=mock is not allowed in production');
   }
   if (parsed.data.NODE_ENV === 'production' && parsed.data.OTP_PROVIDER === 'console') {
     throw new Error('OTP_PROVIDER=console is not allowed in production');

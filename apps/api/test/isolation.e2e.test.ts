@@ -2,6 +2,7 @@
  * Tenant isolation over HTTP (docs/03-multi-tenancy.md §7) — "School A user must NEVER be able
  * to retrieve School B data by modifying an ID". Runs the full app against real Postgres + RLS.
  */
+import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { RouteAccessCheck } from '../src/core/auth/route-access.check.js';
 import { createTenant, createTestApp, type Tenant, type TestApp } from './helpers.js';
@@ -81,6 +82,7 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'GET /v1/payments/:id/receipt': (b) => b.paymentId,
   'POST /v1/payments/:id/void': (b) => ({ id: b.paymentId, body: { reason: 'test' } }),
   'GET /v1/students/:id/fees': (b) => b.students.s1,
+  'POST /v1/payments/:id/refunds': (b) => ({ id: b.paymentId, body: { amountPaise: 100, reason: 'test' } }),
   'POST /v1/students/:id/credits/apply': (b) => ({ id: b.students.s1, body: { invoiceId: b.invoiceId } }),
   'PUT /v1/grading-scales/:id': (b) => ({ id: b.gradingScaleId, body: { name: 'X', bands: [] } }),
   'DELETE /v1/grading-scales/:id': (b) => b.gradingScaleId,
@@ -116,6 +118,8 @@ const NON_TENANT_ID_ROUTES = new Set([
   'GET /v1/imports/templates/:entity', // template download, not a record
   // Signed-token routes: authorised by an HMAC token, not by tenant id (dev storage only)
   'PUT /v1/files/local/:token',
+  // Authorised by the HMAC signature against the account the opaque id names (tested in payments-online)
+  'POST /v1/webhooks/razorpay/:publicId',
   'GET /v1/files/local/:token',
 ]);
 
@@ -190,9 +194,9 @@ describe('cross-tenant access (School A → School B)', () => {
     const res =
       method === 'GET' ? await client.get(url)
       : method === 'PATCH' ? await client.patch(url, body)
-      : method === 'PUT' ? await client.put(url, body)
+      : method === 'PUT' ? await client.put(url, body).set('idempotency-key', randomUUID())
       : method === 'DELETE' ? await client.delete(url)
-      : await client.post(url, body);
+      : await client.post(url, body).set('idempotency-key', randomUUID());
     expect(res.status).toBe(404);
   });
 });
@@ -269,6 +273,8 @@ describe('route access rules', () => {
         'GET /v1/files/local/:token',
         'GET /v1/public/schools/:slug',
         'PUT /v1/files/local/:token',
+  // Authorised by the HMAC signature against the account the opaque id names (tested in payments-online)
+  'POST /v1/webhooks/razorpay/:publicId',
         'POST /v1/auth/login',
         'POST /v1/auth/otp/send',
         'POST /v1/auth/otp/verify',

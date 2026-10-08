@@ -21,6 +21,8 @@ import { LocalStorageDriver } from './core/storage/local.driver.js';
 import { StorageDriver } from './core/storage/storage.js';
 import { ChannelGateway } from './core/notify/channel-gateway.js';
 import { BasicPdfRenderer, ChromiumPdfRenderer, PdfRenderer } from './core/pdf/pdf-renderer.js';
+import { GatewayClient, MockGatewayClient, RazorpayClient } from './core/payments/gateway-client.js';
+import { SecretBox } from './core/payments/secret-box.js';
 import { QueueService } from './core/queue/queue.service.js';
 import { MemoryRateLimitStore, RateLimitGuard } from './core/rate-limit/rate-limit.js';
 import { AcademicsModule } from './modules/academics/academics.module.js';
@@ -47,7 +49,11 @@ import { ReportCardsService } from './modules/exams/report-cards.service.js';
 import { ResultsService } from './modules/exams/results.service.js';
 import { FeesController } from './modules/fees/fees.controller.js';
 import { FeesService } from './modules/fees/fees.service.js';
-import { InvoicesController, PaymentsController, StudentFeesController } from './modules/finance/finance.controller.js';
+import { GatewayController, InvoicesController, OnlinePaymentsController, PaymentsController, StudentFeesController } from './modules/finance/finance.controller.js';
+import { GatewayService } from './modules/finance/gateway.service.js';
+import { OnlinePaymentsService } from './modules/finance/online-payments.service.js';
+import { WebhooksController } from './modules/webhooks/webhooks.controller.js';
+import { WebhooksService } from './modules/webhooks/webhooks.service.js';
 import { InvoicesService } from './modules/finance/invoices.service.js';
 import { PaymentsService } from './modules/finance/payments.service.js';
 import { MeController } from './modules/me/me.controller.js';
@@ -91,6 +97,8 @@ export class CoreModule {
       OutboxService,
       IdempotencyInterceptor,
       ChannelGateway,
+      SecretBox,
+      { provide: GatewayClient, useClass: env.PAYMENTS_GATEWAY === 'razorpay' ? RazorpayClient : MockGatewayClient },
       { provide: PdfRenderer, useClass: env.PDF_RENDERER === 'chromium' ? ChromiumPdfRenderer : BasicPdfRenderer },
       {
         provide: StorageDriver,
@@ -177,11 +185,14 @@ export class DashboardModule {}
 })
 export class ExamsModule {}
 
+@Module({ controllers: [WebhooksController], providers: [WebhooksService], exports: [WebhooksService] })
+export class WebhooksModule {}
+
 @Module({
-  imports: [NotificationsModule, FilesModule],
-  controllers: [FeesController, InvoicesController, PaymentsController, StudentFeesController],
-  providers: [FeesService, InvoicesService, PaymentsService],
-  exports: [FeesService, InvoicesService, PaymentsService],
+  imports: [NotificationsModule, FilesModule, WebhooksModule],
+  controllers: [FeesController, InvoicesController, PaymentsController, StudentFeesController, GatewayController, OnlinePaymentsController],
+  providers: [FeesService, InvoicesService, PaymentsService, GatewayService, OnlinePaymentsService],
+  exports: [FeesService, InvoicesService, PaymentsService, GatewayService, OnlinePaymentsService],
 })
 export class FinanceModule {}
 

@@ -33,6 +33,8 @@ export function testEnv(overrides: Record<string, string> = {}) {
     STORAGE_SIGNING_SECRET: randomBytes(32).toString('base64url'),
     RUN_WORKERS: 'false',
     PDF_RENDERER: 'basic',
+    PAYMENTS_GATEWAY: 'mock',
+    PAYMENT_SECRETS_KEY: randomBytes(32).toString('base64'),
     ...overrides,
   });
 }
@@ -92,7 +94,7 @@ export class TestApp {
 }
 
 export async function createTestApp(overrides: Record<string, string> = {}): Promise<TestApp> {
-  const app = await createApp(testEnv(overrides), pino({ level: 'silent' }));
+  const app = await createApp(testEnv(overrides), pino({ level: process.env.TEST_LOG_LEVEL ?? 'silent' }));
   await app.init();
   return new TestApp(app);
 }

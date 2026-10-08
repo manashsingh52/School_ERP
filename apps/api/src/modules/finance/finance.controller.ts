@@ -1,10 +1,15 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/common';
 import type { z } from 'zod';
 import {
   adjustInvoiceSchema,
   applyCreditSchema,
   cancelInvoiceSchema,
   collectPaymentSchema,
+  createOnlineOrderSchema,
+  gatewayAccountSchema,
+  mockCheckoutSchema,
+  refundPaymentSchema,
+  verifyOnlinePaymentSchema,
   generateInvoicesSchema,
   listInvoicesQuerySchema,
   listPaymentsQuerySchema,
@@ -15,12 +20,80 @@ import { z as zod } from 'zod';
 import { RequirePermission } from '../../core/auth/decorators.js';
 import { Idempotent } from '../../core/idempotency/idempotency.js';
 import { ZodPipe } from '../../core/validation/zod.pipe.js';
+import { GatewayService } from './gateway.service.js';
 import { InvoicesService } from './invoices.service.js';
+import { OnlinePaymentsService } from './online-payments.service.js';
 import { PaymentsService } from './payments.service.js';
 
 const id = new ZodPipe(uuidSchema);
 type Out<T extends z.ZodType> = z.output<T>;
 const dayQuery = zod.object({ date: zod.iso.date().optional() });
+const modeBody = zod.object({ mode: zod.enum(['TEST', 'LIVE']) });
+const activateBody = modeBody.extend({ active: zod.boolean() });
+
+@Controller('payments/gateway')
+export class GatewayController {
+  constructor(private readonly gateway: GatewayService) {}
+
+  @Get()
+  @RequirePermission('gateway.manage')
+  async status() {
+    return { data: await this.gateway.status() };
+  }
+
+  @Put()
+  @RequirePermission('gateway.manage')
+  async connect(@Body(new ZodPipe(gatewayAccountSchema)) body: Out<typeof gatewayAccountSchema>) {
+    return { data: await this.gateway.connect(body) };
+  }
+
+  @Post('activate')
+  @HttpCode(200)
+  @RequirePermission('gateway.manage')
+  async activate(@Body(new ZodPipe(activateBody)) body: { mode: 'TEST' | 'LIVE'; active: boolean }) {
+    return { data: await this.gateway.activate(body.mode, body.active) };
+  }
+
+  @Post('test-webhook')
+  @HttpCode(200)
+  @RequirePermission('gateway.manage')
+  async testWebhook(@Body(new ZodPipe(modeBody)) body: { mode: 'TEST' | 'LIVE' }) {
+    return { data: await this.gateway.sendTestWebhook(body.mode) };
+  }
+}
+
+@Controller('payments/online')
+export class OnlinePaymentsController {
+  constructor(private readonly online: OnlinePaymentsService) {}
+
+  @Post('orders')
+  @RequirePermission('payment.pay_online')
+  @Idempotent({ required: true })
+  async order(@Body(new ZodPipe(createOnlineOrderSchema)) body: Out<typeof createOnlineOrderSchema>) {
+    return { data: await this.online.createOrder(body.studentId, body.invoiceIds) };
+  }
+
+  @Post('verify')
+  @HttpCode(200)
+  @RequirePermission('payment.pay_online')
+  async verify(@Body(new ZodPipe(verifyOnlinePaymentSchema)) body: Out<typeof verifyOnlinePaymentSchema>) {
+    return { data: await this.online.verify(body) };
+  }
+
+  @Post('mock-checkout')
+  @HttpCode(200)
+  @RequirePermission('payment.pay_online')
+  async mockCheckout(@Body(new ZodPipe(mockCheckoutSchema)) body: Out<typeof mockCheckoutSchema>) {
+    return { data: await this.online.mockCheckout(body) };
+  }
+
+  @Post('reconcile')
+  @HttpCode(200)
+  @RequirePermission('gateway.manage')
+  async reconcile() {
+    return { data: await this.online.reconcile() };
+  }
+}
 
 @Controller('invoices')
 export class InvoicesController {
@@ -70,7 +143,17 @@ export class InvoicesController {
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly payments: PaymentsService) {}
+  constructor(
+    private readonly payments: PaymentsService,
+    private readonly online: OnlinePaymentsService,
+  ) {}
+
+  @Post(':id/refunds')
+  @RequirePermission('payment.refund')
+  @Idempotent({ required: true })
+  async refund(@Param('id', id) paymentId: string, @Body(new ZodPipe(refundPaymentSchema)) body: Out<typeof refundPaymentSchema>) {
+    return { data: await this.online.refund(paymentId, body.amountPaise, body.reason) };
+  }
 
   @Post('collect')
   @RequirePermission('payment.collect')

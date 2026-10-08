@@ -34,9 +34,11 @@ export default tseslint.config(
   },
   {
     // Feature modules get tenant-scoped data only. Allowed users of the bypass client:
-    // core/, auth, me, public, schools (platform provisioning).
+    // core/, auth, me, public, schools (platform provisioning), webhooks (an inbound payment
+    // webhook must find its school from the URL before any tenant context exists; it only
+    // stores the event — processing runs tenant-scoped in the worker).
     files: ['apps/api/src/modules/**/*.ts'],
-    ignores: ['apps/api/src/modules/{auth,me,public,schools}/**'],
+    ignores: ['apps/api/src/modules/{auth,me,public,schools,webhooks}/**'],
     rules: {
       'no-restricted-imports': [
         'error',
