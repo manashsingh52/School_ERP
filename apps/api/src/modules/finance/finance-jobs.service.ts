@@ -6,6 +6,7 @@ import { LOGGER } from '../../core/logger/logger.js';
 import { PrismaService } from '../../core/prisma/prisma.service.js';
 import { QUEUES, QueueService } from '../../core/queue/queue.service.js';
 import { SchedulerService } from '../../core/queue/scheduler.service.js';
+import { SchoolSettingsService } from '../../core/settings/school-settings.service.js';
 import { fromDate, toDate, todayIn } from '../../core/util/dates.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
@@ -14,8 +15,6 @@ import { InvoicesService } from './invoices.service.js';
 const DAY = 86_400_000;
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / DAY);
 const pretty = (iso: string) => new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`));
-const DUE_SOON_DAYS = [7, 1];
-const MAX_OVERDUE_REMINDERS = 4;
 
 /**
  * Scheduled finance work per school (docs/11 §9): late fees (00:30), fee reminders (08:00) and
@@ -30,6 +29,7 @@ export class FinanceJobsService implements OnModuleInit {
     private readonly scheduler: SchedulerService,
     private readonly invoices: InvoicesService,
     private readonly notifications: NotificationsService,
+    private readonly settings: SchoolSettingsService,
     @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
@@ -86,9 +86,11 @@ export class FinanceJobsService implements OnModuleInit {
     return { invoices: touched, addedPaise: added };
   }
 
-  /** Due-soon (7 and 1 days before) and weekly overdue reminders, once each. */
+  /** Due-soon (default 7 and 1 days before) and repeating overdue reminders (default weekly, 4 times), once each — per Settings → Fees. */
   async reminders(today = todayIn()): Promise<{ dueSoon: number; overdue: number }> {
-    const soonDates = DUE_SOON_DAYS.map((d) => toDate(new Date(Date.parse(`${today}T00:00:00Z`) + d * DAY).toISOString().slice(0, 10))!);
+    const rules = await this.settings.get('fees');
+    const every = rules.overdueReminderEveryDays;
+    const soonDates = rules.reminderDaysBefore.map((d) => toDate(new Date(Date.parse(`${today}T00:00:00Z`) + d * DAY).toISOString().slice(0, 10))!);
     const open = await this.prisma.db.invoice.findMany({
       where: { status: { in: ['ISSUED', 'PARTIALLY_PAID'] }, balancePaise: { gt: 0 }, OR: [{ dueDate: { in: soonDates } }, { dueDate: { lt: toDate(today) } }] },
       include: { installment: { select: { name: true } }, student: { select: { firstName: true } } },
@@ -99,14 +101,14 @@ export class FinanceJobsService implements OnModuleInit {
       const due = fromDate(inv.dueDate)!;
       const daysLeft = daysBetween(today, due);
       const late = -daysLeft;
-      const weekly = late > 0 && late % 7 === 1 && Math.ceil(late / 7) <= MAX_OVERDUE_REMINDERS;
-      if (daysLeft <= 0 && !weekly) continue;
+      const repeat = late > 0 && late % every === 1 % every && Math.ceil(late / every) <= rules.maxOverdueReminders;
+      if (daysLeft <= 0 && !repeat) continue;
       const guardians = await this.notifications.guardiansOf([inv.studentId]);
       const vars = { student: inv.student.firstName, installment: inv.installment?.name ?? 'school', amount: formatRupees(inv.balancePaise), due: pretty(due) };
       const sent = await this.notifications.notify({
         event: daysLeft > 0 ? 'fee.due' : 'fee.overdue',
         recipients: guardians.map((g) => ({ membershipId: g.membershipId, vars, data: { route: '/my/fees', invoiceId: inv.id } })),
-        dedupeKey: () => (daysLeft > 0 ? `fee.due:${inv.id}:${daysLeft}` : `fee.overdue:${inv.id}:${Math.ceil(late / 7)}`),
+        dedupeKey: () => (daysLeft > 0 ? `fee.due:${inv.id}:${daysLeft}` : `fee.overdue:${inv.id}:${Math.ceil(late / every)}`),
       });
       if (sent) {
         if (daysLeft > 0) dueSoon++;

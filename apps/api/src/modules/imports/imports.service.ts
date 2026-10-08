@@ -28,6 +28,7 @@ import { purposeOf } from '../files/files.service.js';
 import { GuardiansService } from '../guardians/guardians.service.js';
 import { IdentityService } from '../schools/identity.service.js';
 import { classKey, parseDate, parseGender, parseSpreadsheet, splitClassSection, splitName, suggestMapping } from './parsing.js';
+import { SetupImports } from './setup-imports.js';
 
 type In<T extends z.ZodType> = z.output<T>;
 type Raw = Record<string, string>;
@@ -67,6 +68,7 @@ export class ImportsService implements OnModuleInit {
     private readonly queues: QueueService,
     private readonly guardians: GuardiansService,
     private readonly identity: IdentityService,
+    private readonly setup: SetupImports,
     private readonly audit: AuditService,
     private readonly outbox: OutboxService,
     @Inject(LOGGER) private readonly logger: Logger,
@@ -145,7 +147,12 @@ export class ImportsService implements OnModuleInit {
 
     const rows = await this.prisma.db.importRow.findMany({ where: { importJobId: id }, orderBy: { rowNumber: 'asc' } });
     const mapped = rows.map((r) => ({ rowNumber: r.rowNumber, raw: r.raw as Raw, values: applyMapping(r.raw as Raw, columns) }));
-    const results = entity === 'STUDENTS' ? await this.checkStudents(mapped) : await this.checkTeachers(mapped);
+    const results =
+      entity === 'STUDENTS' ? await this.checkStudents(mapped)
+      : entity === 'TEACHERS' ? await this.checkTeachers(mapped)
+      : entity === 'CLASSES' ? await this.setup.checkClasses(mapped)
+      : entity === 'SUBJECTS' ? await this.setup.checkSubjects(mapped)
+      : await this.setup.checkFeeAssignments(mapped);
     const stats = statsOf(results.map((r) => r.status));
 
     await this.prisma.tenantTx(
@@ -383,9 +390,13 @@ export class ImportsService implements OnModuleInit {
     let failed = 0;
     for (const row of rows) {
       try {
-        const entityId = job.entity === 'STUDENTS'
-          ? await this.importStudent(row.normalized as never, inviteLogins)
-          : await this.importTeacher(row.normalized as never, inviteLogins);
+        const n = row.normalized as never;
+        const entityId =
+          job.entity === 'STUDENTS' ? await this.importStudent(n, inviteLogins)
+          : job.entity === 'TEACHERS' ? await this.importTeacher(n, inviteLogins)
+          : job.entity === 'CLASSES' ? await this.setup.importClass(n)
+          : job.entity === 'SUBJECTS' ? await this.setup.importSubject(n)
+          : await this.setup.importFeeAssignment(n);
         await this.prisma.db.importRow.update({ where: { id: row.id }, data: { status: 'IMPORTED', entityId } });
         imported++;
       } catch (error) {
@@ -565,14 +576,36 @@ export class ImportsService implements OnModuleInit {
     return { data, page: { page: query.page, pageSize: query.pageSize, total } };
   }
 
-  /** CSV of rows that were not imported, with the reason — fix and re-upload. */
-  async problemsCsv(id: string): Promise<{ fileName: string; csv: string }> {
+  private async problemRows(id: string) {
     const job = await this.prisma.db.importJob.findUnique({ where: { id }, include: { file: { select: { originalName: true } } } });
     if (!job) throw AppError.notFound('import');
     const rows = await this.prisma.db.importRow.findMany({
       where: { importJobId: id, status: { in: ['INVALID', 'DUPLICATE'] } },
       orderBy: { rowNumber: 'asc' },
     });
+    return { job, rows, base: job.file.originalName.replace(/\.[^.]+$/, '') };
+  }
+
+  /**
+   * Excel of rows that were not imported: the original columns (fix them in place and re-upload
+   * this same file) plus the row number and problem at the end, highlighted.
+   */
+  async problemsXlsx(id: string): Promise<{ fileName: string; data: Buffer }> {
+    const { job, rows, base } = await this.problemRows(id);
+    const safe = (s: string) => (/^[=+\-@\t\r]/.test(s) ? `'${s}` : s); // formula injection guard (docs/09 §3)
+    const header = [...job.detectedColumns, 'Row in your file', 'What to fix'].map((h, i) => ({ value: h, fontWeight: 'bold' as const, ...(i >= job.detectedColumns.length ? { backgroundColor: '#FDE68A' } : {}) }));
+    const body = rows.map((r) => [
+      ...job.detectedColumns.map((h) => ({ value: safe((r.raw as Raw)[h] ?? ''), type: String })),
+      { value: r.rowNumber, type: Number },
+      { value: ((r.errors as unknown as RowError[] | null) ?? []).map((e) => e.message).join('; '), type: String, color: '#B91C1C', wrap: true },
+    ]);
+    const data = await writeXlsxFile([header, ...body] as never, { columns: [...job.detectedColumns.map(() => ({ width: 18 })), { width: 10 }, { width: 60 }], sheet: 'Rows to fix' }).toBuffer();
+    return { fileName: `${base} - rows to fix.xlsx`, data };
+  }
+
+  /** CSV of rows that were not imported, with the reason — fix and re-upload. */
+  async problemsCsv(id: string): Promise<{ fileName: string; csv: string }> {
+    const { job, rows } = await this.problemRows(id);
     const headers = ['Row', 'Problem', ...job.detectedColumns];
     const esc = (s: string) => {
       const safe = /^[=+\-@]/.test(s) ? `'${s}` : s; // spreadsheet formula injection guard (docs/09 §3)
@@ -609,10 +642,12 @@ export function missingRequired(entity: ImportEntity, columns: Record<string, st
     if (!has.has('admissionNo')) missing.push(name('admissionNo'));
     if (!has.has('fullName') && !has.has('firstName')) missing.push('Student name');
     if (!has.has('classSection') && !has.has('class')) missing.push('Class');
-  } else {
+  } else if (entity === 'TEACHERS') {
     if (!has.has('employeeId')) missing.push(name('employeeId'));
     if (!has.has('fullName') && !has.has('firstName')) missing.push('Name');
     if (!has.has('phone')) missing.push(name('phone'));
+  } else {
+    for (const f of IMPORT_FIELDS[entity]) if (f.required && !has.has(f.key)) missing.push(f.label);
   }
   return missing;
 }
@@ -630,6 +665,10 @@ function statsOf(statuses: string[]): ImportStats {
 }
 
 function summarize(entity: ImportEntity, n: Record<string, unknown>, raw: Raw): string {
+  const list = (v: unknown) => (Array.isArray(v) ? v.join(', ') : '');
+  if (entity === 'CLASSES' && n.name) return [n.name, list(n.sections) ? `sections ${list(n.sections)}` : null].filter(Boolean).join(' · ');
+  if (entity === 'SUBJECTS' && n.name) return [n.name, n.code, list(n.classes)].filter(Boolean).join(' · ');
+  if (entity === 'FEE_ASSIGNMENTS' && n.name) return [n.name, n.admissionNo, list(n.labels) || 'no optional fees'].filter(Boolean).join(' · ');
   const name = [n.firstName, n.lastName].filter(Boolean).join(' ');
   if (!name) return Object.values(raw).filter(Boolean).slice(0, 3).join(' · ');
   return entity === 'STUDENTS'

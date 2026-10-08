@@ -11,13 +11,12 @@ import { PrismaService } from '../../core/prisma/prisma.service.js';
 import { QUEUES, QueueService } from '../../core/queue/queue.service.js';
 import { fromDate, fullName } from '../../core/util/dates.js';
 import { FilesService } from '../files/files.service.js';
+import { SchoolSettingsService } from '../../core/settings/school-settings.service.js';
 import { ExamsService } from './exams.service.js';
 import { ON_ROLL } from './marks.service.js';
 import { reportCardHtml } from './report-card.template.js';
 import { ResultsService } from './results.service.js';
 
-const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-const MAX_INLINE_IMAGE = 2 * 1024 * 1024;
 const fmtDate = (iso: string | null) =>
   iso ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`)) : null;
 
@@ -37,6 +36,7 @@ export class ReportCardsService implements OnModuleInit {
     private readonly exams: ExamsService,
     private readonly results: ResultsService,
     private readonly pdf: PdfRenderer,
+    private readonly settings: SchoolSettingsService,
     @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
@@ -79,6 +79,8 @@ export class ReportCardsService implements OnModuleInit {
       select: { id: true, dateOfBirth: true, photoFileId: true, guardians: { orderBy: { isPrimary: 'desc' }, take: 1, select: { guardian: { select: { name: true } } } } },
     });
     const logo = await this.imageDataUri(school.logoFileId);
+    const [general, examSettings, branding] = await Promise.all([this.settings.get('general'), this.settings.get('examinations'), this.settings.get('branding')]);
+    const signature = await this.imageDataUri(branding.signatureFileId);
     const address = [school.addressLine1, school.addressLine2, school.city, [school.state, school.postalCode].filter(Boolean).join(' ')].filter(Boolean).join(', ') || null;
     const contact = [school.phone, school.email].filter(Boolean).join(' · ') || null;
     const grades = exam.gradingScale.bands.map((b) => ({ label: b.label, minPercent: Number(b.minPercent), maxPercent: Number(b.maxPercent), remark: b.remark }));
@@ -87,7 +89,10 @@ export class ReportCardsService implements OnModuleInit {
     for (const result of rows) {
       const st = students.find((s) => s.id === result.studentId);
       const html = reportCardHtml({
-        school: { name: school.name, address, contact, board: school.board, accent: school.accentColor, logoDataUri: logo },
+        school: { name: school.name, address, contact, board: school.board, accent: school.accentColor, logoDataUri: logo, affiliation: general.affiliation },
+        principal: { name: general.principalName, signatureDataUri: signature },
+        note: examSettings.reportCardNote,
+        showAttendance: examSettings.showAttendanceOnReportCard,
         academicYear: exam.academicYear.name,
         exam: { name: exam.name, term: exam.term, rankingEnabled: exam.rankingEnabled },
         student: { dateOfBirth: fmtDate(fromDate(st?.dateOfBirth)), guardian: st?.guardians[0]?.guardian.name ?? null, photoDataUri: await this.imageDataUri(st?.photoFileId ?? null) },
@@ -113,15 +118,8 @@ export class ReportCardsService implements OnModuleInit {
     return made;
   }
 
-  private async imageDataUri(fileId: string | null): Promise<string | null> {
-    if (!fileId) return null;
-    const file = await this.prisma.db.file.findUnique({ where: { id: fileId }, select: { mimeType: true, sizeBytes: true, status: true } });
-    if (!file || file.status !== 'READY' || !IMAGE_TYPES.has(file.mimeType) || Number(file.sizeBytes) > MAX_INLINE_IMAGE) return null;
-    try {
-      return `data:${file.mimeType};base64,${(await this.files.bytes(fileId)).toString('base64')}`;
-    } catch {
-      return null; // a missing image never blocks a report card
-    }
+  private imageDataUri(fileId: string | null): Promise<string | null> {
+    return this.files.imageDataUri(fileId); // a missing image never blocks a report card
   }
 
   /** Who has a card in this section, and which version. */

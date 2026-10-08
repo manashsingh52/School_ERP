@@ -109,6 +109,11 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'POST /v1/notices/:id/read': (b) => b.noticeId,
   'GET /v1/notices/:id/stats': (b) => b.noticeId,
   'GET /v1/notices/:id/attachments/:fileId': (b) => b.noticeId,
+  'PATCH /v1/documents/:id': (b) => ({ id: b.documentId, body: { title: 'x' } }),
+  'DELETE /v1/documents/:id': (b) => b.documentId,
+  'GET /v1/documents/:id/download': (b) => b.documentId,
+  'GET /v1/reports/runs/:id': (b) => b.reportRunId,
+  'GET /v1/reports/runs/:id/download': (b) => b.reportRunId,
   'POST /v1/school/support-access/:id/approve': (b) => b.supportGrantId,
   'POST /v1/school/support-access/:id/revoke': (b) => b.supportGrantId,
 };
@@ -118,6 +123,7 @@ const NON_TENANT_ID_ROUTES = new Set([
   'DELETE /v1/me/sessions/:id',
   'GET /v1/public/schools/:slug',
   'GET /v1/imports/templates/:entity', // template download, not a record
+  'PUT /v1/school/settings/:section', // a settings section name, not a record
   // Signed-token routes: authorised by an HMAC token, not by tenant id (dev storage only)
   'PUT /v1/files/local/:token',
   // Authorised by the HMAC signature against the account the opaque id names (tested in payments-online)

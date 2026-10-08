@@ -25,6 +25,7 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import { FilesService } from '../files/files.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { InvoicesService, invoiceInclude } from './invoices.service.js';
+import { SchoolSettingsService } from '../../core/settings/school-settings.service.js';
 import { receiptHtml } from './receipt.template.js';
 import { nextNumber, yearKey } from './sequence.js';
 
@@ -76,6 +77,7 @@ export class PaymentsService implements OnModuleInit {
     private readonly invoices: InvoicesService,
     private readonly notifications: NotificationsService,
     private readonly pdf: PdfRenderer,
+    private readonly settings: SchoolSettingsService,
     @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
@@ -423,14 +425,18 @@ export class PaymentsService implements OnModuleInit {
       net.set(key, cur);
     }
     const sec = p.student.enrollments.at(-1)?.section;
+    const [general, fees, branding] = await Promise.all([this.settings.get('general'), this.settings.get('fees'), this.settings.get('branding')]);
     const html = receiptHtml({
       school: {
         name: school.name,
         address: [school.addressLine1, school.city, school.state].filter(Boolean).join(', ') || null,
         contact: [school.phone, school.email].filter(Boolean).join(' · ') || null,
         accent: school.accentColor,
-        logoDataUri: null,
+        logoDataUri: branding.showLogoOnReceipts ? await this.files.imageDataUri(school.logoFileId) : null,
+        affiliation: general.affiliation,
       },
+      note: fees.receiptNote,
+      signatureDataUri: await this.files.imageDataUri(branding.signatureFileId),
       receiptNo: p.receipt.number,
       date: new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' }).format(p.receivedAt),
       student: {

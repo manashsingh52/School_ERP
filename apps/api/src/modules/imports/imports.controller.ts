@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import {
   createImportSchema,
   importEntitySchema,
+  importProblemsQuerySchema,
   listImportRowsQuerySchema,
   setImportMappingSchema,
   uuidSchema,
@@ -71,7 +72,14 @@ export class ImportsController {
 
   @Get(':id/problems')
   @RequirePermission('import.run')
-  async problems(@Param('id', id) importId: string, @Res() res: Response) {
+  async problems(@Param('id', id) importId: string, @Query(new ZodPipe(importProblemsQuerySchema)) q: { format: 'csv' | 'xlsx' }, @Res() res: Response) {
+    if (q.format === 'xlsx') {
+      const { fileName, data } = await this.imports.problemsXlsx(importId);
+      res.setHeader('content-type', XLSX);
+      res.setHeader('content-disposition', contentDisposition(fileName));
+      res.send(data);
+      return;
+    }
     const { fileName, csv } = await this.imports.problemsCsv(importId);
     res.setHeader('content-type', 'text/csv; charset=utf-8');
     res.setHeader('content-disposition', contentDisposition(fileName));

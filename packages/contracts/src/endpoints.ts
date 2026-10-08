@@ -35,6 +35,8 @@ import {
   updateAttendanceSettingsSchema,
 } from './attendance.js';
 import { requestUploadSchema } from './files.js';
+import { createDocumentSchema, listDocumentsQuerySchema, updateDocumentSchema } from './documents.js';
+import { auditQuerySchema, createReportRunSchema, reportPreviewQuerySchema } from './reports.js';
 import {
   featureFlagSchema,
   listSchoolsQuerySchema,
@@ -90,7 +92,7 @@ import { createNoticeSchema, listNoticesQuerySchema, publishNoticeSchema, update
 import { bellScheduleSchema, createTimetableSchema, saveTimetableSchema, timetableQuerySchema, todayQuerySchema } from './timetable.js';
 import { createHomeworkSchema, listHomeworkQuerySchema, publishHomeworkSchema, updateHomeworkSchema } from './homework.js';
 import { listNotificationsQuerySchema, updateNotificationRulesSchema } from './notifications.js';
-import { createImportSchema, listImportRowsQuerySchema, setImportMappingSchema } from './imports.js';
+import { createImportSchema, importProblemsQuerySchema, listImportRowsQuerySchema, setImportMappingSchema } from './imports.js';
 import {
   promotionCommitSchema,
   promotionPreviewSchema,
@@ -208,7 +210,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'PUT /v1/imports/:id/mapping': { summary: 'Map columns and validate every row', tag: 'Imports', access: 'permission:import.run', body: setImportMappingSchema },
   'GET /v1/imports/:id/rows': { summary: 'Rows with status and problems', tag: 'Imports', access: 'permission:import.run', query: listImportRowsQuerySchema },
   'POST /v1/imports/:id/commit': { summary: 'Import the valid rows (background job)', tag: 'Imports', access: 'permission:import.run', idempotent: true },
-  'GET /v1/imports/:id/problems': { summary: 'CSV of rows that need fixing', tag: 'Imports', access: 'permission:import.run' },
+  'GET /v1/imports/:id/problems': { summary: 'Rows that need fixing (format=csv or xlsx)', tag: 'Imports', access: 'permission:import.run', query: importProblemsQuerySchema },
 
   'GET /v1/school': { summary: 'This school: profile, branding, current year', tag: 'School', access: 'school' },
   'PATCH /v1/school': { summary: 'Edit school profile', tag: 'School', access: 'permission:school.settings.manage', body: updateSchoolProfileSchema },
@@ -349,6 +351,8 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/files/:id/download-url': { summary: 'Get a short-lived download link', tag: 'Files', access: 'school' },
   'PUT /v1/files/local/:token': { summary: 'Development storage upload (signed token)', tag: 'Files', access: 'public' },
   'GET /v1/files/local/:token': { summary: 'Development storage download (signed token)', tag: 'Files', access: 'public' },
+  'GET /v1/school/settings': { summary: 'Settings: general, fees, examinations, branding', tag: 'School', access: 'permission:school.settings.view' },
+  'PUT /v1/school/settings/:section': { summary: 'Save one settings section (branding needs school.branding.manage)', tag: 'School', access: 'school' },
   'GET /v1/school/subscription': { summary: "This school's plan, limits and usage", tag: 'School', access: 'permission:billing.view' },
   'GET /v1/school/features': { summary: 'Feature flags switched on for this school', tag: 'School', access: 'school' },
   'GET /v1/school/support-access': { summary: 'Support access requests and grants', tag: 'School', access: 'permission:user.manage' },
@@ -373,4 +377,18 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/platform/system/retry': { summary: 'Retry a failed job', tag: 'Platform', access: 'platform:platform.schools.manage', body: retryJobSchema },
   'GET /v1/platform/support-access': { summary: 'My support access requests (all=true: everyone’s)', tag: 'Platform', access: 'platform:platform.support_access.request', query: supportGrantsQuerySchema },
   'POST /v1/platform/support-access': { summary: 'Ask a school for time-boxed read-only access', tag: 'Platform', access: 'platform:platform.support_access.request', body: requestSupportAccessSchema },
+
+  'GET /v1/documents': { summary: "A student's, guardian's, teacher's or the school's documents", tag: 'Documents', access: 'permission:document.view', query: listDocumentsQuerySchema },
+  'POST /v1/documents': { summary: 'Attach an uploaded file as a document', tag: 'Documents', access: 'permission:document.manage', body: createDocumentSchema },
+  'PATCH /v1/documents/:id': { summary: 'Rename, recategorise or share with parents', tag: 'Documents', access: 'permission:document.manage', body: updateDocumentSchema },
+  'DELETE /v1/documents/:id': { summary: 'Delete a document', tag: 'Documents', access: 'permission:document.manage' },
+  'GET /v1/documents/:id/download': { summary: 'Short-lived download link', tag: 'Documents', access: 'permission:document.view' },
+
+  'GET /v1/reports/catalog': { summary: 'Reports I can run', tag: 'Reports', access: 'school' },
+  'GET /v1/reports/preview': { summary: 'Run a report on screen (first 500 rows)', tag: 'Reports', access: 'school', query: reportPreviewQuerySchema },
+  'POST /v1/reports/runs': { summary: 'Export a report (PDF, Excel or CSV) in the background', tag: 'Reports', access: 'permission:report.export', body: createReportRunSchema },
+  'GET /v1/reports/runs': { summary: 'My exports', tag: 'Reports', access: 'permission:report.export' },
+  'GET /v1/reports/runs/:id': { summary: 'One export (poll until DONE)', tag: 'Reports', access: 'permission:report.export' },
+  'GET /v1/reports/runs/:id/download': { summary: 'Download link for a finished export', tag: 'Reports', access: 'permission:report.export' },
+  'GET /v1/audit': { summary: "The school's audit log", tag: 'Audit', access: 'permission:audit.view', query: auditQuerySchema },
 };

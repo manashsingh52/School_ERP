@@ -24,12 +24,14 @@ export const FILE_PURPOSES = {
   student_photo: { label: 'Student photo', mimeTypes: IMAGES, maxBytes: 5 * MB, permission: 'student.edit' },
   teacher_photo: { label: 'Teacher photo', mimeTypes: IMAGES, maxBytes: 5 * MB, permission: 'teacher.manage' },
   school_logo: { label: 'School logo', mimeTypes: ['image/png', 'image/jpeg', 'image/webp'], maxBytes: 2 * MB, permission: 'school.branding.manage' },
+  signature: { label: 'Signature', mimeTypes: ['image/png', 'image/jpeg', 'image/webp'], maxBytes: 1 * MB, permission: 'school.branding.manage' },
   document: { label: 'Document', mimeTypes: [...PDF, ...IMAGES, ...DOCX], maxBytes: 15 * MB, permission: 'document.manage' },
   homework_attachment: { label: 'Homework attachment', mimeTypes: [...PDF, ...IMAGES, ...DOCX, ...XLSX], maxBytes: 15 * MB, permission: 'homework.manage' },
   notice_attachment: { label: 'Notice attachment', mimeTypes: [...PDF, ...IMAGES], maxBytes: 15 * MB, permission: 'notice.create' },
   receipt: { label: 'Fee receipt', mimeTypes: PDF, maxBytes: 5 * MB, permission: 'payment.collect' },
   report_card: { label: 'Report card', mimeTypes: PDF, maxBytes: 10 * MB, permission: 'report_card.generate' },
   import: { label: 'Import file', mimeTypes: [...XLSX, ...CSV], maxBytes: 10 * MB, permission: 'import.run' },
+  report_export: { label: 'Report export', mimeTypes: [...PDF, ...XLSX, ...CSV], maxBytes: 50 * MB, permission: 'report.export' },
 } as const satisfies Record<string, FilePurposeRule>;
 
 export type FilePurpose = keyof typeof FILE_PURPOSES;

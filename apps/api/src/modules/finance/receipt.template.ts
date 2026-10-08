@@ -1,7 +1,10 @@
 import { formatRupees, rupeesInWords } from '@schoolos/contracts';
 
 export interface ReceiptData {
-  school: { name: string; address: string | null; contact: string | null; accent: string; logoDataUri: string | null };
+  school: { name: string; address: string | null; contact: string | null; accent: string; logoDataUri: string | null; affiliation?: string | null };
+  /** Settings → Fees / Branding. */
+  note?: string | null;
+  signatureDataUri?: string | null;
   receiptNo: string;
   date: string;
   student: { name: string; admissionNo: string; classLabel: string | null; guardian: string | null };
@@ -48,11 +51,13 @@ export function receiptHtml(d: ReceiptData): string {
   .sign { border-top: 1px solid #1b1f24; padding-top: 3px; min-width: 150px; text-align: center; color: #57606a; }
   .void { position: absolute; top: 40%; left: 0; right: 0; text-align: center; font-size: 46pt; font-weight: 800; color: rgba(180, 35, 24, .18); transform: rotate(-12deg); letter-spacing: .1em; }
   .voidnote { margin-top: 6px; color: #b42318; font-weight: 600; }
+  .note { margin-top: 8px; font-size: 8pt; color: #3d444d; white-space: pre-line; }
+  .sign { position: relative; } .sig { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); max-height: 30px; max-width: 110px; }
 </style></head><body>
   ${d.cancelled ? '<div class="void">CANCELLED</div>' : ''}
   <div class="head">
     ${d.school.logoDataUri ? `<img src="${d.school.logoDataUri}" alt="">` : ''}
-    <div class="s"><h1>${esc(d.school.name)}</h1>${d.school.address ? `<p>${esc(d.school.address)}</p>` : ''}${d.school.contact ? `<p>${esc(d.school.contact)}</p>` : ''}</div>
+    <div class="s"><h1>${esc(d.school.name)}</h1>${d.school.affiliation ? `<p>${esc(d.school.affiliation)}</p>` : ''}${d.school.address ? `<p>${esc(d.school.address)}</p>` : ''}${d.school.contact ? `<p>${esc(d.school.contact)}</p>` : ''}</div>
     <div class="r"><h2>FEE RECEIPT</h2><p>${esc(d.receiptNo)}</p><p style="font-weight:400;color:#57606a">${esc(d.date)}</p></div>
   </div>
   <div class="fields">
@@ -69,6 +74,7 @@ export function receiptHtml(d: ReceiptData): string {
   <div class="words">${esc(rupeesInWords(d.amountPaise))}</div>
   <div class="pay">${field('Paid by', d.method)}${field('Reference', d.reference)}${d.collector ? field('Received by', d.collector) : ''}</div>
   ${d.cancelled ? `<div class="voidnote">Cancelled on ${esc(d.cancelled.at)}${d.cancelled.reason ? ` — ${esc(d.cancelled.reason)}` : ''}</div>` : ''}
-  <div class="foot"><span>This is a computer-generated receipt and needs no signature.</span><span class="sign">For ${esc(d.school.name)}</span></div>
+  ${d.note ? `<div class="note">${esc(d.note)}</div>` : ''}
+  <div class="foot"><span>This is a computer-generated receipt${d.signatureDataUri ? '' : ' and needs no signature'}.</span><span class="sign">${d.signatureDataUri ? `<img class="sig" src="${d.signatureDataUri}" alt="">` : ''}For ${esc(d.school.name)}</span></div>
 </body></html>`;
 }

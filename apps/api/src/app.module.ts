@@ -24,6 +24,7 @@ import { BasicPdfRenderer, ChromiumPdfRenderer, PdfRenderer } from './core/pdf/p
 import { GatewayClient, MockGatewayClient, RazorpayClient } from './core/payments/gateway-client.js';
 import { SecretBox } from './core/payments/secret-box.js';
 import { EntitlementsService } from './core/entitlements/entitlements.service.js';
+import { SchoolSettingsService } from './core/settings/school-settings.service.js';
 import { QueueService } from './core/queue/queue.service.js';
 import { SchedulerService } from './core/queue/scheduler.service.js';
 import { MemoryRateLimitStore, RateLimitGuard } from './core/rate-limit/rate-limit.js';
@@ -66,13 +67,20 @@ import { GuardiansController } from './modules/guardians/guardians.controller.js
 import { GuardiansService } from './modules/guardians/guardians.service.js';
 import { ImportsController } from './modules/imports/imports.controller.js';
 import { ImportsService } from './modules/imports/imports.service.js';
+import { SetupImports } from './modules/imports/setup-imports.js';
 import { MembersController, PermissionsController, RolesController } from './modules/members/members.controller.js';
 import { MembersService } from './modules/members/members.service.js';
+import { DocumentsController } from './modules/documents/documents.controller.js';
+import { DocumentsService } from './modules/documents/documents.service.js';
 import { PlatformController, SchoolPlanController } from './modules/platform/platform.controller.js';
+import { ReportRunsService } from './modules/reports/report-runs.service.js';
+import { AuditController, ReportsController } from './modules/reports/reports.controller.js';
+import { ReportsService } from './modules/reports/reports.service.js';
 import { PlatformService } from './modules/platform/platform.service.js';
 import { SupportAccessService } from './modules/platform/support-access.service.js';
 import { IdentityService } from './modules/schools/identity.service.js';
 import { OnboardingController, PromotionsController, SchoolController } from './modules/school/school.controller.js';
+import { SchoolSettingsController } from './modules/school/settings.controller.js';
 import { SchoolService } from './modules/school/school.service.js';
 import { SchoolsService } from './modules/schools/schools.service.js';
 import { SearchController, SearchService } from './modules/search/search.controller.js';
@@ -107,6 +115,7 @@ export class CoreModule {
       ChannelGateway,
       SecretBox,
       EntitlementsService,
+      SchoolSettingsService,
       { provide: GatewayClient, useClass: env.PAYMENTS_GATEWAY === 'razorpay' ? RazorpayClient : MockGatewayClient },
       { provide: PdfRenderer, useClass: env.PDF_RENDERER === 'chromium' ? ChromiumPdfRenderer : BasicPdfRenderer },
       {
@@ -168,10 +177,9 @@ export class MembersModule {}
 @Module({ imports: [StudentsModule, TeachersModule, GuardiansModule], controllers: [SearchController], providers: [SearchService] })
 export class SearchModule {}
 
-@Module({ imports: [SchoolsModule, GuardiansModule], controllers: [ImportsController], providers: [ImportsService] })
-export class ImportsModule {}
 
-@Module({ imports: [FilesModule], controllers: [SchoolController, OnboardingController, PromotionsController], providers: [SchoolService] })
+
+@Module({ imports: [FilesModule], controllers: [SchoolController, SchoolSettingsController, OnboardingController, PromotionsController], providers: [SchoolService] })
 export class SchoolModule {}
 
 @Module({ imports: [FilesModule, NotificationsModule], controllers: [HomeworkController], providers: [HomeworkService] })
@@ -201,12 +209,21 @@ export class WebhooksModule {}
   imports: [NotificationsModule, FilesModule, WebhooksModule],
   controllers: [FeesController, InvoicesController, PaymentsController, StudentFeesController, GatewayController, OnlinePaymentsController, FinanceJobsController, FinanceReportsController],
   providers: [FeesService, InvoicesService, PaymentsService, GatewayService, OnlinePaymentsService, FinanceJobsService, FinanceReportsService],
-  exports: [FeesService, InvoicesService, PaymentsService, GatewayService, OnlinePaymentsService],
+  exports: [FeesService, InvoicesService, PaymentsService, GatewayService, OnlinePaymentsService, FinanceReportsService],
 })
 export class FinanceModule {}
 
 @Module({ imports: [SchoolsModule, NotificationsModule], controllers: [PlatformController, SchoolPlanController], providers: [PlatformService, SupportAccessService] })
 export class PlatformModule {}
+
+@Module({ imports: [SchoolsModule, GuardiansModule, FinanceModule], controllers: [ImportsController], providers: [ImportsService, SetupImports] })
+export class ImportsModule {}
+
+@Module({ imports: [FilesModule], controllers: [DocumentsController], providers: [DocumentsService] })
+export class DocumentsModule {}
+
+@Module({ imports: [FilesModule, FinanceModule], controllers: [ReportsController, AuditController], providers: [ReportsService, ReportRunsService] })
+export class ReportsModule {}
 
 @Module({})
 export class AppModule {
@@ -236,6 +253,8 @@ export class AppModule {
         ExamsModule,
         FinanceModule,
         PlatformModule,
+        DocumentsModule,
+        ReportsModule,
       ],
     };
   }

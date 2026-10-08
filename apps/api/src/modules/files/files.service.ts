@@ -25,6 +25,7 @@ const DOWNLOAD_TTL_SEC = 5 * 60; // GET links live 5 minutes
 const SNIFF_BYTES = 4100;
 
 /** Object keys: schools/{schoolId}/{purpose}/{fileId} — the purpose is recoverable from the key. */
+const INLINE_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const keyFor = (schoolId: string, purpose: FilePurpose, id: string) => `schools/${schoolId}/${purpose}/${id}`;
 export const purposeOf = (objectKey: string): FilePurpose | null => {
   const purpose = objectKey.split('/')[2];
@@ -161,6 +162,21 @@ export class FilesService {
       }),
     );
     return id;
+  }
+
+  /**
+   * A small stored image as a data: URI for server-rendered PDFs (logo, signature, photo).
+   * Only PNG/JPEG/WebP up to 2 MB; anything else — or a missing file — gives null, never an error.
+   */
+  async imageDataUri(fileId: string | null | undefined): Promise<string | null> {
+    if (!fileId) return null;
+    const file = await this.prisma.db.file.findUnique({ where: { id: fileId }, select: { mimeType: true, sizeBytes: true, status: true } });
+    if (!file || file.status !== 'READY' || !INLINE_IMAGE_TYPES.has(file.mimeType) || Number(file.sizeBytes) > 2 * 1024 * 1024) return null;
+    try {
+      return `data:${file.mimeType};base64,${(await this.bytes(fileId)).toString('base64')}`;
+    } catch {
+      return null;
+    }
   }
 
   /** Raw bytes of a stored file (e.g. merging report cards). */

@@ -144,6 +144,9 @@ export interface Tenant {
   notificationId: string;
   /** A pending support access request (from a made-up platform user). */
   supportGrantId: string;
+  /** A document on s1 (shared with parents) and a finished report export by the admin. */
+  documentId: string;
+  reportRunId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
 }
 
@@ -330,6 +333,12 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
       await db.notification.create({
         data: { schoolId, membershipId: adminMembership.id, event: 'notice.published', title: 'Welcome', body: 'Hello', data: {} },
       })
+    ).id,
+    documentId: (
+      await db.document.create({ data: { schoolId, ownerType: 'STUDENT', ownerId: s1, category: 'birth_certificate', title: 'Birth certificate', fileId: file.id, visibleToGuardian: true, uploadedByMemberId: adminMembership.id } })
+    ).id,
+    reportRunId: (
+      await db.reportRun.create({ data: { schoolId, type: 'student_strength', params: {}, format: 'CSV', status: 'DONE', fileId: file.id, requestedByMemberId: adminMembership.id, completedAt: new Date() } })
     ).id,
     supportGrantId: (
       await db.supportAccessGrant.create({ data: { schoolId, platformUserId: randomUUID(), reason: 'Fixture request', expiresAt: new Date(Date.now() + 3_600_000) } })

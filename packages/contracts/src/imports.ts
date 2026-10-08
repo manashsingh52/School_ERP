@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { uuidSchema } from './common.js';
 
-export const importEntitySchema = z.enum(['STUDENTS', 'TEACHERS']);
+export const importEntitySchema = z.enum(['STUDENTS', 'TEACHERS', 'CLASSES', 'SUBJECTS', 'FEE_ASSIGNMENTS']);
 export type ImportEntity = z.infer<typeof importEntitySchema>;
 
 export interface ImportField {
@@ -59,7 +59,25 @@ export const IMPORT_FIELDS: Record<ImportEntity, ImportField[]> = {
     { key: 'qualification', label: 'Qualification', aliases: ['qualification', 'qualifications', 'degree'], example: 'M.Sc, B.Ed' },
     { key: 'joiningDate', label: 'Joining date', aliases: ['joining date', 'date of joining', 'doj'], example: '01/06/2019' },
   ],
+  CLASSES: [
+    { key: 'className', label: 'Class', aliases: ['class', 'class name', 'grade', 'std', 'standard'], example: 'Class 8', required: true },
+    { key: 'sections', label: 'Sections (A, B, C)', aliases: ['sections', 'section', 'sections names', 'divisions', 'division', 'div'], example: 'A, B, C', required: true },
+    { key: 'capacity', label: 'Seats per section', aliases: ['capacity', 'seats', 'strength', 'max students'], example: '40' },
+    { key: 'displayOrder', label: 'Order', aliases: ['order', 'sequence', 'sort order', 'display order', 'sno', 's no'], example: '10' },
+  ],
+  SUBJECTS: [
+    { key: 'name', label: 'Subject', aliases: ['subject', 'subject name', 'name'], example: 'Mathematics', required: true },
+    { key: 'code', label: 'Code', aliases: ['code', 'subject code', 'short name'], example: 'MATH' },
+    { key: 'type', label: 'Type (core / elective / co-scholastic)', aliases: ['type', 'subject type', 'category'], example: 'Core' },
+    { key: 'classes', label: 'Taught in classes (1-5, 8 or All)', aliases: ['classes', 'class', 'taught in', 'for classes', 'grades'], example: '6-10' },
+  ],
+  FEE_ASSIGNMENTS: [
+    { key: 'admissionNo', label: 'Admission number', aliases: ['admission no', 'admission number', 'adm no', 'admno', 'scholar no', 'sr no'], example: '1042', required: true },
+    { key: 'optionalFees', label: 'Optional fees taken (Transport, Lab)', aliases: ['optional fees', 'opted fees', 'fees', 'optional', 'add ons', 'addons', 'services'], example: 'Transport', required: true },
+  ],
 };
+
+export const importProblemsQuerySchema = z.object({ format: z.enum(['csv', 'xlsx']).default('csv') });
 
 export const createImportSchema = z.object({
   entity: importEntitySchema,

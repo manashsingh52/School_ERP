@@ -1,7 +1,11 @@
 import type { ResultRow } from '@schoolos/contracts';
 
 export interface ReportCardData {
-  school: { name: string; address: string | null; contact: string | null; board: string | null; accent: string; logoDataUri: string | null };
+  school: { name: string; address: string | null; contact: string | null; board: string | null; accent: string; logoDataUri: string | null; affiliation?: string | null };
+  principal?: { name: string | null; signatureDataUri: string | null };
+  /** Settings → Examinations. */
+  note?: string | null;
+  showAttendance?: boolean;
   academicYear: string;
   exam: { name: string; term: string | null; rankingEnabled: boolean };
   student: { dateOfBirth: string | null; guardian: string | null; photoDataUri: string | null };
@@ -82,6 +86,9 @@ export function reportCardHtml(d: ReportCardData): string {
   .signs { margin-top: 42px; display: flex; justify-content: space-between; gap: 24px; }
   .sign { flex: 1; text-align: center; border-top: 1px solid #1b1f24; padding-top: 4px; font-size: 9pt; color: #57606a; }
   .foot { margin-top: 14px; font-size: 7.5pt; color: #8c959f; text-align: center; }
+  .sign { position: relative; }
+  .sig { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); max-height: 34px; max-width: 120px; }
+  .note { margin-top: 12px; font-size: 8pt; color: #3d444d; white-space: pre-line; }
 </style></head>
 <body>
   <div class="head">
@@ -89,7 +96,8 @@ export function reportCardHtml(d: ReportCardData): string {
     <div class="school">
       <h1>${esc(d.school.name)}</h1>
       ${d.school.address ? `<p>${esc(d.school.address)}</p>` : ''}
-      ${d.school.contact || d.school.board ? `<p>${esc([d.school.board ? `Affiliated: ${d.school.board}` : null, d.school.contact].filter(Boolean).join(' · '))}</p>` : ''}
+      ${d.school.affiliation ? `<p>${esc(d.school.affiliation)}</p>` : ''}
+      ${d.school.contact || (d.school.board && !d.school.affiliation) ? `<p>${esc([d.school.board && !d.school.affiliation ? `Affiliated: ${d.school.board}` : null, d.school.contact].filter(Boolean).join(' · '))}</p>` : ''}
     </div>
   </div>
   <div class="title">
@@ -117,7 +125,7 @@ export function reportCardHtml(d: ReportCardData): string {
     <div class="stat"><span>Grade</span><b>${esc(r.grade ?? '—')}</b></div>
     <div class="stat"><span>Result</span><b class="${r.status === 'PASS' ? 'pass' : r.status === 'FAIL' ? 'fail' : ''}">${STATUS[r.status]}</b></div>
     ${ranks}
-    <div class="stat"><span>Attendance</span><b>${r.attendancePct === null ? '—' : `${n(r.attendancePct)}%`}</b></div>
+    ${d.showAttendance === false ? '' : `<div class="stat"><span>Attendance</span><b>${r.attendancePct === null ? '—' : `${n(r.attendancePct)}%`}</b></div>`}
   </div>
   <div class="remarks">
     <div class="remark"><span>Class teacher's remarks</span>${esc(r.teacherRemark ?? '')}</div>
@@ -126,9 +134,10 @@ export function reportCardHtml(d: ReportCardData): string {
   ${d.grades.length ? `<div class="scale">Grading: ${d.grades.map((g) => `<b>${esc(g.label)}</b> ${n(g.minPercent)}–${n(Math.floor(g.maxPercent))}%`).join(' · ')}</div>` : ''}
   <div class="signs">
     <div class="sign">Class teacher${d.classTeacher ? ` (${esc(d.classTeacher)})` : ''}</div>
-    <div class="sign">Principal</div>
+    <div class="sign">${d.principal?.signatureDataUri ? `<img class="sig" src="${d.principal.signatureDataUri}" alt="">` : ''}Principal${d.principal?.name ? ` (${esc(d.principal.name)})` : ''}</div>
     <div class="sign">Parent / guardian</div>
   </div>
+  ${d.note ? `<div class="note">${esc(d.note)}</div>` : ''}
   <div class="foot">This report card was generated electronically by ${esc(d.school.name)}.</div>
 </body></html>`;
 }

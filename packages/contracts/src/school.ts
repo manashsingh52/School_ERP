@@ -121,3 +121,45 @@ export interface PromotionResult {
   graduated: number;
   skipped: number;
 }
+
+// ---------------------------------------------------------------- settings sections (docs/12 Phase 6)
+
+const note = (max: number) => z.string().trim().max(max).nullable().default(null);
+
+export const generalSettingsSchema = z.object({
+  principalName: z.string().trim().max(100).nullable().default(null),
+  /** Printed under the school name on report cards and receipts, e.g. "Affiliated to CBSE · No. 1130xxx". */
+  affiliation: note(120),
+  /** 1 = Monday … 7 = Sunday. */
+  workingDays: z.array(z.number().int().min(1).max(7)).min(1).max(7).default([1, 2, 3, 4, 5, 6]),
+});
+
+export const feeSettingsSchema = z.object({
+  /** Days before the due date that parents get a reminder. */
+  reminderDaysBefore: z.array(z.number().int().min(1).max(30)).max(3).default([7, 1]),
+  overdueReminderEveryDays: z.number().int().min(1).max(30).default(7),
+  maxOverdueReminders: z.number().int().min(0).max(12).default(4),
+  receiptNote: note(200),
+});
+
+export const examSettingsSchema = z.object({
+  showAttendanceOnReportCard: z.boolean().default(true),
+  reportCardNote: note(300),
+});
+
+export const brandingSettingsSchema = z.object({
+  /** Principal's signature image (purpose "signature"), printed on report cards and receipts. */
+  signatureFileId: z.uuid().nullable().default(null),
+  showLogoOnReceipts: z.boolean().default(true),
+});
+
+export const SETTINGS_SECTIONS = { general: generalSettingsSchema, fees: feeSettingsSchema, examinations: examSettingsSchema, branding: brandingSettingsSchema } as const;
+export type SettingsSection = keyof typeof SETTINGS_SECTIONS;
+export const settingsSectionSchema = z.enum(['general', 'fees', 'examinations', 'branding']);
+
+export interface SchoolSettingsView {
+  general: z.output<typeof generalSettingsSchema>;
+  fees: z.output<typeof feeSettingsSchema>;
+  examinations: z.output<typeof examSettingsSchema>;
+  branding: z.output<typeof brandingSettingsSchema> & { signatureUrl: string | null };
+}
