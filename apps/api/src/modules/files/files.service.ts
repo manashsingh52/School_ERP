@@ -135,6 +135,27 @@ export class FilesService {
     });
   }
 
+  /**
+   * Download link for a file the caller may see through the record it is attached to
+   * (e.g. a homework attachment on homework they can view). The caller checks that access.
+   */
+  async attachedLink(fileId: string): Promise<DownloadLink> {
+    const file = await this.prisma.db.file.findUnique({ where: { id: fileId } });
+    if (!file || file.status !== 'READY') throw AppError.notFound('file');
+    const url = await this.storage.downloadUrl({ key: file.objectKey, fileName: file.originalName, contentType: file.mimeType, expiresInSec: DOWNLOAD_TTL_SEC });
+    return { url, expiresAt: new Date(Date.now() + DOWNLOAD_TTL_SEC * 1000).toISOString() };
+  }
+
+  /** Every id must be a verified upload of this purpose in this school (for attachments). */
+  async assertAllReady(fileIds: string[], purpose: FilePurpose, field: string): Promise<FileRow[]> {
+    if (!fileIds.length) return [];
+    const files = await this.prisma.db.file.findMany({ where: { id: { in: fileIds }, status: 'READY' } });
+    if (files.length !== new Set(fileIds).size || files.some((f) => purposeOf(f.objectKey) !== purpose)) {
+      throw AppError.invalidReference(field, 'attachment');
+    }
+    return files;
+  }
+
   /** A file attached to a record must be a verified upload of the right purpose in this school. */
   async assertReady(fileId: string, purpose: FilePurpose): Promise<void> {
     const file = await this.prisma.db.file.findUnique({ where: { id: fileId } });

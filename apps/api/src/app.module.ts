@@ -31,6 +31,8 @@ import { ConsoleOtpSender, OtpSender } from './modules/auth/otp-sender.js';
 import { SessionService } from './modules/auth/session.service.js';
 import { FilesController, LocalStorageController } from './modules/files/files.controller.js';
 import { FilesService } from './modules/files/files.service.js';
+import { HomeworkController } from './modules/homework/homework.controller.js';
+import { HomeworkService } from './modules/homework/homework.service.js';
 import { MeController } from './modules/me/me.controller.js';
 import { PublicController } from './modules/public/public.controller.js';
 import { GuardiansController } from './modules/guardians/guardians.controller.js';
@@ -137,6 +139,9 @@ export class ImportsModule {}
 @Module({ imports: [FilesModule], controllers: [SchoolController, OnboardingController, PromotionsController], providers: [SchoolService] })
 export class SchoolModule {}
 
+@Module({ imports: [FilesModule, NotificationsModule], controllers: [HomeworkController], providers: [HomeworkService] })
+export class HomeworkModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
@@ -158,6 +163,7 @@ export class AppModule {
         SchoolModule,
         NotificationsModule,
         AttendanceModule,
+        HomeworkModule,
       ],
     };
   }

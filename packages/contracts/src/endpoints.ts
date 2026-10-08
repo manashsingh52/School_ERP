@@ -35,6 +35,7 @@ import {
   updateAttendanceSettingsSchema,
 } from './attendance.js';
 import { requestUploadSchema } from './files.js';
+import { createHomeworkSchema, listHomeworkQuerySchema, publishHomeworkSchema, updateHomeworkSchema } from './homework.js';
 import { listNotificationsQuerySchema, updateNotificationRulesSchema } from './notifications.js';
 import { createImportSchema, listImportRowsQuerySchema, setImportMappingSchema } from './imports.js';
 import {
@@ -181,6 +182,14 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/students/:id/attendance': { summary: "A student's attendance history", tag: 'Attendance', access: 'permission:attendance.view', query: historyQuerySchema },
   'GET /v1/staff-attendance': { summary: 'Staff attendance for a day', tag: 'Attendance', access: 'permission:staff_attendance.manage', query: registerQuerySchema },
   'PUT /v1/staff-attendance': { summary: 'Mark staff attendance', tag: 'Attendance', access: 'permission:staff_attendance.manage', body: saveStaffAttendanceSchema },
+
+  'GET /v1/homework': { summary: 'Homework list (scoped: class, own sections, own children)', tag: 'Homework', access: 'permission:homework.view', query: listHomeworkQuerySchema },
+  'POST /v1/homework': { summary: 'Set homework (publish now, draft or schedule)', tag: 'Homework', access: 'permission:homework.manage', body: createHomeworkSchema },
+  'GET /v1/homework/:id': { summary: 'One homework', tag: 'Homework', access: 'permission:homework.view' },
+  'PATCH /v1/homework/:id': { summary: 'Edit homework', tag: 'Homework', access: 'permission:homework.manage', body: updateHomeworkSchema },
+  'POST /v1/homework/:id/publish': { summary: 'Publish a draft now or at a time', tag: 'Homework', access: 'permission:homework.manage', body: publishHomeworkSchema },
+  'DELETE /v1/homework/:id': { summary: 'Delete homework (published → archived)', tag: 'Homework', access: 'permission:homework.manage' },
+  'GET /v1/homework/:id/attachments/:fileId': { summary: 'Download link for an attachment', tag: 'Homework', access: 'permission:homework.view' },
 
   'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 

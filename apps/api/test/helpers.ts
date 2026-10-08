@@ -117,6 +117,8 @@ export interface Tenant {
   adminMembershipId: string;
   teacherRoleId: string;
   importJobId: string;
+  /** Published homework for 8-A (Maths, by the class teacher). */
+  homeworkId: string;
   /** An in-app notification in the admin's inbox. */
   notificationId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
@@ -209,6 +211,20 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     guardianId: guardian.id,
     adminMembershipId: adminMembership.id,
     teacherRoleId: (await db.role.findFirstOrThrow({ where: { schoolId, key: 'teacher' } })).id,
+    homeworkId: (
+      await db.homework.create({
+        data: {
+          schoolId,
+          academicYearId: year.id,
+          subjectId: subject.id,
+          teacherId: teacher.id,
+          title: 'Fixture homework',
+          status: 'PUBLISHED',
+          publishedAt: new Date(),
+          sections: { create: [{ schoolId, sectionId: a!.id }] },
+        },
+      })
+    ).id,
     notificationId: (
       await db.notification.create({
         data: { schoolId, membershipId: adminMembership.id, event: 'notice.published', title: 'Welcome', body: 'Hello', data: {} },

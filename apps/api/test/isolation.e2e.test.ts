@@ -53,6 +53,11 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'GET /v1/sections/:id/attendance/month': (b) => ({ id: b.sectionA, query: 'month=2026-06' }),
   'GET /v1/students/:id/attendance': (b) => b.students.s1,
   'POST /v1/notifications/:id/read': (b) => b.notificationId,
+  'GET /v1/homework/:id': (b) => b.homeworkId,
+  'PATCH /v1/homework/:id': (b) => ({ id: b.homeworkId, body: { title: 'x' } }),
+  'POST /v1/homework/:id/publish': (b) => b.homeworkId,
+  'DELETE /v1/homework/:id': (b) => b.homeworkId,
+  'GET /v1/homework/:id/attachments/:fileId': (b) => b.homeworkId,
 };
 
 /** Routes with :id that are not tenant data (e.g. scoped to the signed-in user). */
@@ -131,7 +136,7 @@ describe('cross-tenant access (School A → School B)', () => {
     const [method, path] = key.split(' ') as [string, string];
     const probe = CROSS_TENANT_PROBES[key]!(B);
     const { id, body = {}, query } = typeof probe === 'string' ? { id: probe } : probe;
-    const url = path.replace(':id', id).replace(':studentId', B.students.s1) + (query ? `?${query}` : '');
+    const url = path.replace(':id', id).replace(':studentId', B.students.s1).replace(':fileId', B.fileId) + (query ? `?${query}` : '');
     const client = t.as(tokens.adminA, A.slug);
     const res =
       method === 'GET' ? await client.get(url)

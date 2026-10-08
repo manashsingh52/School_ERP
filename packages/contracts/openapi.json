@@ -5861,6 +5861,568 @@
         }
       }
     },
+    "/v1/homework": {
+      "get": {
+        "summary": "Homework list (scoped: class, own sections, own children)",
+        "tags": [
+          "Homework"
+        ],
+        "x-access": "permission:homework.view",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "sectionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "studentId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "SCHEDULED",
+                "PUBLISHED",
+                "ARCHIVED"
+              ]
+            }
+          },
+          {
+            "name": "mine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "dueFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "dueTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Set homework (publish now, draft or schedule)",
+        "tags": [
+          "Homework"
+        ],
+        "x-access": "permission:homework.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subjectId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "sectionIds": {
+                    "minItems": 1,
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "dueDate": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "attachmentFileIds": {
+                    "default": [],
+                    "maxItems": 5,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "teacherId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "publish": {
+                    "default": "NOW",
+                    "type": "string",
+                    "enum": [
+                      "NOW",
+                      "DRAFT",
+                      "SCHEDULE"
+                    ]
+                  },
+                  "publishAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  }
+                },
+                "required": [
+                  "subjectId",
+                  "sectionIds",
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/homework/{id}": {
+      "get": {
+        "summary": "One homework",
+        "tags": [
+          "Homework"
+        ],
+        "x-access": "permission:homework.view",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edit homework",
+        "tags": [
+          "Homework"
+        ],
+        "x-access": "permission:homework.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subjectId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "sectionIds": {
+                    "minItems": 1,
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 5000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "dueDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "attachmentFileIds": {
+                    "maxItems": 5,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete homework (published → archived)",
+        "tags": [
+          "Homework"
+        ],
+        "x-access": "permission:homework.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/homework/{id}/publish": {
+      "post": {
+        "summary": "Publish a draft now or at a time",
+        "tags": [
+          "Homework"
+        ],
+        "x-access": "permission:homework.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "publishAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/homework/{id}/attachments/{fileId}": {
+      "get": {
+        "summary": "Download link for an attachment",
+        "tags": [
+          "Homework"
+        ],
+        "x-access": "permission:homework.view",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/v1/search": {
       "get": {
         "summary": "Search students, teachers and parents",

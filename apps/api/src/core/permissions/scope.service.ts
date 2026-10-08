@@ -60,6 +60,23 @@ export class ScopeService {
     return links.map((l) => l.studentId);
   }
 
+  /** Current-year section ids of the current member's children. */
+  async childSectionIds(): Promise<string[]> {
+    const [children, yearId] = await Promise.all([this.childStudentIds(), this.currentAcademicYearId()]);
+    if (!children.length || !yearId) return [];
+    const rows = await this.prisma.db.studentEnrollment.findMany({
+      where: { studentId: { in: children }, academicYearId: yearId },
+      select: { sectionId: true },
+    });
+    return [...new Set(rows.map((r) => r.sectionId))];
+  }
+
+  /** The Teacher record of the signed-in member, if they are one. */
+  async myTeacherId(): Promise<string | null> {
+    const { membershipId } = RequestContextStore.tenant();
+    return (await this.prisma.db.teacher.findUnique({ where: { membershipId }, select: { id: true } }))?.id ?? null;
+  }
+
   /** Prisma filter for students visible under `permission`. */
   async studentWhere(permission: Permission): Promise<Prisma.StudentWhereInput> {
     switch (this.scopeOf(permission)) {
