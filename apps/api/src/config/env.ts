@@ -26,6 +26,14 @@ const envSchema = z.object({
   MSG91_SENDER_ID: optional(z.string()),
   MSG91_OTP_TEMPLATE_ID: optional(z.string()),
 
+  // Notification channels (docs/01 §3 notifications). console = print to the log (development).
+  PUSH_PROVIDER: z.enum(['none', 'console', 'fcm']).default('none'),
+  SMS_PROVIDER: z.enum(['none', 'console', 'msg91']).default('none'),
+  EMAIL_PROVIDER: z.enum(['none', 'console', 'resend']).default('none'),
+  // ⏸ Email via Resend — fill in once the sending domain is verified
+  RESEND_API_KEY: optional(z.string()),
+  EMAIL_FROM: optional(z.string()),
+
   // Background jobs (docs/01 §5). V1 runs BullMQ on PostgreSQL — no Redis needed.
   QUEUE_BACKEND: z.enum(['postgres', 'redis']).default('postgres'),
   /** Defaults to PLATFORM_DATABASE_URL. */
@@ -62,6 +70,7 @@ function checkProviders(env: Env): string[] {
   if (env.STORAGE_DRIVER === 'gcs' && (!env.GCS_PRIVATE_BUCKET || !env.GCS_PROJECT_ID)) {
     problems.push('STORAGE_DRIVER=gcs needs GCS_PROJECT_ID and GCS_PRIVATE_BUCKET');
   }
+  if (env.EMAIL_PROVIDER === 'resend' && (!env.RESEND_API_KEY || !env.EMAIL_FROM)) problems.push('EMAIL_PROVIDER=resend needs RESEND_API_KEY and EMAIL_FROM');
   if (env.OTP_PROVIDER === 'msg91' && (!env.MSG91_AUTH_KEY || !env.MSG91_OTP_TEMPLATE_ID)) {
     problems.push('OTP_PROVIDER=msg91 needs MSG91_AUTH_KEY and MSG91_OTP_TEMPLATE_ID');
   }

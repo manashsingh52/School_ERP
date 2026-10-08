@@ -25,7 +25,17 @@ import {
   updateSectionSchema,
   updateSubjectSchema,
 } from './academics.js';
+import {
+  historyQuerySchema,
+  monthQuerySchema,
+  overviewQuerySchema,
+  registerQuerySchema,
+  saveRegisterSchema,
+  saveStaffAttendanceSchema,
+  updateAttendanceSettingsSchema,
+} from './attendance.js';
 import { requestUploadSchema } from './files.js';
+import { listNotificationsQuerySchema, updateNotificationRulesSchema } from './notifications.js';
 import { createImportSchema, listImportRowsQuerySchema, setImportMappingSchema } from './imports.js';
 import {
   promotionCommitSchema,
@@ -154,6 +164,23 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/onboarding/go-live': { summary: 'Mark the school live', tag: 'School', access: 'permission:school.settings.manage' },
   'POST /v1/promotions/preview': { summary: 'Plan year-end promotion', tag: 'Students', access: 'permission:student.promote', body: promotionPreviewSchema },
   'POST /v1/promotions/commit': { summary: 'Promote students to the next year', tag: 'Students', access: 'permission:student.promote', body: promotionCommitSchema, idempotent: true },
+
+  'GET /v1/notifications': { summary: 'My notifications (newest first)', tag: 'Notifications', access: 'school', query: listNotificationsQuerySchema },
+  'GET /v1/notifications/unread-count': { summary: 'Unread badge count', tag: 'Notifications', access: 'school' },
+  'POST /v1/notifications/read-all': { summary: 'Mark all my notifications read', tag: 'Notifications', access: 'school' },
+  'POST /v1/notifications/:id/read': { summary: 'Mark one notification read', tag: 'Notifications', access: 'school' },
+  'GET /v1/notification-rules': { summary: 'Which events notify whom, on which channels', tag: 'Notifications', access: 'permission:notification.settings.manage' },
+  'PUT /v1/notification-rules': { summary: 'Turn events and channels on or off', tag: 'Notifications', access: 'permission:notification.settings.manage', body: updateNotificationRulesSchema },
+
+  'GET /v1/attendance/overview': { summary: "Today's attendance across sections", tag: 'Attendance', access: 'permission:attendance.view', query: overviewQuerySchema },
+  'GET /v1/attendance/settings': { summary: 'Attendance rules (edit window, who marks, weekly off)', tag: 'Attendance', access: 'permission:attendance.view' },
+  'PUT /v1/attendance/settings': { summary: 'Change attendance rules', tag: 'Attendance', access: 'permission:school.settings.manage', body: updateAttendanceSettingsSchema },
+  'GET /v1/sections/:id/attendance': { summary: "A section's register for a day", tag: 'Attendance', access: 'permission:attendance.view', query: registerQuerySchema },
+  'PUT /v1/sections/:id/attendance': { summary: 'Save or submit a register', tag: 'Attendance', access: 'permission:attendance.mark', body: saveRegisterSchema },
+  'GET /v1/sections/:id/attendance/month': { summary: 'Monthly attendance grid', tag: 'Attendance', access: 'permission:attendance.view', query: monthQuerySchema },
+  'GET /v1/students/:id/attendance': { summary: "A student's attendance history", tag: 'Attendance', access: 'permission:attendance.view', query: historyQuerySchema },
+  'GET /v1/staff-attendance': { summary: 'Staff attendance for a day', tag: 'Attendance', access: 'permission:staff_attendance.manage', query: registerQuerySchema },
+  'PUT /v1/staff-attendance': { summary: 'Mark staff attendance', tag: 'Attendance', access: 'permission:staff_attendance.manage', body: saveStaffAttendanceSchema },
 
   'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 

@@ -14,6 +14,8 @@ export const QUEUES = {
   maintenance: 'maintenance',
   /** Excel/CSV import commits. */
   imports: 'imports',
+  /** One job per notification delivery (push / SMS / email). */
+  notifications: 'notifications',
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 

@@ -16,7 +16,7 @@ const tokens: Record<'adminA' | 'teacherA' | 'parentA' | 'accountantA' | 'adminB
  * A new module that adds an :id route without an entry FAILS the "registry is complete" test,
  * so cross-tenant coverage can't be forgotten.
  */
-type Probe = string | { id: string; body: object };
+type Probe = string | { id: string; body?: object; query?: string };
 const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'GET /v1/students/:id': (b) => b.students.s1,
   'PATCH /v1/students/:id': (b) => b.students.s1,
@@ -48,6 +48,11 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'GET /v1/imports/:id/problems': (b) => b.importJobId,
   'POST /v1/files/:id/complete': (b) => b.fileId,
   'GET /v1/files/:id/download-url': (b) => b.fileId,
+  'GET /v1/sections/:id/attendance': (b) => b.sectionA,
+  'PUT /v1/sections/:id/attendance': (b) => ({ id: b.sectionA, body: { date: '2026-06-01', records: [] } }),
+  'GET /v1/sections/:id/attendance/month': (b) => ({ id: b.sectionA, query: 'month=2026-06' }),
+  'GET /v1/students/:id/attendance': (b) => b.students.s1,
+  'POST /v1/notifications/:id/read': (b) => b.notificationId,
 };
 
 /** Routes with :id that are not tenant data (e.g. scoped to the signed-in user). */
@@ -125,8 +130,8 @@ describe('cross-tenant access (School A → School B)', () => {
   it.each(Object.keys(CROSS_TENANT_PROBES))('%s with a B id → 404', async (key) => {
     const [method, path] = key.split(' ') as [string, string];
     const probe = CROSS_TENANT_PROBES[key]!(B);
-    const { id, body } = typeof probe === 'string' ? { id: probe, body: {} } : probe;
-    const url = path.replace(':id', id).replace(':studentId', B.students.s1);
+    const { id, body = {}, query } = typeof probe === 'string' ? { id: probe } : probe;
+    const url = path.replace(':id', id).replace(':studentId', B.students.s1) + (query ? `?${query}` : '');
     const client = t.as(tokens.adminA, A.slug);
     const res =
       method === 'GET' ? await client.get(url)

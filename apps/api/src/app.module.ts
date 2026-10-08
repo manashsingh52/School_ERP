@@ -19,9 +19,12 @@ import { OutboxService } from './core/outbox/outbox.service.js';
 import { GcsStorageDriver } from './core/storage/gcs.driver.js';
 import { LocalStorageDriver } from './core/storage/local.driver.js';
 import { StorageDriver } from './core/storage/storage.js';
+import { ChannelGateway } from './core/notify/channel-gateway.js';
 import { QueueService } from './core/queue/queue.service.js';
 import { MemoryRateLimitStore, RateLimitGuard } from './core/rate-limit/rate-limit.js';
 import { AcademicsModule } from './modules/academics/academics.module.js';
+import { AttendanceModule } from './modules/attendance/attendance.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AuthController } from './modules/auth/auth.controller.js';
 import { AuthService } from './modules/auth/auth.service.js';
 import { ConsoleOtpSender, OtpSender } from './modules/auth/otp-sender.js';
@@ -68,6 +71,7 @@ export class CoreModule {
       QueueService,
       OutboxService,
       IdempotencyInterceptor,
+      ChannelGateway,
       {
         provide: StorageDriver,
         useFactory: () =>
@@ -152,6 +156,8 @@ export class AppModule {
         SearchModule,
         ImportsModule,
         SchoolModule,
+        NotificationsModule,
+        AttendanceModule,
       ],
     };
   }

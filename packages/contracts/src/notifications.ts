@@ -1,0 +1,111 @@
+import { z } from 'zod';
+
+export const notificationChannelSchema = z.enum(['IN_APP', 'PUSH', 'SMS', 'EMAIL']);
+export type NotificationChannel = z.infer<typeof notificationChannelSchema>;
+
+export interface NotificationEventDef {
+  label: string;
+  description: string;
+  audience: string;
+  /** Channels a school can turn on for this event (IN_APP is always on — it's the inbox). */
+  channels: NotificationChannel[];
+  defaultChannels: NotificationChannel[];
+  defaultEnabled: boolean;
+  /** {{placeholders}} are filled from the event. */
+  title: string;
+  body: string;
+}
+
+/**
+ * Every event the notification engine knows (Master Prompt §39). Modules publish events;
+ * only this catalog + the engine decide who hears about it and how.
+ */
+export const NOTIFICATION_EVENTS = {
+  'attendance.absent': {
+    label: 'Absent today',
+    description: 'When a student is marked absent.',
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH', 'SMS'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '{{student}} was marked absent',
+    body: '{{student}} ({{class}}) was marked absent on {{date}}. Please contact the school if this is unexpected.',
+  },
+  'attendance.late': {
+    label: 'Arrived late',
+    description: 'When a student is marked late.',
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH'],
+    defaultChannels: ['IN_APP'],
+    defaultEnabled: false,
+    title: '{{student}} arrived late',
+    body: '{{student}} ({{class}}) was marked late on {{date}}.',
+  },
+  'homework.published': {
+    label: 'New homework',
+    description: 'When a teacher publishes homework.',
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '{{subject}} homework for {{student}}',
+    body: '{{title}}{{due}}',
+  },
+  'notice.published': {
+    label: 'Notices',
+    description: 'When the school publishes a notice to someone.',
+    audience: 'Chosen audience',
+    channels: ['IN_APP', 'PUSH', 'EMAIL'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '{{title}}',
+    body: '{{preview}}',
+  },
+} as const satisfies Record<string, NotificationEventDef>;
+
+export type NotificationEvent = keyof typeof NOTIFICATION_EVENTS;
+export const NOTIFICATION_EVENT_KEYS = Object.keys(NOTIFICATION_EVENTS) as NotificationEvent[];
+
+/** Fill {{placeholders}}; unknown ones become empty. */
+export function renderTemplate(template: string, vars: Record<string, string | number | null | undefined>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => String(vars[key] ?? '')).trim();
+}
+
+export interface NotificationItem {
+  id: string;
+  event: string;
+  title: string;
+  body: string;
+  /** Where tapping it goes, e.g. { route: "/attendance" }. */
+  data: { route?: string; [key: string]: unknown };
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationRuleItem {
+  event: NotificationEvent;
+  label: string;
+  description: string;
+  audience: string;
+  enabled: boolean;
+  channels: NotificationChannel[];
+  availableChannels: NotificationChannel[];
+}
+
+export const updateNotificationRulesSchema = z.object({
+  rules: z
+    .array(
+      z.object({
+        event: z.enum(NOTIFICATION_EVENT_KEYS as [NotificationEvent, ...NotificationEvent[]]),
+        enabled: z.boolean(),
+        channels: z.array(notificationChannelSchema).max(4),
+      }),
+    )
+    .min(1),
+});
+
+export const listNotificationsQuerySchema = z.object({
+  cursor: z.string().max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  unread: z.enum(['true', 'false']).optional(),
+});
