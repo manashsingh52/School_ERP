@@ -121,6 +121,8 @@ export interface Tenant {
   bellScheduleId: string;
   /** Draft timetable for 8-A on that schedule (empty). */
   timetableId: string;
+  /** Published notice to everyone, by the admin. */
+  noticeId: string;
   /** Published homework for 8-A (Maths, by the class teacher). */
   homeworkId: string;
   /** An in-app notification in the admin's inbox. */
@@ -234,6 +236,19 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
       const tt = await db.timetable.create({ data: { schoolId, academicYearId: year.id, sectionId: a!.id, bellScheduleId: bell.id, effectiveFrom: date('2026-04-01') } });
       return { bellScheduleId: bell.id, timetableId: tt.id };
     })()),
+    noticeId: (
+      await db.notice.create({
+        data: {
+          schoolId,
+          title: 'Welcome back',
+          body: 'School reopens on Monday.',
+          status: 'PUBLISHED',
+          publishedAt: new Date(),
+          createdByMemberId: adminMembership.id,
+          audiences: { create: [{ schoolId, type: 'SCHOOL' }] },
+        },
+      })
+    ).id,
     homeworkId: (
       await db.homework.create({
         data: {

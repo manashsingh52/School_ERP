@@ -11,3 +11,4 @@ export * from './notifications.js';
 export * from './attendance.js';
 export * from './homework.js';
 export * from './timetable.js';
+export * from './notices.js';

@@ -21,9 +21,10 @@ export class ScopeService {
     return scope;
   }
 
+  /** Works in background jobs too (needs only the school, not a signed-in member). */
   async currentAcademicYearId(): Promise<string | null> {
     const school = await this.prisma.db.school.findUnique({
-      where: { id: RequestContextStore.tenant().schoolId },
+      where: { id: RequestContextStore.school().schoolId },
       select: { currentAcademicYearId: true },
     });
     return school?.currentAcademicYearId ?? null;

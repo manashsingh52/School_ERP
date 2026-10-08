@@ -27,6 +27,8 @@ export interface NotifyRequest {
   recipients: { membershipId: string; vars: Record<string, string | number | null | undefined>; data?: Record<string, unknown> }[];
   /** Skip recipients who already got a notification with this key (e.g. "absent:<student>:<date>"). */
   dedupeKey?: (membershipId: string, index: number) => string;
+  /** Inbox only, no push/SMS/email (e.g. a notice the author chose not to push). */
+  inAppOnly?: boolean;
 }
 
 /**
@@ -69,7 +71,7 @@ export class NotificationsService implements OnModuleInit {
     }
     if (!recipients.length) return 0;
 
-    const extra = rule.channels.filter((c): c is Exclude<NotificationChannel, 'IN_APP'> => c !== 'IN_APP');
+    const extra = req.inAppOnly ? [] : rule.channels.filter((c): c is Exclude<NotificationChannel, 'IN_APP'> => c !== 'IN_APP');
     const notifications: Prisma.NotificationCreateManyInput[] = [];
     const deliveries: Prisma.NotificationDeliveryCreateManyInput[] = [];
     for (const r of recipients) {

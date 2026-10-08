@@ -35,6 +35,7 @@ import {
   updateAttendanceSettingsSchema,
 } from './attendance.js';
 import { requestUploadSchema } from './files.js';
+import { createNoticeSchema, listNoticesQuerySchema, publishNoticeSchema, updateNoticeSchema } from './notices.js';
 import { bellScheduleSchema, createTimetableSchema, saveTimetableSchema, timetableQuerySchema, todayQuerySchema } from './timetable.js';
 import { createHomeworkSchema, listHomeworkQuerySchema, publishHomeworkSchema, updateHomeworkSchema } from './homework.js';
 import { listNotificationsQuerySchema, updateNotificationRulesSchema } from './notifications.js';
@@ -205,6 +206,17 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/timetables/:id/publish': { summary: 'Publish to teachers and parents', tag: 'Timetable', access: 'permission:timetable.manage' },
   'DELETE /v1/timetables/:id': { summary: 'Delete a timetable', tag: 'Timetable', access: 'permission:timetable.manage' },
   'GET /v1/teachers/:id/timetable': { summary: "A teacher's week", tag: 'Timetable', access: 'permission:timetable.view' },
+
+  'GET /v1/notices': { summary: 'Notices addressed to me (managers: all)', tag: 'Notices', access: 'permission:notice.view', query: listNoticesQuerySchema },
+  'POST /v1/notices': { summary: 'Write a notice (publish now, draft or schedule)', tag: 'Notices', access: 'permission:notice.create', body: createNoticeSchema },
+  'GET /v1/notices/audience-options': { summary: 'Classes, sections and roles I may address', tag: 'Notices', access: 'permission:notice.create' },
+  'GET /v1/notices/:id': { summary: 'One notice', tag: 'Notices', access: 'permission:notice.view' },
+  'PATCH /v1/notices/:id': { summary: 'Edit a notice', tag: 'Notices', access: 'permission:notice.create', body: updateNoticeSchema },
+  'POST /v1/notices/:id/publish': { summary: 'Publish a draft now or at a time', tag: 'Notices', access: 'permission:notice.create', body: publishNoticeSchema },
+  'DELETE /v1/notices/:id': { summary: 'Delete a notice (published → archived)', tag: 'Notices', access: 'permission:notice.create' },
+  'POST /v1/notices/:id/read': { summary: 'Read receipt', tag: 'Notices', access: 'permission:notice.view' },
+  'GET /v1/notices/:id/stats': { summary: 'How many recipients opened it', tag: 'Notices', access: 'permission:notice.create' },
+  'GET /v1/notices/:id/attachments/:fileId': { summary: 'Download link for an attachment', tag: 'Notices', access: 'permission:notice.view' },
 
   'GET /v1/search': { summary: 'Search students, teachers and parents', tag: 'Search', access: 'school', query: searchQuerySchema },
 

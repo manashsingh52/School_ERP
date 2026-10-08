@@ -64,6 +64,13 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'POST /v1/timetables/:id/publish': (b) => b.timetableId,
   'DELETE /v1/timetables/:id': (b) => b.timetableId,
   'GET /v1/teachers/:id/timetable': (b) => b.teacherId,
+  'GET /v1/notices/:id': (b) => b.noticeId,
+  'PATCH /v1/notices/:id': (b) => ({ id: b.noticeId, body: { title: 'x' } }),
+  'POST /v1/notices/:id/publish': (b) => b.noticeId,
+  'DELETE /v1/notices/:id': (b) => b.noticeId,
+  'POST /v1/notices/:id/read': (b) => b.noticeId,
+  'GET /v1/notices/:id/stats': (b) => b.noticeId,
+  'GET /v1/notices/:id/attachments/:fileId': (b) => b.noticeId,
 };
 
 /** Routes with :id that are not tenant data (e.g. scoped to the signed-in user). */
