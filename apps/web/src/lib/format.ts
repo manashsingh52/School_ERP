@@ -37,3 +37,40 @@ export function classSection(className: string | null, sectionName: string | nul
   const short = className.replace(/^Class\s+/i, '');
   return sectionName ? `${short}-${sectionName}` : short;
 }
+
+const isoFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+const dayFmt = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+const monthFmt = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+/** Today in the school's timezone as YYYY-MM-DD. */
+export const todayISO = () => isoFmt.format(new Date());
+
+/** "2026-10-08" + 1 → "2026-10-09" */
+export function addDays(iso: string, days: number): string {
+  return new Date(Date.parse(`${iso}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** "2026-10-08" → "Thu, 8 Oct" */
+export const formatDay = (iso: string) => dayFmt.format(new Date(`${iso}T00:00:00Z`));
+
+/** "2026-10" → "October 2026" */
+export const formatMonth = (month: string) => monthFmt.format(new Date(`${month}-01T00:00:00Z`));
+
+/** "2026-10" + -1 → "2026-09" */
+export function addMonths(month: string, n: number): string {
+  const d = new Date(`${month}-01T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + n);
+  return d.toISOString().slice(0, 7);
+}
+
+export const formatPercent = (n: number | null | undefined) => (n === null || n === undefined ? '—' : `${n % 1 ? n.toFixed(1) : n}%`);
+
+/** "5 min ago", "Yesterday", "3 Oct" */
+export function timeAgo(iso: string, now = Date.now()): string {
+  const s = Math.max(0, Math.round((now - Date.parse(iso)) / 1000));
+  if (s < 60) return 'Just now';
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86_400) return `${Math.floor(s / 3600)} h ago`;
+  if (s < 172_800) return 'Yesterday';
+  return formatDate(iso);
+}

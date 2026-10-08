@@ -13,13 +13,14 @@ import {
   Tooltip,
   cn,
 } from '@schoolos/ui';
-import { Bell, Check, LogOut, Menu as MenuIcon, PanelLeftClose, PanelLeftOpen, Search, X } from 'lucide-react';
+import { LogOut, Menu as MenuIcon, PanelLeftClose, PanelLeftOpen, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { apiPost } from '@/lib/api-client';
 import { useMe } from '@/lib/me';
 import { CommandPalette } from './command-palette';
+import { NotificationsButton } from './notifications-button';
 import { SETTINGS_NAV, visibleNav, type NavItem } from './nav';
 
 const COLLAPSE_KEY = 'sos.sidebar.collapsed';
@@ -188,27 +189,6 @@ function NavLink({ item, active, collapsed }: { item: NavItem; active: boolean; 
         </Link>
       </Tooltip>
     </li>
-  );
-}
-
-function NotificationsButton() {
-  return (
-    <Menu>
-      <MenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label="Notifications">
-          <Bell />
-        </Button>
-      </MenuTrigger>
-      <MenuContent className="w-80">
-        <div className="flex flex-col items-center px-4 py-8 text-center">
-          <div className="mb-3 flex size-9 items-center justify-center rounded-full bg-subtle text-fg-tertiary">
-            <Check className="size-4" />
-          </div>
-          <p className="text-body font-medium">You're all caught up</p>
-          <p className="mt-0.5 text-small text-fg-secondary">Absences, fee updates and notices will show up here.</p>
-        </div>
-      </MenuContent>
-    </Menu>
   );
 }
 
