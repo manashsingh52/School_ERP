@@ -70,3 +70,10 @@ export interface HomeworkItem {
   /** Can the caller edit/delete it? */
   canEdit: boolean;
 }
+
+/** What the caller may set homework for: sections and, per section, subjects. */
+export interface HomeworkTargets {
+  /** True when the caller can post on behalf of any teacher (admins). */
+  anyTeacher: boolean;
+  sections: { id: string; label: string; subjects: { id: string; name: string; teacherName: string | null }[] }[];
+}

@@ -38,7 +38,7 @@ export const NAV: NavItem[] = [
   { href: '/teachers', label: 'Teachers', icon: GraduationCap, any: ['teacher.view'], scopes: STAFF, ready: true },
   { href: '/academics', label: 'Academics', icon: BookOpen, any: ['academic.view'], scopes: STAFF, ready: true },
   { href: '/attendance', label: 'Attendance', icon: CalendarCheck, any: ['attendance.view', 'staff_attendance.manage'], scopes: STAFF, ready: true },
-  { href: '/homework', label: 'Homework', icon: NotebookPen, any: ['homework.view'], scopes: STAFF, ready: false, phase: 'Phase 3' },
+  { href: '/homework', label: 'Homework', icon: NotebookPen, any: ['homework.view'], scopes: STAFF, ready: true },
   { href: '/timetable', label: 'Timetable', icon: CalendarClock, any: ['timetable.view'], scopes: STAFF, ready: false, phase: 'Phase 3' },
   { href: '/exams', label: 'Examinations', icon: ClipboardList, any: ['exam.view'], scopes: STAFF, ready: false, phase: 'Phase 4' },
   { href: '/fees', label: 'Fees', icon: IndianRupee, any: ['fee.manage', 'invoice.view'], scopes: STAFF, ready: false, phase: 'Phase 5' },

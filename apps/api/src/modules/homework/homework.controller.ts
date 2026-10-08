@@ -24,6 +24,12 @@ export class HomeworkController {
     return { data: await this.homework.create(body) };
   }
 
+  @Get('targets')
+  @RequirePermission('homework.manage')
+  async targets() {
+    return { data: await this.homework.targets() };
+  }
+
   @Get(':id')
   @RequirePermission('homework.view')
   async get(@Param('id', id) homeworkId: string) {

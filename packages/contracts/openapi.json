@@ -6113,6 +6113,41 @@
         }
       }
     },
+    "/v1/homework/targets": {
+      "get": {
+        "summary": "Sections and subjects I may set homework for",
+        "tags": [
+          "Homework"
+        ],
+        "x-access": "permission:homework.manage",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/v1/homework/{id}": {
       "get": {
         "summary": "One homework",

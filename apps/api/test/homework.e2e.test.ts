@@ -145,6 +145,17 @@ describe('setting homework', () => {
     expect(row.status).toBe('ARCHIVED');
   });
 
+  it('lists what each person may set homework for', async () => {
+    const mine = await t.as(tok.teacher, A.slug).get('/v1/homework/targets');
+    expect(mine.body.data).toMatchObject({ anyTeacher: false, sections: [{ id: A.sectionA, label: '8-A' }] });
+    expect(mine.body.data.sections[0].subjects.map((s: { id: string }) => s.id)).toContain(A.subjectId);
+    const all = await t.as(tok.admin, A.slug).get('/v1/homework/targets');
+    expect(all.body.data.anyTeacher).toBe(true);
+    const b = all.body.data.sections.find((s: { id: string }) => s.id === A.sectionB);
+    expect(b.subjects).toEqual([{ id: A.subjectId, name: 'Mathematics', teacherName: 'Second' }]);
+    expect((await t.as(tok.parent, A.slug).get('/v1/homework/targets')).status).toBe(403);
+  });
+
   it('teachers can filter to their own homework', async () => {
     const res = await t.as(tok.teacher, A.slug).get('/v1/homework?mine=true&pageSize=50');
     expect(res.status).toBe(200);

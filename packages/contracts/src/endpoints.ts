@@ -185,6 +185,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
 
   'GET /v1/homework': { summary: 'Homework list (scoped: class, own sections, own children)', tag: 'Homework', access: 'permission:homework.view', query: listHomeworkQuerySchema },
   'POST /v1/homework': { summary: 'Set homework (publish now, draft or schedule)', tag: 'Homework', access: 'permission:homework.manage', body: createHomeworkSchema },
+  'GET /v1/homework/targets': { summary: 'Sections and subjects I may set homework for', tag: 'Homework', access: 'permission:homework.manage' },
   'GET /v1/homework/:id': { summary: 'One homework', tag: 'Homework', access: 'permission:homework.view' },
   'PATCH /v1/homework/:id': { summary: 'Edit homework', tag: 'Homework', access: 'permission:homework.manage', body: updateHomeworkSchema },
   'POST /v1/homework/:id/publish': { summary: 'Publish a draft now or at a time', tag: 'Homework', access: 'permission:homework.manage', body: publishHomeworkSchema },

@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import type {
   DownloadLink,
   HomeworkItem,
+  HomeworkTargets,
   PageResponse,
   createHomeworkSchema,
   listHomeworkQuerySchema,
@@ -117,12 +118,53 @@ export class HomeworkService implements OnModuleInit {
       return { teacherId: requestedTeacherId, yearId };
     }
     if (me) return { teacherId: me, yearId };
-    const assigned = await this.prisma.db.teachingAssignment.findFirst({ where: { subjectId, sectionId: { in: ids } }, select: { teacherId: true } });
+    // The subject teacher of the first chosen section (deterministic when sections differ).
+    const assignments = await this.prisma.db.teachingAssignment.findMany({ where: { subjectId, sectionId: { in: ids } }, select: { teacherId: true, sectionId: true }, orderBy: { id: 'asc' } });
+    const assigned = assignments.sort((a, b) => ids.indexOf(a.sectionId) - ids.indexOf(b.sectionId))[0];
     if (!assigned) throw new AppError('TEACHER_REQUIRED', 422, 'Choose which teacher this homework is from.', [{ field: 'teacherId', message: 'Choose a teacher' }]);
     return { teacherId: assigned.teacherId, yearId };
   }
 
   // ---------------------------------------------------------------- read
+
+  async targets(): Promise<HomeworkTargets> {
+    const yearId = await this.scope.currentAcademicYearId();
+    const manage = RequestContextStore.tenant().permissions['homework.manage'];
+    if (!yearId || !manage) return { anyTeacher: false, sections: [] };
+    const me = await this.scope.myTeacherId();
+    const [sections, classSubjects, assignments, allSubjects] = await Promise.all([
+      this.prisma.db.section.findMany({
+        where: { academicYearId: yearId, ...(manage === 'ALL' ? {} : { OR: [{ classTeacherId: me ?? undefined }, { assignments: { some: { teacherId: me ?? undefined } } }] }) },
+        select: { id: true, name: true, classId: true, classTeacherId: true, class: { select: { name: true, displayOrder: true } } },
+      }),
+      this.prisma.db.classSubject.findMany({ where: { academicYearId: yearId }, select: { classId: true, subject: { select: { id: true, name: true } } } }),
+      this.prisma.db.teachingAssignment.findMany({
+        where: { academicYearId: yearId },
+        orderBy: { id: 'asc' },
+        select: { sectionId: true, subjectId: true, teacherId: true, subject: { select: { id: true, name: true } }, teacher: { select: { firstName: true, lastName: true } } },
+      }),
+      this.prisma.db.subject.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    ]);
+    if (manage !== 'ALL' && !me) return { anyTeacher: false, sections: [] };
+    sections.sort((a, b) => a.class.displayOrder - b.class.displayOrder || a.name.localeCompare(b.name));
+    return {
+      anyTeacher: manage === 'ALL',
+      sections: sections
+        .map((sec) => {
+          const teacherOf = (subjectId: string) => {
+            const a = assignments.find((x) => x.sectionId === sec.id && x.subjectId === subjectId);
+            return a ? fullName(a.teacher.firstName, a.teacher.lastName) : null;
+          };
+          const ofClass = classSubjects.filter((c) => c.classId === sec.classId).map((c) => c.subject);
+          let subjects: { id: string; name: string }[];
+          if (manage === 'ALL' || sec.classTeacherId === me) subjects = ofClass.length ? ofClass : allSubjects;
+          else subjects = assignments.filter((a) => a.sectionId === sec.id && a.teacherId === me).map((a) => a.subject);
+          const unique = [...new Map(subjects.map((x) => [x.id, x])).values()].sort((a, b) => a.name.localeCompare(b.name));
+          return { id: sec.id, label: label(sec.class.name, sec.name), subjects: unique.map((x) => ({ ...x, teacherName: teacherOf(x.id) })) };
+        })
+        .filter((s) => s.subjects.length),
+    };
+  }
 
   async list(query: In<typeof listHomeworkQuerySchema>): Promise<PageResponse<HomeworkItem>> {
     const filters: Prisma.HomeworkWhereInput[] = [await this.visibleWhere()];
