@@ -22,14 +22,21 @@ function inAnHour(): string {
 }
 
 /** Create or edit homework. Sections first (chips), then a subject taught in all of them. */
-export function HomeworkForm({ existing, onDone }: { existing?: HomeworkItem; onDone: () => void }) {
+/** Pre-filled text for a new homework (e.g. from an AI worksheet draft). */
+export interface HomeworkDraft {
+  title: string;
+  description: string;
+}
+export const HOMEWORK_DRAFT_KEY = 'schoolos-homework-draft';
+
+export function HomeworkForm({ existing, draft, onDone }: { existing?: HomeworkItem; draft?: HomeworkDraft; onDone: () => void }) {
   const qc = useQueryClient();
   const targets = useData<HomeworkTargets>(['homework', 'targets'], '/homework/targets', { staleTime: 60_000 });
   const teachers = useTeacherOptions(!!targets.data?.anyTeacher && !existing);
   const [sectionIds, setSectionIds] = useState<string[]>(existing?.sections.map((s) => s.id) ?? []);
   const [subjectId, setSubjectId] = useState(existing?.subject.id ?? '');
-  const [title, setTitle] = useState(existing?.title ?? '');
-  const [description, setDescription] = useState(existing?.description ?? '');
+  const [title, setTitle] = useState(existing?.title ?? draft?.title ?? '');
+  const [description, setDescription] = useState(existing?.description ?? draft?.description ?? '');
   const [dueDate, setDueDate] = useState(existing?.dueDate ?? '');
   const [teacherId, setTeacherId] = useState('');
   const [files, setFiles] = useState<Attachment[]>(existing?.attachments ?? []);

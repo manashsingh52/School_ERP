@@ -28,7 +28,7 @@ import { CalendarClock, MoreHorizontal, NotebookPen, Paperclip, Pencil, Plus, Se
 import { useEffect, useState } from 'react';
 import { Gate } from '@/components/gate';
 import { AttachmentLinks, dueBadge } from '@/components/homework/homework-bits';
-import { HomeworkForm } from '@/components/homework/homework-form';
+import { HOMEWORK_DRAFT_KEY, HomeworkForm, type HomeworkDraft } from '@/components/homework/homework-form';
 import { ApiError, apiDelete, apiFetch, apiPost } from '@/lib/api-client';
 import { useData } from '@/lib/hooks';
 import { formatDate } from '@/lib/format';
@@ -107,6 +107,19 @@ function HomeworkPageContent() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
+  const [draft, setDraft] = useState<HomeworkDraft | undefined>();
+  // Arriving from "Use as homework" (Assistant): open the form with the draft, once.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(HOMEWORK_DRAFT_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(HOMEWORK_DRAFT_KEY);
+      setDraft(JSON.parse(raw) as HomeworkDraft);
+      setCreating(true);
+    } catch {
+      // storage unavailable — nothing to pre-fill
+    }
+  }, []);
   const [editing, setEditing] = useState<HomeworkItem | null>(null);
   const [viewing, setViewing] = useState<HomeworkItem | null>(null);
   useEffect(() => {
@@ -175,7 +188,7 @@ function HomeworkPageContent() {
 
       <Dialog open={creating} onOpenChange={setCreating}>
         <DialogContent title="Set homework" className="max-w-[640px]">
-          {creating && <HomeworkForm onDone={() => setCreating(false)} />}
+          {creating && <HomeworkForm draft={draft} onDone={() => { setCreating(false); setDraft(undefined); }} />}
         </DialogContent>
       </Dialog>
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>

@@ -2,13 +2,16 @@
 
 import type { AiStatus, AiTable, AskResponse, WorksheetResponse } from '@schoolos/contracts';
 import { Badge, Button, Card, CardHeader, Checkbox, EmptyState, Field, Input, PageHeader, Select, Skeleton, Table, TD, TH, THead, TR, Tabs, Textarea, cn, toast } from '@schoolos/ui';
-import { ChevronDown, ChevronRight, Copy, Send, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, NotebookPen, Send, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Gate } from '@/components/gate';
+import { HOMEWORK_DRAFT_KEY } from '@/components/homework/homework-form';
 import { Markdown } from '@/components/notices/markdown';
 import { ApiError, apiPost } from '@/lib/api-client';
 import { formatDate, formatNumber } from '@/lib/format';
 import { useData } from '@/lib/hooks';
+import { useMe } from '@/lib/me';
 import { rupees } from '@/lib/money';
 
 /** The AI assistant (docs/12 Phase 8): answers from the school's own reports; worksheet drafts. */
@@ -149,6 +152,19 @@ function DataTable({ table }: { table: AiTable }) {
 }
 
 function Worksheet({ onUsed }: { onUsed: () => void }) {
+  const { can } = useMe();
+  const router = useRouter();
+  /** Hand the draft to the homework page, which opens "New homework" with it filled in. */
+  function sendToHomework(w: WorksheetResponse) {
+    const body = w.body.length > 5000 ? `${w.body.slice(0, 4950)}\n\n(Trimmed — the full draft was longer.)` : w.body;
+    try {
+      sessionStorage.setItem(HOMEWORK_DRAFT_KEY, JSON.stringify({ title: w.title.slice(0, 200), description: body }));
+    } catch {
+      toast.error('Your browser blocked this — copy the text instead.');
+      return;
+    }
+    router.push('/homework');
+  }
   const [v, setV] = useState({ subject: '', classLabel: '', topic: '', questions: 10, difficulty: 'medium', includeAnswers: true });
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<WorksheetResponse | null>(null);
@@ -186,7 +202,16 @@ function Worksheet({ onUsed }: { onUsed: () => void }) {
       <Card className="min-h-80">
         {result ? (
           <>
-            <CardHeader title={result.title} description="A draft — read it through before you use it." action={<Button size="sm" variant="secondary" onClick={() => { void navigator.clipboard.writeText(result.body); toast.success('Copied'); }}><Copy /> Copy</Button>} />
+            <CardHeader
+              title={result.title}
+              description="A draft — read it through before you use it."
+              action={
+                <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => { void navigator.clipboard.writeText(result.body); toast.success('Copied'); }}><Copy /> Copy</Button>
+                  {can('homework.manage') && <Button size="sm" onClick={() => sendToHomework(result)}><NotebookPen /> Use as homework</Button>}
+                </div>
+              }
+            />
             <div className="p-5"><Markdown text={result.body} /></div>
           </>
         ) : (
