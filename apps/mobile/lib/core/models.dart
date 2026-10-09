@@ -171,7 +171,7 @@ class Attachment {
 }
 
 class Homework {
-  Homework({required this.id, required this.title, this.description, required this.subject, required this.teacher, required this.sections, this.dueDate, required this.status, required this.attachments});
+  Homework({required this.id, required this.title, this.description, required this.subject, required this.teacher, required this.sections, this.dueDate, required this.status, required this.attachments, this.progress, this.feedback});
   factory Homework.fromJson(Json j) => Homework(
         id: j['id'] as String,
         title: j['title'] as String,
@@ -182,9 +182,13 @@ class Homework {
         dueDate: _s(j['dueDate']),
         status: j['status'] as String,
         attachments: _list(j['attachments']).map(Attachment.fromJson).toList(),
+        progress: _s((j['submission'] as Json?)?['status']),
+        feedback: _s((j['submission'] as Json?)?['feedback']),
       );
   final String id, title, subject, teacher, status;
   final String? description, dueDate;
+  /// Parents only: ASSIGNED | VIEWED | SUBMITTED | REVIEWED, and the teacher's note.
+  final String? progress, feedback;
   final List<String> sections;
   final List<Attachment> attachments;
 }

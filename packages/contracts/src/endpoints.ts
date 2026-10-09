@@ -92,7 +92,7 @@ import {
 } from './finance.js';
 import { createNoticeSchema, listNoticesQuerySchema, publishNoticeSchema, updateNoticeSchema } from './notices.js';
 import { bellScheduleSchema, createTimetableSchema, saveTimetableSchema, timetableQuerySchema, todayQuerySchema } from './timetable.js';
-import { createHomeworkSchema, listHomeworkQuerySchema, publishHomeworkSchema, updateHomeworkSchema } from './homework.js';
+import { createHomeworkSchema, homeworkSeenSchema, listHomeworkQuerySchema, publishHomeworkSchema, saveSubmissionsSchema, updateHomeworkSchema } from './homework.js';
 import { listNotificationsQuerySchema, updateNotificationRulesSchema } from './notifications.js';
 import { createImportSchema, importProblemsQuerySchema, listImportRowsQuerySchema, setImportMappingSchema } from './imports.js';
 import {
@@ -251,6 +251,9 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'PATCH /v1/homework/:id': { summary: 'Edit homework', tag: 'Homework', access: 'permission:homework.manage', body: updateHomeworkSchema },
   'POST /v1/homework/:id/publish': { summary: 'Publish a draft now or at a time', tag: 'Homework', access: 'permission:homework.manage', body: publishHomeworkSchema },
   'DELETE /v1/homework/:id': { summary: 'Delete homework (published → archived)', tag: 'Homework', access: 'permission:homework.manage' },
+  'GET /v1/homework/:id/submissions': { summary: 'Who handed it in (class roster with status and feedback)', tag: 'Homework', access: 'permission:homework.manage' },
+  'PUT /v1/homework/:id/submissions': { summary: 'Mark students submitted / reviewed, with feedback', tag: 'Homework', access: 'permission:homework.manage', body: saveSubmissionsSchema },
+  'POST /v1/homework/:id/seen': { summary: 'A parent opened it (shows the teacher it was seen)', tag: 'Homework', access: 'permission:homework.view', body: homeworkSeenSchema },
   'GET /v1/homework/:id/attachments/:fileId': { summary: 'Download link for an attachment', tag: 'Homework', access: 'permission:homework.view' },
 
   'GET /v1/bell-schedules': { summary: 'Bell schedules and their periods', tag: 'Timetable', access: 'permission:timetable.view' },

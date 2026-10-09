@@ -3,10 +3,13 @@ import type { z } from 'zod';
 import type {
   DownloadLink,
   HomeworkItem,
+  HomeworkProgress,
+  HomeworkSubmissions,
   HomeworkTargets,
   PageResponse,
   createHomeworkSchema,
   listHomeworkQuerySchema,
+  saveSubmissionsSchema,
   updateHomeworkSchema,
 } from '@schoolos/contracts';
 import { AuditService } from '../../core/audit/audit.service.js';
@@ -19,6 +22,7 @@ import { QUEUES, QueueService } from '../../core/queue/queue.service.js';
 import { fromDate, fullName, toDate } from '../../core/util/dates.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { FilesService } from '../files/files.service.js';
+import { ON_ROLL } from '../exams/marks.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 
 type In<T extends z.ZodType> = z.output<T>;
@@ -192,13 +196,105 @@ export class HomeworkService implements OnModuleInit {
       }),
       this.prisma.db.homework.count({ where }),
     ]);
-    return { data: await Promise.all(rows.map((r) => this.toItem(r))), page: { page: query.page, pageSize: query.pageSize, total } };
+    const items = await Promise.all(rows.map((r) => this.toItem(r)));
+    if (query.studentId) {
+      // One child's list (parents): add that child's progress and the teacher's feedback.
+      const subs = await this.prisma.db.homeworkSubmission.findMany({ where: { studentId: query.studentId, homeworkId: { in: rows.map((r) => r.id) } } });
+      for (const item of items) {
+        const sub = subs.find((x) => x.homeworkId === item.id);
+        item.submission = sub ? { status: sub.status, feedback: sub.feedback, reviewedAt: sub.reviewedAt?.toISOString() ?? null } : { status: 'ASSIGNED', feedback: null, reviewedAt: null };
+      }
+    }
+    return { data: items, page: { page: query.page, pageSize: query.pageSize, total } };
   }
 
   async get(id: string): Promise<HomeworkItem> {
     const row = await this.prisma.db.homework.findFirst({ where: { AND: [{ id }, await this.visibleWhere()] }, include });
     if (!row) throw AppError.notFound('homework');
     return this.toItem(row);
+  }
+
+  // ---------------------------------------------------------------- submissions
+
+  /** Students the homework was set for (on roll in its sections this year). */
+  private async roster(row: Row) {
+    return this.prisma.db.studentEnrollment.findMany({
+      where: { sectionId: { in: row.sections.map((s) => s.section.id) }, ...ON_ROLL, student: { archivedAt: null } },
+      select: { studentId: true, rollNo: true, sectionId: true, student: { select: { firstName: true, lastName: true, admissionNo: true } } },
+    });
+  }
+
+  /** Who handed it in — for the teacher who set it (or homework managers). */
+  async submissions(id: string): Promise<HomeworkSubmissions> {
+    const row = await this.editable(id);
+    const [roster, subs] = await Promise.all([this.roster(row), this.prisma.db.homeworkSubmission.findMany({ where: { homeworkId: id } })]);
+    const sectionLabel = new Map(row.sections.map((s) => [s.section.id, label(s.section.class.name, s.section.name)]));
+    const rows = roster
+      .map((e) => {
+        const sub = subs.find((x) => x.studentId === e.studentId);
+        return {
+          studentId: e.studentId,
+          name: fullName(e.student.firstName, e.student.lastName),
+          rollNo: e.rollNo,
+          admissionNo: e.student.admissionNo,
+          section: sectionLabel.get(e.sectionId) ?? '',
+          status: (sub?.status ?? 'ASSIGNED') as HomeworkProgress,
+          viewedAt: sub?.viewedAt?.toISOString() ?? null,
+          submittedAt: sub?.submittedAt?.toISOString() ?? null,
+          reviewedAt: sub?.reviewedAt?.toISOString() ?? null,
+          feedback: sub?.feedback ?? null,
+        };
+      })
+      .sort((a, b) => a.section.localeCompare(b.section) || (a.rollNo ?? 999) - (b.rollNo ?? 999) || a.name.localeCompare(b.name));
+    const counts = { ASSIGNED: 0, VIEWED: 0, SUBMITTED: 0, REVIEWED: 0 } as Record<HomeworkProgress, number>;
+    for (const r of rows) counts[r.status]++;
+    return { homeworkId: id, dueDate: fromDate(row.dueDate), rows, counts };
+  }
+
+  async saveSubmissions(id: string, input: In<typeof saveSubmissionsSchema>): Promise<HomeworkSubmissions> {
+    const row = await this.editable(id);
+    if (row.status !== 'PUBLISHED') throw new AppError('HOMEWORK_NOT_PUBLISHED', 409, 'Publish the homework before recording who handed it in.');
+    const onRoll = new Set((await this.roster(row)).map((e) => e.studentId));
+    if (input.entries.some((e) => !onRoll.has(e.studentId))) throw AppError.invalidReference('entries', 'student in these sections');
+    const now = new Date();
+    await this.prisma.tenantTx(async (tx) => {
+      const existing = await tx.homeworkSubmission.findMany({ where: { homeworkId: id, studentId: { in: input.entries.map((e) => e.studentId) } } });
+      for (const e of input.entries) {
+        const prev = existing.find((x) => x.studentId === e.studentId);
+        // "Not handed in" keeps the parent's "seen" signal; reviewing implies it was handed in.
+        const data =
+          e.status === 'ASSIGNED'
+            ? { status: (prev?.viewedAt ? 'VIEWED' : 'ASSIGNED') as HomeworkProgress, submittedAt: null, reviewedAt: null }
+            : e.status === 'SUBMITTED'
+              ? { status: 'SUBMITTED' as const, submittedAt: prev?.submittedAt ?? now, reviewedAt: null }
+              : { status: 'REVIEWED' as const, submittedAt: prev?.submittedAt ?? now, reviewedAt: prev?.reviewedAt ?? now };
+        const feedback = e.feedback === undefined ? undefined : e.feedback || null;
+        await tx.homeworkSubmission.upsert({
+          where: { homeworkId_studentId: { homeworkId: id, studentId: e.studentId } },
+          create: { homeworkId: id, studentId: e.studentId, ...data, feedback: feedback ?? null } as Prisma.HomeworkSubmissionUncheckedCreateInput,
+          update: { ...data, ...(feedback !== undefined ? { feedback } : {}) },
+        });
+      }
+      await this.audit.record(tx, { action: 'homework.submissions', entityType: 'Homework', entityId: id, metadata: { students: input.entries.length, submitted: input.entries.filter((e) => e.status !== 'ASSIGNED').length } });
+    });
+    return this.submissions(id);
+  }
+
+  /** A parent opened the homework for their child: the teacher sees it was seen. */
+  async markSeen(id: string, studentId: string): Promise<void> {
+    if (!(await this.scope.canAccessStudent('homework.view', studentId))) throw AppError.notFound('student');
+    const row = await this.prisma.db.homework.findFirst({ where: { AND: [{ id }, await this.visibleWhere(), { status: 'PUBLISHED' }] }, include });
+    if (!row) throw AppError.notFound('homework');
+    if (!(await this.roster(row)).some((e) => e.studentId === studentId)) throw AppError.notFound('homework');
+    const existing = await this.prisma.db.homeworkSubmission.findUnique({ where: { homeworkId_studentId: { homeworkId: id, studentId } } });
+    if (existing?.viewedAt) return;
+    await this.prisma.tenantTx((tx) =>
+      tx.homeworkSubmission.upsert({
+        where: { homeworkId_studentId: { homeworkId: id, studentId } },
+        create: { homeworkId: id, studentId, status: 'VIEWED', viewedAt: new Date() } as Prisma.HomeworkSubmissionUncheckedCreateInput,
+        update: { viewedAt: new Date(), ...(existing?.status === 'ASSIGNED' ? { status: 'VIEWED' } : {}) },
+      }),
+    );
   }
 
   async attachmentLink(id: string, fileId: string): Promise<DownloadLink> {

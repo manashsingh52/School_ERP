@@ -136,8 +136,12 @@ class _HomeworkTab extends ConsumerWidget {
                   return ListTile(
                     title: Text(h.title),
                     subtitle: Text([h.subject, if (h.dueDate != null) 'due ${formatDay(h.dueDate!)}'].join(' · ')),
-                    trailing: h.attachments.isNotEmpty ? const Icon(Icons.attach_file, size: 18) : (overdue ? null : const Pill('Due', tone: Tone.info)),
-                    onTap: () => showHomework(context, h),
+                    trailing: switch (h.progress) {
+                      'REVIEWED' => const Pill('Checked', tone: Tone.success),
+                      'SUBMITTED' => const Pill('Handed in', tone: Tone.info),
+                      _ => h.attachments.isNotEmpty ? const Icon(Icons.attach_file, size: 18) : (overdue ? null : const Pill('Due', tone: Tone.info)),
+                    },
+                    onTap: () => showHomework(context, h, studentId: child.id),
                   );
                 },
               ),

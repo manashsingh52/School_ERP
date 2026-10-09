@@ -78,7 +78,7 @@ class ParentHome extends ConsumerWidget {
               final due = list.where((h) => h.dueDate == null || h.dueDate!.compareTo(today()) >= 0).take(3).toList();
               if (due.isEmpty) return const EmptyView(icon: Icons.task_alt, title: 'Nothing due');
               return Column(children: [
-                for (final h in due) ListTile(title: Text(h.title), subtitle: Text([h.subject, if (h.dueDate != null) 'due ${formatDay(h.dueDate!)}'].join(' · ')), onTap: () => showHomework(context, h)),
+                for (final h in due) ListTile(title: Text(h.title), subtitle: Text([h.subject, if (h.dueDate != null) 'due ${formatDay(h.dueDate!)}'].join(' · ')), onTap: () => showHomework(context, h, studentId: child.id)),
               ]);
             },
           ),
@@ -116,7 +116,11 @@ class _SlotTile extends StatelessWidget {
       );
 }
 
-void showHomework(BuildContext context, Homework h) {
+/// Parent's view of one homework; tells the teacher it was seen (best effort).
+void showHomework(BuildContext context, Homework h, {String? studentId}) {
+  if (studentId != null && h.progress == 'ASSIGNED') {
+    ProviderScope.containerOf(context).read(apiProvider).post<Object?>('/homework/${h.id}/seen', {'studentId': studentId}).ignore();
+  }
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -129,6 +133,10 @@ void showHomework(BuildContext context, Homework h) {
         const SizedBox(height: 4),
         Text([h.subject, h.teacher, if (h.dueDate != null) 'Due ${formatDate(h.dueDate!)}'].join(' · '), style: Theme.of(ctx).textTheme.bodySmall),
         if (h.description != null) ...[const SizedBox(height: 16), Text(h.description!)],
+        if (h.feedback != null) ...[
+          const SizedBox(height: 16),
+          Card(child: ListTile(leading: const Icon(Icons.rate_review_outlined), title: Text("${h.teacher}'s note"), subtitle: Text(h.feedback!))),
+        ],
         if (h.attachments.isNotEmpty) ...[
           const SizedBox(height: 16),
           for (final a in h.attachments)

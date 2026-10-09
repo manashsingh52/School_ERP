@@ -24,11 +24,12 @@ import {
   toast,
 } from '@schoolos/ui';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarClock, MoreHorizontal, NotebookPen, Paperclip, Pencil, Plus, Search, Send, Trash2 } from 'lucide-react';
+import { CalendarClock, ClipboardCheck, MoreHorizontal, NotebookPen, Paperclip, Pencil, Plus, Search, Send, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Gate } from '@/components/gate';
 import { AttachmentLinks, dueBadge } from '@/components/homework/homework-bits';
 import { HOMEWORK_DRAFT_KEY, HomeworkForm, type HomeworkDraft } from '@/components/homework/homework-form';
+import { SubmissionsDialog } from '@/components/homework/submissions-panel';
 import { ApiError, apiDelete, apiFetch, apiPost } from '@/lib/api-client';
 import { useData } from '@/lib/hooks';
 import { formatDate } from '@/lib/format';
@@ -37,7 +38,7 @@ import { useMe } from '@/lib/me';
 type Tab = Exclude<HomeworkStatus, 'ARCHIVED'>;
 const PAGE = 20;
 
-function HomeworkCard({ hw, onOpen, onEdit }: { hw: HomeworkItem; onOpen: () => void; onEdit: () => void }) {
+function HomeworkCard({ hw, onOpen, onEdit, onSubmissions }: { hw: HomeworkItem; onOpen: () => void; onEdit: () => void; onSubmissions: () => void }) {
   const qc = useQueryClient();
   const refresh = () => qc.invalidateQueries({ queryKey: ['homework'] });
   async function publishNow() {
@@ -88,6 +89,7 @@ function HomeworkCard({ hw, onOpen, onEdit }: { hw: HomeworkItem; onOpen: () => 
             <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${hw.title}`}><MoreHorizontal /></Button>
           </MenuTrigger>
           <MenuContent align="end">
+            {hw.status === 'PUBLISHED' && <MenuItem onSelect={onSubmissions}><ClipboardCheck /> Who handed it in</MenuItem>}
             <MenuItem onSelect={onEdit}><Pencil /> Edit</MenuItem>
             {hw.status !== 'PUBLISHED' && <MenuItem onSelect={() => void publishNow()}><Send /> Publish now</MenuItem>}
             <MenuItem destructive onSelect={() => void remove()}><Trash2 /> Delete</MenuItem>
@@ -122,6 +124,7 @@ function HomeworkPageContent() {
   }, []);
   const [editing, setEditing] = useState<HomeworkItem | null>(null);
   const [viewing, setViewing] = useState<HomeworkItem | null>(null);
+  const [reviewing, setReviewing] = useState<HomeworkItem | null>(null);
   useEffect(() => {
     const t = setTimeout(() => { setQ(search.trim()); setPage(1); }, 250);
     return () => clearTimeout(t);
@@ -180,7 +183,7 @@ function HomeworkPageContent() {
       ) : (
         <div className="flex flex-col gap-3">
           {query.data.data.map((hw) => (
-            <HomeworkCard key={hw.id} hw={hw} onOpen={() => setViewing(hw)} onEdit={() => setEditing(hw)} />
+            <HomeworkCard key={hw.id} hw={hw} onOpen={() => setViewing(hw)} onEdit={() => setEditing(hw)} onSubmissions={() => setReviewing(hw)} />
           ))}
           {query.data.page.total > PAGE && <Pagination page={page} pageSize={PAGE} total={query.data.page.total} onPageChange={setPage} />}
         </div>
@@ -206,11 +209,16 @@ function HomeworkPageContent() {
             </DialogBody>
             {viewing.canEdit && (
               <DialogFooter>
+                {viewing.status === 'PUBLISHED' && <Button variant="secondary" onClick={() => { setReviewing(viewing); setViewing(null); }}><ClipboardCheck /> Who handed it in</Button>}
                 <Button variant="secondary" onClick={() => { setEditing(viewing); setViewing(null); }}><Pencil /> Edit</Button>
               </DialogFooter>
             )}
           </DialogContent>
         )}
+      </Dialog>
+
+      <Dialog open={!!reviewing} onOpenChange={(o) => !o && setReviewing(null)}>
+        {reviewing && <SubmissionsDialog hw={reviewing} onDone={() => setReviewing(null)} />}
       </Dialog>
     </div>
   );

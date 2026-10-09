@@ -69,7 +69,50 @@ export interface HomeworkItem {
   createdAt: string;
   /** Can the caller edit/delete it? */
   canEdit: boolean;
+  /** Only when listing one child's homework (parents): that child's progress and the teacher's feedback. */
+  submission?: { status: HomeworkProgress; feedback: string | null; reviewedAt: string | null } | null;
 }
+
+// ---------------------------------------------------------------- submissions (who handed it in)
+
+export type HomeworkProgress = 'ASSIGNED' | 'VIEWED' | 'SUBMITTED' | 'REVIEWED';
+
+export interface HomeworkSubmissionRow {
+  studentId: string;
+  name: string;
+  rollNo: number | null;
+  admissionNo: string;
+  section: string;
+  status: HomeworkProgress;
+  /** When a parent opened it. */
+  viewedAt: string | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  feedback: string | null;
+}
+
+export interface HomeworkSubmissions {
+  homeworkId: string;
+  dueDate: string | null;
+  rows: HomeworkSubmissionRow[];
+  counts: Record<HomeworkProgress, number>;
+}
+
+export const saveSubmissionsSchema = z.object({
+  entries: z
+    .array(
+      z.object({
+        studentId: uuidSchema,
+        /** ASSIGNED = not handed in (undo). VIEWED is set only when a parent opens it. */
+        status: z.enum(['ASSIGNED', 'SUBMITTED', 'REVIEWED']),
+        feedback: z.string().trim().max(500).nullable().optional(),
+      }),
+    )
+    .min(1)
+    .max(200),
+});
+
+export const homeworkSeenSchema = z.object({ studentId: uuidSchema });
 
 /** What the caller may set homework for: sections and, per section, subjects. */
 export interface HomeworkTargets {

@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import type { z } from 'zod';
-import { createHomeworkSchema, listHomeworkQuerySchema, publishHomeworkSchema, updateHomeworkSchema, uuidSchema } from '@schoolos/contracts';
+import { createHomeworkSchema, homeworkSeenSchema, listHomeworkQuerySchema, publishHomeworkSchema, saveSubmissionsSchema, updateHomeworkSchema, uuidSchema } from '@schoolos/contracts';
 import { RequirePermission } from '../../core/auth/decorators.js';
 import { ZodPipe } from '../../core/validation/zod.pipe.js';
 import { HomeworkService } from './homework.service.js';
@@ -54,6 +54,26 @@ export class HomeworkController {
   @RequirePermission('homework.manage')
   async remove(@Param('id', id) homeworkId: string) {
     await this.homework.remove(homeworkId);
+    return { data: { ok: true } };
+  }
+
+  @Get(':id/submissions')
+  @RequirePermission('homework.manage')
+  async submissions(@Param('id', id) homeworkId: string) {
+    return { data: await this.homework.submissions(homeworkId) };
+  }
+
+  @Put(':id/submissions')
+  @RequirePermission('homework.manage')
+  async saveSubmissions(@Param('id', id) homeworkId: string, @Body(new ZodPipe(saveSubmissionsSchema)) body: Out<typeof saveSubmissionsSchema>) {
+    return { data: await this.homework.saveSubmissions(homeworkId, body) };
+  }
+
+  @Post(':id/seen')
+  @HttpCode(200)
+  @RequirePermission('homework.view')
+  async seen(@Param('id', id) homeworkId: string, @Body(new ZodPipe(homeworkSeenSchema)) body: Out<typeof homeworkSeenSchema>) {
+    await this.homework.markSeen(homeworkId, body.studentId);
     return { data: { ok: true } };
   }
 
