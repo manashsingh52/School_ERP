@@ -1,0 +1,68 @@
+name: Deploy
+
+# Staging: after CI passes on main. Production: by hand (Actions → Deploy → Run workflow), behind
+# the "production" environment's required reviewers. Nothing runs until the Google Cloud project is
+# set up and these repository variables exist (infra/README.md):
+#   GCP_STAGING_PROJECT, GCP_STAGING_WIF_PROVIDER, GCP_STAGING_DEPLOY_SA, DOMAIN
+#   GCP_PRODUCTION_PROJECT, GCP_PRODUCTION_WIF_PROVIDER, GCP_PRODUCTION_DEPLOY_SA
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+  id-token: write # keyless login to Google Cloud (Workload Identity Federation)
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    if: >-
+      vars.GCP_STAGING_PROJECT != '' &&
+      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging'))
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_STAGING_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_STAGING_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: ./infra/gcp/deploy.sh
+        env:
+          ENV: staging
+          PROJECT_ID: ${{ vars.GCP_STAGING_PROJECT }}
+          DOMAIN: ${{ vars.DOMAIN }}
+
+  production:
+    if: vars.GCP_PRODUCTION_PROJECT != '' && github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment: production # add required reviewers in GitHub → Settings → Environments
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_PRODUCTION_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_PRODUCTION_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: ./infra/gcp/deploy.sh
+        env:
+          ENV: production
+          PROJECT_ID: ${{ vars.GCP_PRODUCTION_PROJECT }}
+          DOMAIN: ${{ vars.DOMAIN }}

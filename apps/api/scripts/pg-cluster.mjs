@@ -42,7 +42,9 @@ export async function bootstrapDatabase({ port, database }) {
     const roles = [
       ['schoolos_owner', 'LOGIN CREATEDB NOBYPASSRLS'],
       ['schoolos_app', 'LOGIN NOBYPASSRLS'],
-      ['schoolos_platform', 'LOGIN BYPASSRLS'],
+      // No BYPASSRLS, like Cloud SQL: the platform role's access comes from its own policies
+      // (apply-sql.mjs, `platform_all`), so local, tests and production behave the same.
+      ['schoolos_platform', 'LOGIN NOBYPASSRLS'],
     ];
     for (const [role, attrs] of roles) {
       const { rowCount } = await admin.query('SELECT 1 FROM pg_roles WHERE rolname = $1', [role]);

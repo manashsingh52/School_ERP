@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { serverEnv } from '@/lib/server-env';
 import { ACCESS_COOKIE, REFRESH_COOKIE, clearSessionCookies, setSessionCookies } from '@/lib/session-cookies';
 import { CONSOLE_HEADER, SCHOOL_SLUG_HEADER, isConsoleHost, slugFromHost } from '@/lib/tenant';
+import { fromEdge, requestHost, requestOrigin } from '@/lib/edge';
 import { clientIpFrom, upstream } from '@/lib/upstream';
 
 const PUBLIC_PAGES = ['/login'];
@@ -17,11 +18,15 @@ const PUBLIC_PAGES = ['/login'];
  */
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  const slug = slugFromHost(req.headers.get('host'), serverEnv.baseDomain);
+  // Only Cloudflare may reach us when an edge secret is configured (run.app URLs stay closed).
+  if (!fromEdge(req.headers)) return new NextResponse('Not found', { status: 404 });
+  const host = requestHost(req.headers);
+  const origin = requestOrigin(req.headers, req.url);
+  const slug = slugFromHost(host, serverEnv.baseDomain);
   const isApi = path.startsWith('/api/');
   const isPublicPage = PUBLIC_PAGES.includes(path);
 
-  const consoleHost = isConsoleHost(req.headers.get('host'), serverEnv.baseDomain);
+  const consoleHost = isConsoleHost(host, serverEnv.baseDomain);
   const requestHeaders = new Headers(req.headers);
   requestHeaders.delete(SCHOOL_SLUG_HEADER);
   requestHeaders.delete(CONSOLE_HEADER);
@@ -30,13 +35,13 @@ export async function proxy(req: NextRequest) {
 
   // The super-admin console only serves /platform (and sign-in); schools never serve /platform.
   const isPlatformPage = path === '/platform' || path.startsWith('/platform/');
-  if (consoleHost && !isApi && !isPublicPage && !isPlatformPage) return NextResponse.redirect(new URL('/platform', req.url));
-  if (!consoleHost && isPlatformPage) return NextResponse.redirect(new URL('/login', req.url));
+  if (consoleHost && !isApi && !isPublicPage && !isPlatformPage) return NextResponse.redirect(new URL('/platform', origin));
+  if (!consoleHost && isPlatformPage) return NextResponse.redirect(new URL('/login', origin));
 
   // The bare domain only serves "Find your school".
   if (!slug && !consoleHost) {
     if (isApi || path === '/login') return NextResponse.next({ request: { headers: requestHeaders } });
-    return NextResponse.redirect(new URL('/login', req.url));
+    return NextResponse.redirect(new URL('/login', origin));
   }
 
   let accessToken = req.cookies.get(ACCESS_COOKIE)?.value;
@@ -68,7 +73,7 @@ export async function proxy(req: NextRequest) {
   }
 
   if (!accessToken && !isApi && !isPublicPage) {
-    const login = new URL('/login', req.url);
+    const login = new URL('/login', origin);
     if (path !== '/') login.searchParams.set('next', `${path}${req.nextUrl.search}`);
     const redirect = NextResponse.redirect(login);
     if (sessionEnded) clearSessionCookies(redirect);

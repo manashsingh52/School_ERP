@@ -25,6 +25,7 @@ export function upstream(opts: UpstreamOptions): Promise<Response> {
   if (opts.userAgent) headers.set('user-agent', opts.userAgent);
   if (opts.requestId) headers.set('x-request-id', opts.requestId);
   if (opts.idempotencyKey) headers.set('idempotency-key', opts.idempotencyKey);
+  if (serverEnv.edgeSecret) headers.set('x-edge-secret', serverEnv.edgeSecret); // the API refuses calls without it
   if (serverEnv.bffSecret && opts.clientIp) {
     headers.set('x-bff-key', serverEnv.bffSecret);
     headers.set('x-client-ip', opts.clientIp);

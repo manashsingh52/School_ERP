@@ -17,20 +17,32 @@ export class RequestContextMiddleware implements NestMiddleware {
     @Inject(ENV) private readonly env: Env,
   ) {}
 
-  /** The browser's IP. Behind the web BFF, trust X-Client-IP only with the shared secret. */
+  private static same(secret: string | undefined, sent: string | undefined): boolean {
+    if (!secret || !sent) return false;
+    const a = Buffer.from(secret);
+    const b = Buffer.from(sent);
+    return a.length === b.length && timingSafeEqual(a, b);
+  }
+
+  /**
+   * The caller's IP. Behind the web BFF, trust X-Client-IP only with the BFF secret; behind the
+   * Cloudflare Worker (apps, webhooks), trust CF-Connecting-IP only with the edge secret.
+   */
   private clientIp(req: Request): string | undefined {
-    const secret = this.env.BFF_SHARED_SECRET;
-    const key = req.header('x-bff-key');
     const forwarded = req.header('x-client-ip');
-    if (secret && key && forwarded && isIP(forwarded)) {
-      const a = Buffer.from(secret);
-      const b = Buffer.from(key);
-      if (a.length === b.length && timingSafeEqual(a, b)) return forwarded;
-    }
+    if (forwarded && isIP(forwarded) && RequestContextMiddleware.same(this.env.BFF_SHARED_SECRET, req.header('x-bff-key'))) return forwarded;
+    const cf = req.header('cf-connecting-ip');
+    if (cf && isIP(cf) && RequestContextMiddleware.same(this.env.EDGE_SHARED_SECRET, req.header('x-edge-secret'))) return cf;
     return req.ip;
   }
 
   use(req: Request, res: Response, next: NextFunction): void {
+    // With an edge secret, only Cloudflare (and the web server) may call us; the public run.app URL
+    // answers 404. Health checks stay open for Cloud Run.
+    if (this.env.EDGE_SHARED_SECRET && req.path !== '/health' && !RequestContextMiddleware.same(this.env.EDGE_SHARED_SECRET, req.header('x-edge-secret'))) {
+      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found.' } });
+      return;
+    }
     const incoming = req.header('x-request-id');
     const requestId = incoming && SAFE_REQUEST_ID.test(incoming) ? incoming : `req_${randomUUID()}`;
     res.setHeader('X-Request-Id', requestId);

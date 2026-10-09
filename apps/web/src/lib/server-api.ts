@@ -46,6 +46,7 @@ export async function schoolBranding(slug: string | null): Promise<PublicSchoolB
   if (!slug) return null;
   try {
     const res = await fetch(`${serverEnv.apiUrl}/v1/public/schools/${encodeURIComponent(slug)}`, {
+      headers: serverEnv.edgeSecret ? { 'x-edge-secret': serverEnv.edgeSecret } : undefined,
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;

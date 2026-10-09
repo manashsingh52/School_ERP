@@ -49,3 +49,36 @@ jobs:
       - run: flutter pub get --enforce-lockfile
       - run: flutter analyze
       - run: flutter test
+
+  # Proves the deployment images build (docs/10). Nothing is pushed here; deploy.yml does that.
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        include:
+          - { name: api, file: apps/api/Dockerfile, target: api }
+          - { name: migrate, file: apps/api/Dockerfile, target: migrate }
+          - { name: web, file: apps/web/Dockerfile, target: web }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          target: ${{ matrix.target }}
+          push: false
+          load: ${{ matrix.name != 'migrate' }}
+          tags: schoolos-${{ matrix.name }}:ci
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+      - name: Start the image and check it answers
+        if: matrix.name == 'web'
+        run: |
+          docker run -d --name web -p 8080:8080 -e API_URL=http://127.0.0.1:9 -e APP_BASE_DOMAIN=localhost schoolos-web:ci
+          for i in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:8080/login && exit 0; sleep 1; done
+          docker logs web; exit 1
+      - name: Chromium is present for PDFs
+        if: matrix.name == 'api'
+        run: docker run --rm --entrypoint chromium schoolos-api:ci --headless --no-sandbox --disable-gpu --dump-dom about:blank >/dev/null

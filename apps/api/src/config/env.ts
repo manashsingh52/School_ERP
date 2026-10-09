@@ -81,6 +81,8 @@ const envSchema = z.object({
 
   /** Shared with the web BFF so it can pass the real client IP (X-Client-IP) for rate limits & sessions. */
   BFF_SHARED_SECRET: optional(z.string().min(32)),
+  /** Cloudflare Worker in front of Cloud Run (docs/10 §3 option B): requests without it get 404. */
+  EDGE_SHARED_SECRET: optional(z.string().min(32)),
 });
 
 export type Env = z.infer<typeof envSchema>;

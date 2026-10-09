@@ -42,5 +42,11 @@
         "src/generated/**"
       ]
     }
+  },
+  "globalDependencies": [
+    "tsconfig.base.json"
+  ],
+  "futureFlags": {
+    "pruneIncludesGlobalFiles": true
   }
 }

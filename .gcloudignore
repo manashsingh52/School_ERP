@@ -1,0 +1,10 @@
+# What `gcloud builds submit` uploads (Cloud Build builds the Docker images; docs/10).
+.gcloudignore
+.git
+#!include:.gitignore
+**/node_modules
+**/.next
+**/dist
+.data
+apps/mobile
+docs

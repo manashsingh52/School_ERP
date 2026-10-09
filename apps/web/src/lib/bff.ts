@@ -1,5 +1,6 @@
 import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
+import { requestHost } from './edge';
 
 /**
  * CSRF guard for state-changing BFF calls: the request must come from this same host and carry
@@ -7,7 +8,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 export function csrfRejection(req: NextRequest): NextResponse | null {
   const origin = req.headers.get('origin');
-  const host = req.headers.get('host');
+  const host = requestHost(req.headers);
   let sameOrigin: boolean;
   try {
     sameOrigin = !!origin && !!host && new URL(origin).host === host;

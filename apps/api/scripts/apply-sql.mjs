@@ -67,6 +67,16 @@ export async function applySecurity(connectionString, { log = console.log } = {}
       `);
     }
 
+    // The platform role sees everything through an explicit policy that applies to it alone, so it
+    // works even where roles can't be given BYPASSRLS (managed PostgreSQL such as Cloud SQL).
+    // Policies are permissive (OR'd): schoolos_app is still limited by the policies above.
+    for (const table of [...tenantTables, 'schools', 'users']) {
+      await client.query(`
+        DROP POLICY IF EXISTS platform_all ON "${table}";
+        CREATE POLICY platform_all ON "${table}" TO schoolos_platform USING (true) WITH CHECK (true);
+      `);
+    }
+
     // The tenant registry: anyone may read basic rows (login page branding); a school may update only itself.
     await client.query(`
       ALTER TABLE schools ENABLE ROW LEVEL SECURITY;

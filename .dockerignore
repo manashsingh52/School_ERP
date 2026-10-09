@@ -1,0 +1,17 @@
+# Keep images small and secrets out of the build context.
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.data
+apps/mobile
+docs
+*.md
+!apps/**/README.md
+**/coverage
+**/*.log

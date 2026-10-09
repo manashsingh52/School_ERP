@@ -167,6 +167,18 @@ Known follow-ups (small): online subscription billing (V1.1), staff documents fo
 
 Known follow-ups: run the live evaluation once a Gemini key exists (SETUP-LATER #19); Hindi/regional-language checks in the evaluation set; "use as homework" from a worksheet draft.
 
+### 2026-10-09: Deployment setup (docs/10 lean mode) — ready, not yet run 🚧
+
+Everything is scripted; nothing is created in Google Cloud until you run it (infra/README.md).
+
+- [x] Dockerfiles: API (+ Chromium and Noto fonts for PDFs, `tini`, non-root) with a `migrate` target; web (Next.js standalone, non-root). `turbo prune` keeps each image to what it needs. Rehearsed locally without Docker (pruned install → build → production-only install → both servers answer); **built for real in CI** on every push (new `docker` job)
+- [x] `infra/gcp/bootstrap.sh`: APIs, Artifact Registry, Cloud SQL Postgres 17, buckets, least-privilege service accounts, generated secrets, keyless GitHub deploys (Workload Identity Federation)
+- [x] `infra/gcp/deploy.sh` + Cloud Build: build → migrate job → deploy API and web → smoke test; `roles` step for the one-time database roles (`scripts/setup-roles.mjs`, verified on a throwaway Postgres)
+- [x] Cloudflare Worker (`infra/cloudflare`) instead of a load balancer: `*.domain` → web, `api.domain` → API; the apps trust `X-Forwarded-Host` / `CF-Connecting-IP` only with the edge secret and answer 404 to direct `run.app` traffic (tested)
+- [x] RLS works without `BYPASSRLS` (Cloud SQL can't grant it): explicit `platform_all` policies for the platform role; local and test databases now match (421 tests pass)
+- [x] `.github/workflows/deploy.yml`: staging after CI on `main`; production by hand behind the `production` environment
+- [ ] Run it: Google Cloud project + billing, domain on Cloudflare (SETUP-LATER #5–7)
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |
@@ -179,6 +191,8 @@ Known follow-ups: run the live evaluation once a Gemini key exists (SETUP-LATER 
 | Design tokens in `packages/design-tokens` (JSON) | CSS variables in `packages/ui/src/styles.css` | Only one React client today; generate Flutter `ThemeData` from these in Phase 7 |
 | Dart client generated from OpenAPI (`dart-dio`) | Hand-written typed client + models, guarded by `mobile-routes.test.ts` (every path the app calls must be a registered route) and model-parsing tests; `GET /v1/openapi.json` exists for tooling | Response types are TypeScript interfaces (no runtime schema), so a generator could only produce request types; the generator also needs Java |
 | Drift (SQLite) for the offline queue | `shared_preferences` key-value store | The queue holds a few registers; no relational queries; works on web for testing |
+| Google HTTPS load balancer for wildcard subdomains (docs/10 §3 option A) | Cloudflare Worker (option B) with an edge secret | ~$18/month saved while on credits; switching later changes no app code (drop `EDGE_SHARED_SECRET`) |
+| Platform role with `BYPASSRLS` | `platform_all` RLS policies for that role | Cloud SQL can't grant `BYPASSRLS`; same isolation, works on any Postgres |
 | TypeScript latest | Pinned **5.9.3** | TypeScript 7 (native compiler) is new; Nest relies on decorator metadata. Revisit later |
 
 ## Phase 1: Foundation (≈3–4 weeks)
