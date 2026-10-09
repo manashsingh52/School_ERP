@@ -284,11 +284,13 @@ describe('route access rules', () => {
     expect(publicRoutes.sort()).toEqual(
       [
         'GET /health',
+        'GET /v1/app/config', // mobile version gate: versions and store links only
+        'GET /v1/openapi.json', // route descriptions only; 404 in production
         'GET /v1/files/local/:token',
         'GET /v1/public/schools/:slug',
         'PUT /v1/files/local/:token',
-  // Authorised by the HMAC signature against the account the opaque id names (tested in payments-online)
-  'POST /v1/webhooks/razorpay/:publicId',
+        // Authorised by the HMAC signature against the account the opaque id names (tested in payments-online)
+        'POST /v1/webhooks/razorpay/:publicId',
         'POST /v1/auth/login',
         'POST /v1/auth/otp/send',
         'POST /v1/auth/otp/verify',
