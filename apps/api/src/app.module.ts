@@ -71,6 +71,7 @@ import { SetupImports } from './modules/imports/setup-imports.js';
 import { MembersController, PermissionsController, RolesController } from './modules/members/members.controller.js';
 import { MembersService } from './modules/members/members.service.js';
 import { DocumentsController } from './modules/documents/documents.controller.js';
+import { AppConfigController, DevicesController, OpenApiController } from './modules/mobile/mobile.controller.js';
 import { DocumentsService } from './modules/documents/documents.service.js';
 import { PlatformController, SchoolPlanController } from './modules/platform/platform.controller.js';
 import { ReportRunsService } from './modules/reports/report-runs.service.js';
@@ -147,7 +148,7 @@ export class CoreModule {
 })
 export class AuthModule {}
 
-@Module({ controllers: [PublicController] })
+@Module({ controllers: [PublicController, AppConfigController, DevicesController, OpenApiController] })
 export class PublicModule {}
 
 /** Platform provisioning + identity (the only feature-level users of the platform client). */

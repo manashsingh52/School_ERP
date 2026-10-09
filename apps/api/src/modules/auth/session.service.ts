@@ -145,18 +145,23 @@ export class SessionService {
       data: { revokedAt: new Date(), revokedReason: reason },
     });
     rows.forEach((r) => this.access.invalidateSession(r.id));
+    // No more pushes to a phone whose session has ended.
+    await this.platform.deviceToken.deleteMany({ where: { sessionId: { in: rows.map((r) => r.id) } } });
   }
 
   async revokeAllForUser(userId: string, reason: string, exceptFamilyId?: string): Promise<void> {
     const rows = await this.platform.session.findMany({
       where: { userId, revokedAt: null, ...(exceptFamilyId ? { NOT: { familyId: exceptFamilyId } } : {}) },
-      select: { id: true },
+      select: { id: true, familyId: true },
     });
     await this.platform.session.updateMany({
       where: { id: { in: rows.map((r) => r.id) } },
       data: { revokedAt: new Date(), revokedReason: reason },
     });
     rows.forEach((r) => this.access.invalidateSession(r.id));
+    // A push token is tied to whichever session (of the family) registered it.
+    const family = await this.platform.session.findMany({ where: { familyId: { in: [...new Set(rows.map((r) => r.familyId))] } }, select: { id: true } });
+    await this.platform.deviceToken.deleteMany({ where: { sessionId: { in: family.map((r) => r.id) } } });
   }
 
   /** Live sessions (one per device/login), newest first. */

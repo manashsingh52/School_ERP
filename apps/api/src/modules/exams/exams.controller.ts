@@ -84,6 +84,13 @@ export class ExamsController {
     return { data: await this.exams.create(body) };
   }
 
+  /** Teachers: every marks sheet still open to them (mobile home + marks tab). */
+  @Get('marks/mine')
+  @RequirePermission('marks.enter')
+  async myMarks() {
+    return { data: await this.marks.mine() };
+  }
+
   @Get('marks')
   @RequirePermission('exam.view')
   async sheet(@Query(new ZodPipe(marksSheetQuerySchema)) query: Out<typeof marksSheetQuerySchema>) {

@@ -203,6 +203,19 @@ export class MarksService {
   }
 
   /** Marks entry progress per subject × section (teachers: only their own sheets). */
+  /** Sheets the caller can still fill in, across exams open for marks entry. */
+  async mine(): Promise<{ exam: { id: string; name: string }; sheets: MarksProgressRow[] }[]> {
+    const yearId = await this.scope.currentAcademicYearId();
+    if (!yearId) return [];
+    const exams = await this.prisma.db.exam.findMany({ where: { academicYearId: yearId, status: 'MARKS_ENTRY' }, select: { id: true, name: true }, orderBy: { createdAt: 'asc' } });
+    const out = [];
+    for (const exam of exams) {
+      const sheets = (await this.progress(exam.id)).filter((r) => !r.locked);
+      if (sheets.length) out.push({ exam, sheets });
+    }
+    return out;
+  }
+
   async progress(examId: string): Promise<MarksProgressRow[]> {
     const exam = await this.exams.row(examId);
     const perms = RequestContextStore.tenant().permissions;

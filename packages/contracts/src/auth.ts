@@ -129,3 +129,20 @@ export interface PublicSchoolBranding {
   accentColor: string;
   status: 'ONBOARDING' | 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
 }
+
+// ---------------------------------------------------------------- mobile app (docs/01 §7)
+
+export interface AppConfig {
+  /** Versions below this must update (forced-update gate). */
+  minVersion: string;
+  latestVersion: string;
+  storeUrls: { android: string | null; ios: string | null };
+  /** For "pay online": which checkout to show (mock = sandbox screen in the app). */
+  paymentsDriver: 'razorpay' | 'mock';
+}
+
+export const registerDeviceSchema = z.object({
+  /** FCM registration token. */
+  token: z.string().trim().min(20).max(4096),
+  platform: z.enum(['ANDROID', 'IOS']),
+});

@@ -36,6 +36,11 @@ export async function createApp(env: Env, logger?: Logger): Promise<NestExpressA
   app.set('trust proxy', 1); // behind Google LB / Cloudflare: req.ip = client IP
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: false })); // JSON API; the web app sets its own CSP
+  // Development only: the Flutter app running in a browser (flutter run -d chrome) calls the API
+  // directly. Phones don't use CORS and the web app goes through its BFF, so production has none.
+  if (env.NODE_ENV === 'development') {
+    app.enableCors({ origin: /^http:\/\/(localhost|127\.0\.0\.1):\d+$/, allowedHeaders: ['authorization', 'content-type', 'x-school-slug', 'idempotency-key', 'x-request-id'], maxAge: 600 });
+  }
   // Local-storage uploads arrive as raw bytes (development driver only); everything else is JSON.
   app.use(`/${API_PREFIX}/files/local`, express.raw({ type: () => true, limit: '25mb' }));
   app.useBodyParser('json', { limit: '1mb' });

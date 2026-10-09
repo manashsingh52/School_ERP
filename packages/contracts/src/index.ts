@@ -18,3 +18,4 @@ export * from './finance.js';
 export * from './platform.js';
 export * from './documents.js';
 export * from './reports.js';
+export * from './openapi.js';

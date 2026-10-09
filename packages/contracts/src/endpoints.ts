@@ -5,6 +5,7 @@ import {
   otpSendRequestSchema,
   otpVerifyRequestSchema,
   passwordResetRequestSchema,
+  registerDeviceSchema,
   refreshRequestSchema,
   selectSchoolRequestSchema,
 } from './auth.js';
@@ -146,6 +147,10 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/me': { summary: 'Current user, school, permissions', tag: 'Me', access: 'authenticated' },
   'GET /v1/me/sessions': { summary: 'Signed-in devices', tag: 'Me', access: 'authenticated' },
   'DELETE /v1/me/sessions/:id': { summary: 'Sign out a device', tag: 'Me', access: 'authenticated' },
+  'PUT /v1/me/devices': { summary: 'Register this phone for push notifications', tag: 'Me', access: 'authenticated', body: registerDeviceSchema },
+  'DELETE /v1/me/devices': { summary: 'Stop push notifications to this phone', tag: 'Me', access: 'authenticated' },
+  'GET /v1/openapi.json': { summary: 'This API as OpenAPI 3.1 (not in production)', tag: 'System', access: 'public' },
+  'GET /v1/app/config': { summary: 'Mobile app: minimum version, store links, checkout', tag: 'Me', access: 'public' },
   'PATCH /v1/me/password': { summary: 'Change password', tag: 'Me', access: 'authenticated', body: changePasswordRequestSchema },
 
   'GET /v1/public/schools/:slug': { summary: 'School branding for the login page', tag: 'Public', access: 'public' },
@@ -280,6 +285,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'DELETE /v1/grading-scales/:id': { summary: 'Delete an unused grading scale', tag: 'Exams', access: 'permission:exam.manage' },
   'GET /v1/exams': { summary: 'Exams this year (parents: per child)', tag: 'Exams', access: 'permission:exam.view', query: listExamsQuerySchema },
   'POST /v1/exams': { summary: 'Create an exam', tag: 'Exams', access: 'permission:exam.manage', body: createExamSchema },
+  'GET /v1/exams/marks/mine': { summary: 'Marks sheets still open to me (exams in marks entry)', tag: 'Exams', access: 'permission:marks.enter' },
   'GET /v1/exams/marks': { summary: 'Marks sheet for one subject in one section', tag: 'Exams', access: 'permission:exam.view', query: marksSheetQuerySchema },
   'PUT /v1/exams/marks': { summary: 'Save marks (409 VERSION_CONFLICT if someone saved meanwhile)', tag: 'Exams', access: 'permission:marks.enter', body: saveMarksSchema },
   'GET /v1/exams/:id': { summary: 'Exam with its subject grid and date sheet', tag: 'Exams', access: 'permission:exam.view' },

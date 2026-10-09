@@ -28,6 +28,12 @@ const envSchema = z.object({
 
   // Notification channels (docs/01 §3 notifications). console = print to the log (development).
   PUSH_PROVIDER: z.enum(['none', 'console', 'fcm']).default('none'),
+  // Mobile app (docs/01 §7): versions below MIN must update before they can be used.
+  MOBILE_MIN_VERSION: z.string().regex(/^\d+\.\d+\.\d+$/).default('1.0.0'),
+  MOBILE_LATEST_VERSION: z.string().regex(/^\d+\.\d+\.\d+$/).default('1.0.0'),
+  // ⏸ Store links — fill in once the apps are listed
+  MOBILE_ANDROID_URL: optional(z.string().url()),
+  MOBILE_IOS_URL: optional(z.string().url()),
   SMS_PROVIDER: z.enum(['none', 'console', 'msg91']).default('none'),
   EMAIL_PROVIDER: z.enum(['none', 'console', 'resend']).default('none'),
   // ⏸ Email via Resend — fill in once the sending domain is verified
