@@ -27,7 +27,7 @@ export function buildOpenApi(version = '1.0.0'): Json {
       const q = input(def.query) as { properties?: Record<string, Json>; required?: string[] };
       for (const [name, schema] of Object.entries(q.properties ?? {})) params.push({ name, in: 'query', required: q.required?.includes(name) ?? false, schema });
     }
-    if (def.idempotent) params.push({ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 8 } });
+    if (def.idempotent) params.push({ name: 'Idempotency-Key', in: 'header', required: false, schema: { type: 'string', minLength: 8, maxLength: 100 } });
     paths[path] ??= {};
     paths[path][method.toLowerCase()] = {
       summary: def.summary,
@@ -36,15 +36,42 @@ export function buildOpenApi(version = '1.0.0'): Json {
       ...(def.access === 'public' ? { security: [] } : {}),
       ...(params.length ? { parameters: params } : {}),
       ...(def.body ? { requestBody: { required: true, content: { 'application/json': { schema: input(def.body) } } } } : {}),
-      responses: { '200': { description: 'OK — `{ data }`' }, default: { description: 'Error — `{ error: { code, message, details?, requestId } }`' } },
+      responses: { '200': { description: 'Success — `{ data }`' }, ...Object.fromEntries(['400', '401', '403', '404', '409', '422', '429'].map((s) => [s, { $ref: '#/components/responses/Error' }])) },
     };
   }
   return {
     openapi: '3.1.0',
-    info: { title: 'SchoolOS API', version },
-    servers: [{ url: '/' }],
-    components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } } },
+    info: { title: 'SchoolOS API', version, description: 'Generated from packages/contracts. Do not edit by hand.' },
+    servers: [{ url: 'https://api.schoolos.in' }, { url: 'http://localhost:4000' }],
     security: [{ bearer: [] }],
     paths,
+    components: {
+      securitySchemes: { bearer: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },
+      responses: {
+        Error: {
+          description: 'Error (docs/05 §3)',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'object',
+                    required: ['code', 'message'],
+                    properties: {
+                      code: { type: 'string' },
+                      message: { type: 'string' },
+                      details: { type: 'array', items: { type: 'object', properties: { field: { type: 'string' }, message: { type: 'string' } } } },
+                      requestId: { type: 'string' },
+                      supportRef: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   };
 }

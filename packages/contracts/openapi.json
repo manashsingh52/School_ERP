@@ -29,7 +29,7 @@
         "security": [],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -107,7 +107,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -170,7 +170,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -248,7 +248,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -315,7 +315,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -371,7 +371,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -426,7 +426,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -461,7 +461,7 @@
         "x-access": "authenticated",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -496,7 +496,7 @@
         "x-access": "authenticated",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -531,7 +531,7 @@
         "x-access": "authenticated",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -576,7 +576,175 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/me/devices": {
+      "put": {
+        "summary": "Register this phone for push notifications",
+        "tags": [
+          "Me"
+        ],
+        "x-access": "authenticated",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 4096
+                  },
+                  "platform": {
+                    "type": "string",
+                    "enum": [
+                      "ANDROID",
+                      "IOS"
+                    ]
+                  }
+                },
+                "required": [
+                  "token",
+                  "platform"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Stop push notifications to this phone",
+        "tags": [
+          "Me"
+        ],
+        "x-access": "authenticated",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/openapi.json": {
+      "get": {
+        "summary": "This API as OpenAPI 3.1 (not in production)",
+        "tags": [
+          "System"
+        ],
+        "x-access": "public",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/app/config": {
+      "get": {
+        "summary": "Mobile app: minimum version, store links, checkout",
+        "tags": [
+          "Me"
+        ],
+        "x-access": "public",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -637,7 +805,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -683,7 +851,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -786,7 +954,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -981,7 +1149,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1026,7 +1194,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1182,7 +1350,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1217,7 +1385,7 @@
         "x-access": "permission:academic.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1286,7 +1454,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1358,7 +1526,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1403,7 +1571,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1448,7 +1616,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1495,7 +1663,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1553,7 +1721,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1613,7 +1781,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1683,7 +1851,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1726,7 +1894,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1814,7 +1982,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1891,7 +2059,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -1988,7 +2156,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2031,7 +2199,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2066,7 +2234,7 @@
         "x-access": "permission:academic.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2133,7 +2301,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2215,7 +2383,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2288,7 +2456,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2335,7 +2503,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2419,7 +2587,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2486,7 +2654,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2551,7 +2719,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2596,7 +2764,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2677,7 +2845,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2794,7 +2962,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2839,7 +3007,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -2965,7 +3133,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3010,7 +3178,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3078,7 +3246,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3154,7 +3322,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3199,7 +3367,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3277,7 +3445,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3358,7 +3526,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3411,7 +3579,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3456,7 +3624,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3547,7 +3715,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3617,7 +3785,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3691,7 +3859,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3726,7 +3894,7 @@
         "x-access": "permission:user.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3788,7 +3956,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3854,7 +4022,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3897,7 +4065,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -3988,7 +4156,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4023,7 +4191,7 @@
         "x-access": "permission:user.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4058,7 +4226,7 @@
         "x-access": "permission:import.run",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4100,7 +4268,10 @@
                     "type": "string",
                     "enum": [
                       "STUDENTS",
-                      "TEACHERS"
+                      "TEACHERS",
+                      "CLASSES",
+                      "SUBJECTS",
+                      "FEE_ASSIGNMENTS"
                     ]
                   },
                   "fileId": {
@@ -4119,7 +4290,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4164,7 +4335,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4209,7 +4380,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4282,7 +4453,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4363,7 +4534,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4418,7 +4589,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4446,7 +4617,7 @@
     },
     "/v1/imports/{id}/problems": {
       "get": {
-        "summary": "CSV of rows that need fixing",
+        "summary": "Rows that need fixing (format=csv or xlsx)",
         "tags": [
           "Imports"
         ],
@@ -4459,11 +4630,24 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "csv",
+              "type": "string",
+              "enum": [
+                "csv",
+                "xlsx"
+              ]
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4498,7 +4682,7 @@
         "x-access": "school",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4600,7 +4784,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4663,7 +4847,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4698,7 +4882,7 @@
         "x-access": "permission:school.settings.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4753,7 +4937,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4788,7 +4972,7 @@
         "x-access": "permission:school.settings.manage",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4849,7 +5033,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -4964,7 +5148,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5033,7 +5217,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5068,7 +5252,7 @@
         "x-access": "school",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5103,7 +5287,7 @@
         "x-access": "school",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5148,7 +5332,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5183,7 +5367,7 @@
         "x-access": "permission:notification.settings.manage",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5238,7 +5422,8 @@
                             "fee.due",
                             "fee.overdue",
                             "refund.processed",
-                            "notice.published"
+                            "notice.published",
+                            "support.access_requested"
                           ]
                         },
                         "enabled": {
@@ -5275,7 +5460,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5322,7 +5507,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5357,7 +5542,7 @@
         "x-access": "permission:attendance.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5428,7 +5613,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5483,7 +5668,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5588,7 +5773,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5642,7 +5827,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5707,7 +5892,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5754,7 +5939,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5840,7 +6025,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -5984,7 +6169,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6092,7 +6277,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6127,7 +6312,7 @@
         "x-access": "permission:homework.manage",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6172,7 +6357,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6279,7 +6464,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6322,7 +6507,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6384,7 +6569,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6437,7 +6622,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6472,7 +6657,7 @@
         "x-access": "permission:timetable.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6562,7 +6747,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6664,7 +6849,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6707,7 +6892,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6742,7 +6927,7 @@
         "x-access": "permission:timetable.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6799,7 +6984,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6846,7 +7031,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -6905,7 +7090,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7028,7 +7213,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7073,7 +7258,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7118,7 +7303,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7163,7 +7348,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7282,7 +7467,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7425,7 +7610,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7460,7 +7645,7 @@
         "x-access": "permission:notice.create",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7505,7 +7690,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7649,7 +7834,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7692,7 +7877,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7754,7 +7939,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7799,7 +7984,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7844,7 +8029,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7897,7 +8082,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7932,7 +8117,7 @@
         "x-access": "permission:dashboard.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -7967,7 +8152,7 @@
         "x-access": "permission:exam.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8077,7 +8262,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8135,7 +8320,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8257,7 +8442,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8300,7 +8485,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8362,7 +8547,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8460,7 +8645,42 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/exams/marks/mine": {
+      "get": {
+        "summary": "Marks sheets still open to me (exams in marks entry)",
+        "tags": [
+          "Exams"
+        ],
+        "x-access": "permission:marks.enter",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8517,7 +8737,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8630,7 +8850,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8675,7 +8895,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8786,7 +9006,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8829,7 +9049,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -8969,7 +9189,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9014,7 +9234,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9067,7 +9287,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9128,7 +9348,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9183,7 +9403,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9273,7 +9493,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9318,7 +9538,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9363,7 +9583,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9437,7 +9657,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9490,7 +9710,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9545,7 +9765,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9598,7 +9818,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9643,7 +9863,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9696,7 +9916,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9731,7 +9951,7 @@
         "x-access": "permission:fee.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9819,7 +10039,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9919,7 +10139,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -9954,7 +10174,7 @@
         "x-access": "permission:fee.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10149,7 +10369,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10194,7 +10414,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10399,7 +10619,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10442,7 +10662,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10487,7 +10707,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10522,7 +10742,7 @@
         "x-access": "permission:fee.view",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10637,7 +10857,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10764,7 +10984,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10825,7 +11045,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10900,7 +11120,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -10972,7 +11192,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11017,7 +11237,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11084,7 +11304,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11148,7 +11368,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11212,7 +11432,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11346,7 +11566,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11391,7 +11611,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11467,7 +11687,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11537,7 +11757,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11639,7 +11859,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11766,7 +11986,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11801,7 +12021,7 @@
         "x-access": "permission:payment.collect",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11846,7 +12066,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11891,7 +12111,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -11956,7 +12176,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12037,7 +12257,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12072,7 +12292,7 @@
         "x-access": "permission:gateway.manage",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12138,7 +12358,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12173,7 +12393,7 @@
         "x-access": "permission:gateway.manage",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12208,7 +12428,7 @@
         "x-access": "permission:gateway.manage",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12286,7 +12506,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12353,7 +12573,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12424,7 +12644,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12459,7 +12679,7 @@
         "x-access": "permission:gateway.manage",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12555,7 +12775,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12590,7 +12810,7 @@
         "x-access": "permission:fee.manage",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12636,7 +12856,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12681,7 +12901,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12746,7 +12966,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12793,7 +13013,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12839,12 +13059,14 @@
                       "student_photo",
                       "teacher_photo",
                       "school_logo",
+                      "signature",
                       "document",
                       "homework_attachment",
                       "notice_attachment",
                       "receipt",
                       "report_card",
-                      "import"
+                      "import",
+                      "report_export"
                     ]
                   },
                   "fileName": {
@@ -12874,7 +13096,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12919,7 +13141,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -12964,7 +13186,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -13010,7 +13232,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
@@ -13054,7 +13276,2687 @@
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/school/settings": {
+      "get": {
+        "summary": "Settings: general, fees, examinations, branding",
+        "tags": [
+          "School"
+        ],
+        "x-access": "permission:school.settings.view",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/school/settings/{section}": {
+      "put": {
+        "summary": "Save one settings section (branding needs school.branding.manage)",
+        "tags": [
+          "School"
+        ],
+        "x-access": "school",
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/school/subscription": {
+      "get": {
+        "summary": "This school's plan, limits and usage",
+        "tags": [
+          "School"
+        ],
+        "x-access": "permission:billing.view",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/school/features": {
+      "get": {
+        "summary": "Feature flags switched on for this school",
+        "tags": [
+          "School"
+        ],
+        "x-access": "school",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/school/support-access": {
+      "get": {
+        "summary": "Support access requests and grants",
+        "tags": [
+          "School"
+        ],
+        "x-access": "permission:user.manage",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/school/support-access/{id}/approve": {
+      "post": {
+        "summary": "Let SchoolOS support look (read-only, time-boxed)",
+        "tags": [
+          "School"
+        ],
+        "x-access": "permission:user.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/school/support-access/{id}/revoke": {
+      "post": {
+        "summary": "Decline a request or end access now",
+        "tags": [
+          "School"
+        ],
+        "x-access": "permission:user.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/dashboard": {
+      "get": {
+        "summary": "Platform overview",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.dashboard.view",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/schools": {
+      "get": {
+        "summary": "All schools",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.dashboard.view",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ONBOARDING",
+                "ACTIVE",
+                "SUSPENDED",
+                "ARCHIVED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Onboard a school (admin invited, trial started)",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.schools.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "slug": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$"
+                  },
+                  "board": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "adminName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "adminPhone": {
+                    "type": "string"
+                  },
+                  "adminEmail": {
+                    "type": "string",
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "planId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "trialDays": {
+                    "default": 30,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 90
+                  }
+                },
+                "required": [
+                  "name",
+                  "slug",
+                  "adminName",
+                  "adminPhone"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/schools/{id}": {
+      "get": {
+        "summary": "One school: plan, usage, features, admins",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.dashboard.view",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/schools/{id}/status": {
+      "put": {
+        "summary": "Activate, suspend or archive a school",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.schools.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ONBOARDING",
+                      "ACTIVE",
+                      "SUSPENDED",
+                      "ARCHIVED"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "status",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/schools/{id}/subscription": {
+      "put": {
+        "summary": "Set plan, status, dates and limit overrides (manual billing)",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.subscriptions.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "planId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "TRIALING",
+                      "ACTIVE",
+                      "PAST_DUE",
+                      "CANCELLED"
+                    ]
+                  },
+                  "trialEndsAt": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "currentPeriodStart": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "currentPeriodEnd": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "limitOverrides": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "students": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "storageGb": {
+                            "anyOf": [
+                              {
+                                "type": "number",
+                                "minimum": 0.1
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "smsPerMonth": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "aiCallsPerMonth": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "planId",
+                  "status"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/schools/{id}/features/{key}": {
+      "put": {
+        "summary": "Per-school feature override (null clears)",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.flags.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/plans": {
+      "get": {
+        "summary": "Plans",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.dashboard.view",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a plan",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.subscriptions.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 30,
+                    "pattern": "^[a-z0-9_-]+$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "limits": {
+                    "type": "object",
+                    "properties": {
+                      "students": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "storageGb": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0.1
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "smsPerMonth": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "aiCallsPerMonth": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "students",
+                      "storageGb",
+                      "smsPerMonth",
+                      "aiCallsPerMonth"
+                    ]
+                  },
+                  "features": {
+                    "default": [],
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 60
+                    }
+                  },
+                  "priceMonthlyPaise": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "isActive": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "code",
+                  "name",
+                  "limits"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/plans/{id}": {
+      "put": {
+        "summary": "Edit a plan",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.subscriptions.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 30,
+                    "pattern": "^[a-z0-9_-]+$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "limits": {
+                    "type": "object",
+                    "properties": {
+                      "students": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "storageGb": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0.1
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "smsPerMonth": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "aiCallsPerMonth": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "students",
+                      "storageGb",
+                      "smsPerMonth",
+                      "aiCallsPerMonth"
+                    ]
+                  },
+                  "features": {
+                    "default": [],
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 60
+                    }
+                  },
+                  "priceMonthlyPaise": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "isActive": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "code",
+                  "name",
+                  "limits"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/flags": {
+      "get": {
+        "summary": "Feature flags",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.dashboard.view",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Create or change a feature flag",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.flags.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 60,
+                    "pattern": "^[a-z0-9_.-]+$"
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "defaultEnabled": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "killSwitch": {
+                    "default": false,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "key",
+                  "description"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/users": {
+      "get": {
+        "summary": "Find a user by name, phone or email",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.schools.manage",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/audit": {
+      "get": {
+        "summary": "Audit log across schools",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.audit.view",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/system": {
+      "get": {
+        "summary": "Queues, failed jobs, outbox, webhooks, database",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.system.view",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/system/retry": {
+      "post": {
+        "summary": "Retry a failed job",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.schools.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "queue": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40
+                  },
+                  "jobId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "queue",
+                  "jobId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/support-access": {
+      "get": {
+        "summary": "My support access requests (all=true: everyone’s)",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.support_access.request",
+        "parameters": [
+          {
+            "name": "all",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Ask a school for time-boxed read-only access",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.support_access.request",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "schoolId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 500
+                  },
+                  "hours": {
+                    "default": 4,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 72
+                  }
+                },
+                "required": [
+                  "schoolId",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/documents": {
+      "get": {
+        "summary": "A student's, guardian's, teacher's or the school's documents",
+        "tags": [
+          "Documents"
+        ],
+        "x-access": "permission:document.view",
+        "parameters": [
+          {
+            "name": "ownerType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SCHOOL",
+                "STUDENT",
+                "GUARDIAN",
+                "TEACHER"
+              ]
+            }
+          },
+          {
+            "name": "ownerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "birth_certificate",
+                "transfer_certificate",
+                "id_proof",
+                "address_proof",
+                "marksheet",
+                "medical",
+                "certificate",
+                "qualification",
+                "policy",
+                "other"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Attach an uploaded file as a document",
+        "tags": [
+          "Documents"
+        ],
+        "x-access": "permission:document.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ownerType": {
+                    "type": "string",
+                    "enum": [
+                      "SCHOOL",
+                      "STUDENT",
+                      "GUARDIAN",
+                      "TEACHER"
+                    ]
+                  },
+                  "ownerId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "birth_certificate",
+                      "transfer_certificate",
+                      "id_proof",
+                      "address_proof",
+                      "marksheet",
+                      "medical",
+                      "certificate",
+                      "qualification",
+                      "policy",
+                      "other"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "fileId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "visibleToGuardian": {
+                    "default": false,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "ownerType",
+                  "category",
+                  "title",
+                  "fileId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/documents/{id}": {
+      "patch": {
+        "summary": "Rename, recategorise or share with parents",
+        "tags": [
+          "Documents"
+        ],
+        "x-access": "permission:document.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "birth_certificate",
+                      "transfer_certificate",
+                      "id_proof",
+                      "address_proof",
+                      "marksheet",
+                      "medical",
+                      "certificate",
+                      "qualification",
+                      "policy",
+                      "other"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "visibleToGuardian": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a document",
+        "tags": [
+          "Documents"
+        ],
+        "x-access": "permission:document.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/documents/{id}/download": {
+      "get": {
+        "summary": "Short-lived download link",
+        "tags": [
+          "Documents"
+        ],
+        "x-access": "permission:document.view",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/reports/catalog": {
+      "get": {
+        "summary": "Reports I can run",
+        "tags": [
+          "Reports"
+        ],
+        "x-access": "school",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/reports/preview": {
+      "get": {
+        "summary": "Run a report on screen (first 500 rows)",
+        "tags": [
+          "Reports"
+        ],
+        "x-access": "school",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          },
+          {
+            "name": "classId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "examId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "report",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "student_strength",
+                "student_list",
+                "attendance_monthly",
+                "attendance_low",
+                "exam_summary",
+                "exam_subjects",
+                "collection",
+                "outstanding",
+                "defaulters",
+                "heads",
+                "concessions",
+                "reconciliation"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/reports/runs": {
+      "post": {
+        "summary": "Export a report (PDF, Excel or CSV) in the background",
+        "tags": [
+          "Reports"
+        ],
+        "x-access": "permission:report.export",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "report": {
+                    "type": "string",
+                    "enum": [
+                      "student_strength",
+                      "student_list",
+                      "attendance_monthly",
+                      "attendance_low",
+                      "exam_summary",
+                      "exam_subjects",
+                      "collection",
+                      "outstanding",
+                      "defaulters",
+                      "heads",
+                      "concessions",
+                      "reconciliation"
+                    ]
+                  },
+                  "params": {
+                    "default": {},
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "to": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "month": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}$"
+                      },
+                      "classId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "examId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "threshold": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 100
+                      }
+                    }
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "PDF",
+                      "XLSX",
+                      "CSV"
+                    ]
+                  }
+                },
+                "required": [
+                  "report",
+                  "format"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "get": {
+        "summary": "My exports",
+        "tags": [
+          "Reports"
+        ],
+        "x-access": "permission:report.export",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/reports/runs/{id}": {
+      "get": {
+        "summary": "One export (poll until DONE)",
+        "tags": [
+          "Reports"
+        ],
+        "x-access": "permission:report.export",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/reports/runs/{id}/download": {
+      "get": {
+        "summary": "Download link for a finished export",
+        "tags": [
+          "Reports"
+        ],
+        "x-access": "permission:report.export",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/audit": {
+      "get": {
+        "summary": "The school's audit log",
+        "tags": [
+          "Audit"
+        ],
+        "x-access": "permission:audit.view",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            }
+          },
+          {
+            "name": "actorMembershipId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/ai/status": {
+      "get": {
+        "summary": "Is the AI assistant on for me, and how much is left this month",
+        "tags": [
+          "AI"
+        ],
+        "x-access": "permission:ai.use",
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/ai/ask": {
+      "post": {
+        "summary": "Ask about the school (answers from permission-checked reports)",
+        "tags": [
+          "AI"
+        ],
+        "x-access": "permission:ai.use",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  },
+                  "history": {
+                    "default": [],
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "assistant"
+                          ]
+                        },
+                        "text": {
+                          "type": "string",
+                          "maxLength": 4000
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "text"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "question"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/ai/worksheet": {
+      "post": {
+        "summary": "Draft a worksheet (teachers)",
+        "tags": [
+          "AI"
+        ],
+        "x-access": "permission:ai.use",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subject": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 60
+                  },
+                  "classLabel": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 30
+                  },
+                  "topic": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 200
+                  },
+                  "questions": {
+                    "default": 10,
+                    "type": "integer",
+                    "minimum": 3,
+                    "maximum": 30
+                  },
+                  "difficulty": {
+                    "default": "medium",
+                    "type": "string",
+                    "enum": [
+                      "easy",
+                      "medium",
+                      "hard"
+                    ]
+                  },
+                  "includeAnswers": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "subject",
+                  "classLabel",
+                  "topic"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
           },
           "400": {
             "$ref": "#/components/responses/Error"
