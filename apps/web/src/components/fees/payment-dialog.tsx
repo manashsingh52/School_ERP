@@ -11,8 +11,9 @@ import { METHOD_LABEL, PAYMENT_STATUS, rupees, toPaise, toRupeeInput } from '@/l
 
 export async function openReceipt(paymentId: string) {
   try {
-    const res = await apiFetch<{ data: { url: string } }>(`/payments/${paymentId}/receipt`);
+    const res = await apiFetch<{ data: { url: string; duplicate?: boolean } }>(`/payments/${paymentId}/receipt`);
     window.open(res.data.url, '_blank', 'noopener');
+    if (res.data.duplicate) toast.info('This is a reprint, so it says DUPLICATE COPY. The reprint is recorded in the audit log.');
   } catch (err) {
     toast.error(err instanceof ApiError ? err.message : 'We couldn’t open the receipt.');
   }

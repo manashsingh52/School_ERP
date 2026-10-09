@@ -15,6 +15,8 @@ export interface ReceiptData {
   reference: string | null;
   collector: string | null;
   cancelled: { at: string; reason: string | null } | null;
+  /** A reprint by staff after the original. */
+  duplicate?: boolean;
 }
 
 const esc = (v: unknown) =>
@@ -51,14 +53,16 @@ export function receiptHtml(d: ReceiptData): string {
   .sign { border-top: 1px solid #1b1f24; padding-top: 3px; min-width: 150px; text-align: center; color: #57606a; }
   .void { position: absolute; top: 40%; left: 0; right: 0; text-align: center; font-size: 46pt; font-weight: 800; color: rgba(180, 35, 24, .18); transform: rotate(-12deg); letter-spacing: .1em; }
   .voidnote { margin-top: 6px; color: #b42318; font-weight: 600; }
+  .dup { position: absolute; top: 40%; left: 0; right: 0; text-align: center; font-size: 46pt; font-weight: 800; color: rgba(87, 96, 106, .14); transform: rotate(-12deg); letter-spacing: .1em; }
+  .duptag { margin: 2px 0 0; font-size: 8pt; letter-spacing: .08em; color: #57606a; }
   .note { margin-top: 8px; font-size: 8pt; color: #3d444d; white-space: pre-line; }
   .sign { position: relative; } .sig { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); max-height: 30px; max-width: 110px; }
 </style></head><body>
-  ${d.cancelled ? '<div class="void">CANCELLED</div>' : ''}
+  ${d.cancelled ? '<div class="void">CANCELLED</div>' : d.duplicate ? '<div class="dup">DUPLICATE</div>' : ''}
   <div class="head">
     ${d.school.logoDataUri ? `<img src="${d.school.logoDataUri}" alt="">` : ''}
     <div class="s"><h1>${esc(d.school.name)}</h1>${d.school.affiliation ? `<p>${esc(d.school.affiliation)}</p>` : ''}${d.school.address ? `<p>${esc(d.school.address)}</p>` : ''}${d.school.contact ? `<p>${esc(d.school.contact)}</p>` : ''}</div>
-    <div class="r"><h2>FEE RECEIPT</h2><p>${esc(d.receiptNo)}</p><p style="font-weight:400;color:#57606a">${esc(d.date)}</p></div>
+    <div class="r"><h2>FEE RECEIPT</h2>${d.duplicate ? '<p class="duptag">DUPLICATE COPY</p>' : ''}<p>${esc(d.receiptNo)}</p><p style="font-weight:400;color:#57606a">${esc(d.date)}</p></div>
   </div>
   <div class="fields">
     ${field('Student', d.student.name)}${field('Admission no.', d.student.admissionNo)}${field('Class', d.student.classLabel)}${field('Parent / guardian', d.student.guardian)}

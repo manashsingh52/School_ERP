@@ -389,7 +389,11 @@ export class PaymentsService implements OnModuleInit {
     };
   }
 
-  async receiptLink(paymentId: string): Promise<DownloadLink> {
+  /**
+   * Receipt download. Staff: the first print is the original, every later one is stamped
+   * DUPLICATE COPY (made once, kept) and audited. Parents always get their normal copy.
+   */
+  async receiptLink(paymentId: string): Promise<DownloadLink & { duplicate: boolean }> {
     await this.get(paymentId); // visibility
     const receipt = await this.prisma.db.receipt.findUnique({ where: { paymentId } });
     if (!receipt) throw AppError.notFound('receipt');
@@ -398,12 +402,34 @@ export class PaymentsService implements OnModuleInit {
       await this.queues.add(QUEUES.documents, 'receipt', { schoolId: RequestContextStore.school().schoolId, paymentId }, { jobId: `receipt-${paymentId}-1` });
       throw new AppError('RECEIPT_NOT_READY', 409, 'The receipt is being prepared. Try again in a moment.');
     }
-    return this.files.attachedLink(receipt.fileId);
+    const perms = RequestContextStore.tenant().permissions;
+    const staff = !!perms['payment.collect'] || perms['payment.view'] === 'ALL';
+    if (!staff) return { ...(await this.files.attachedLink(receipt.fileId)), duplicate: false };
+
+    // Count the print first (atomically), so two people printing at once can't both get "original".
+    const { printCount } = await this.prisma.tenantTx((tx) => tx.receipt.update({ where: { id: receipt.id }, data: { printCount: { increment: 1 } }, select: { printCount: true } }));
+    if (printCount === 1) return { ...(await this.files.attachedLink(receipt.fileId)), duplicate: false };
+    let duplicateFileId = receipt.duplicateFileId;
+    if (!duplicateFileId) {
+      duplicateFileId = await this.storeReceiptPdf(paymentId, true);
+      await this.prisma.tenantTx((tx) => tx.receipt.update({ where: { id: receipt.id }, data: { duplicateFileId } }));
+    }
+    await this.prisma.tenantTx((tx) => this.audit.record(tx, { action: 'receipt.reprint', entityType: 'Payment', entityId: paymentId, metadata: { receiptNo: receipt.number, print: printCount } }));
+    return { ...(await this.files.attachedLink(duplicateFileId)), duplicate: true };
   }
 
   // ---------------------------------------------------------------- receipt PDF & notifications
 
+  /** Job: (re)make the original receipt — after a payment, or after a void stamps it CANCELLED. */
   private async renderReceipt(paymentId: string): Promise<void> {
+    if (!(await this.prisma.db.receipt.count({ where: { paymentId } }))) return; // nothing to render (e.g. failed payment)
+    const fileId = await this.storeReceiptPdf(paymentId, false);
+    // A void changes the receipt, so any cached duplicate is out of date.
+    await this.prisma.tenantTx((tx) => tx.receipt.update({ where: { paymentId }, data: { fileId, duplicateFileId: null } }));
+    this.logger.info({ paymentId }, 'receipt generated');
+  }
+
+  private async storeReceiptPdf(paymentId: string, duplicate: boolean): Promise<string> {
     const p = await this.prisma.db.payment.findUnique({
       where: { id: paymentId },
       include: {
@@ -413,7 +439,7 @@ export class PaymentsService implements OnModuleInit {
         student: { select: { id: true, firstName: true, lastName: true, admissionNo: true, guardians: { orderBy: { isPrimary: 'desc' }, take: 1, select: { guardian: { select: { name: true } } } }, enrollments: { select: { academicYearId: true, section: { select: { name: true, class: { select: { name: true } } } } } } } },
       },
     });
-    if (!p?.receipt) return;
+    if (!p?.receipt) throw AppError.notFound('receipt');
     const school = await this.prisma.db.school.findUniqueOrThrow({ where: { id: RequestContextStore.school().schoolId } });
     const names = await this.collectors([p]);
     const net = new Map<string, { description: string; amountPaise: number }>();
@@ -452,17 +478,16 @@ export class PaymentsService implements OnModuleInit {
       reference: p.gatewayPaymentId ?? p.referenceNo,
       collector: p.collectedByMemberId ? (names.get(p.collectedByMemberId) ?? null) : null,
       cancelled: p.voidedAt ? { at: new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(p.voidedAt), reason: p.voidReason } : null,
+      duplicate,
     });
     const data = await this.pdf.render(html);
-    const fileId = await this.files.storeGenerated({
+    return this.files.storeGenerated({
       purpose: 'receipt',
-      fileName: `Receipt ${p.receipt.number.replace(/\//g, '-')}.pdf`,
+      fileName: `Receipt ${p.receipt.number.replace(/\//g, '-')}${duplicate ? ' (duplicate)' : ''}.pdf`,
       mimeType: 'application/pdf',
       data,
       memberId: p.collectedByMemberId ?? (await this.anyAdmin()),
     });
-    await this.prisma.tenantTx((tx) => tx.receipt.update({ where: { id: p.receipt!.id }, data: { fileId } }));
-    this.logger.info({ paymentId, receipt: p.receipt.number }, 'receipt generated');
   }
 
   /** Generated files need an owner; online receipts are attributed to the school's first admin. */

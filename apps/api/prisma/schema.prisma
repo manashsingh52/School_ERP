@@ -2003,13 +2003,16 @@ model StudentCredit {
 }
 
 model Receipt {
-  id          String    @id @default(uuid(7)) @db.Uuid
-  schoolId    String    @map("school_id") @db.Uuid
-  number      String // "RCPT/2026-27/000456"
-  paymentId   String    @unique @map("payment_id") @db.Uuid
-  fileId      String?   @map("file_id") @db.Uuid // PDF, generated async
-  issuedAt    DateTime  @default(now()) @map("issued_at")
-  cancelledAt DateTime? @map("cancelled_at")
+  id              String    @id @default(uuid(7)) @db.Uuid
+  schoolId        String    @map("school_id") @db.Uuid
+  number          String // "RCPT/2026-27/000456"
+  paymentId       String    @unique @map("payment_id") @db.Uuid
+  fileId          String?   @map("file_id") @db.Uuid // PDF, generated async
+  /// Staff prints after the first are stamped DUPLICATE COPY; that PDF is made once and kept here.
+  printCount      Int       @default(0) @map("print_count")
+  duplicateFileId String?   @map("duplicate_file_id") @db.Uuid
+  issuedAt        DateTime  @default(now()) @map("issued_at")
+  cancelledAt     DateTime? @map("cancelled_at")
 
   school  School  @relation(fields: [schoolId], references: [id])
   payment Payment @relation(fields: [paymentId], references: [id])
