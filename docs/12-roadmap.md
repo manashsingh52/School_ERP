@@ -142,6 +142,20 @@ Known follow-ups (small): online subscription billing (V1.1), staff documents fo
 
 **Next: Phase 7 (mobile apps).**
 
+### 2026-10-09: Phase 7 — mobile app, first slice (Flutter 3.47) 🚧
+
+**Milestone M7 not reached yet:** store/TestFlight builds need Xcode, Android Studio, Firebase and store accounts (SETUP-LATER #12, #16–18). The app itself runs in Chrome against the local API; 16 Flutter tests + API route-drift test pass.
+
+- [x] `apps/mobile`: one app, parent and teacher homes by role (switch for people who are both), school picker for multi-school accounts
+- [x] Sign in with password or one-time code; refresh token in Keychain/Keystore; one shared refresh on 401; sessions recorded as ANDROID/IOS (60-day idle)
+- [x] Design tokens → light/dark `ThemeData` with the school's accent
+- [x] Parent: home (today's attendance and classes, fees due, homework, latest result), attendance calendar, homework with attachments, week timetable, results + report card PDF, fees (pick bills → Razorpay Checkout or sandbox → verify → receipt), documents
+- [x] Teacher: home (registers to take, today's classes with "Now", marks to enter), **offline attendance** (cached class list, queued submission with `clientMutationId`, sync on open/resume/"Sync now", refusals shown), homework with camera/gallery photos, marks entry (A/E, validation, version conflict → reload)
+- [x] Notifications inbox with filters; tapping opens the right tab (web routes mapped)
+- [x] Forced-update gate (`GET /v1/app/config`), push-token API (`PUT/DELETE /v1/me/devices`, removed on sign-out), `GET /v1/openapi.json`, `GET /v1/exams/marks/mine`
+- [ ] FCM push + deep links from push (needs Firebase project)
+- [ ] iOS / Android builds, store listings, privacy labels, review prep (needs Xcode, Android Studio, accounts)
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |
@@ -152,6 +166,8 @@ Known follow-ups (small): online subscription billing (V1.1), staff documents fo
 | Session revocation via a Redis deny-list | Session row checked on each request (30 s in-process cache) | No Redis yet. Single instance is fine for V1; move to Redis pub/sub when scaling out |
 | Rate limits in Redis | In-memory store behind a `RateLimitStore` interface | Same reason; swapping the store is one class |
 | Design tokens in `packages/design-tokens` (JSON) | CSS variables in `packages/ui/src/styles.css` | Only one React client today; generate Flutter `ThemeData` from these in Phase 7 |
+| Dart client generated from OpenAPI (`dart-dio`) | Hand-written typed client + models, guarded by `mobile-routes.test.ts` (every path the app calls must be a registered route) and model-parsing tests; `GET /v1/openapi.json` exists for tooling | Response types are TypeScript interfaces (no runtime schema), so a generator could only produce request types; the generator also needs Java |
+| Drift (SQLite) for the offline queue | `shared_preferences` key-value store | The queue holds a few registers; no relational queries; works on web for testing |
 | TypeScript latest | Pinned **5.9.3** | TypeScript 7 (native compiler) is new; Nest relies on decorator metadata. Revisit later |
 
 ## Phase 1: Foundation (≈3–4 weeks)
