@@ -74,6 +74,8 @@ import { AiController } from './modules/ai/ai.controller.js';
 import { AiService } from './modules/ai/ai.service.js';
 import { AiTools } from './modules/ai/tools.js';
 import { DocumentsController } from './modules/documents/documents.controller.js';
+import { StudentTermsController, TermsController } from './modules/exams/terms.controller.js';
+import { TermsService } from './modules/exams/terms.service.js';
 import { AppConfigController, DevicesController, OpenApiController } from './modules/mobile/mobile.controller.js';
 import { DocumentsService } from './modules/documents/documents.service.js';
 import { PlatformController, SchoolPlanController } from './modules/platform/platform.controller.js';
@@ -200,8 +202,8 @@ export class DashboardModule {}
 
 @Module({
   imports: [NotificationsModule, FilesModule],
-  controllers: [GradingScalesController, ExamsController, ReportCardsController, StudentResultsController],
-  providers: [ExamsService, MarksService, ResultsService, ReportCardsService],
+  controllers: [GradingScalesController, ExamsController, ReportCardsController, StudentResultsController, TermsController, StudentTermsController],
+  providers: [ExamsService, MarksService, ResultsService, ReportCardsService, TermsService],
   exports: [ExamsService, MarksService, ResultsService],
 })
 export class ExamsModule {}

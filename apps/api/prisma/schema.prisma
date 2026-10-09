@@ -424,6 +424,8 @@ model School {
   usageCounters          UsageCounter[]
   supportGrants          SupportAccessGrant[]
   aiLogs                 AiLog[]
+  examTerms              ExamTerm[]
+  termReportCards        TermReportCard[]
   memberships            Membership[]
   roles                  Role[]
   rolePermissions        RolePermission[]
@@ -1468,6 +1470,7 @@ model GradingScale {
   school School      @relation(fields: [schoolId], references: [id])
   bands  GradeBand[]
   exams  Exam[]
+  terms  ExamTerm[]
 
   @@unique([schoolId, name])
   @@map("grading_scales")
@@ -2219,4 +2222,41 @@ model AiLog {
 
   @@index([schoolId, createdAt])
   @@map("ai_logs")
+}
+
+/// A term result made of several exams with weights (e.g. Term 1 = Unit Test 1 × 20% + Half-Yearly × 80%).
+model ExamTerm {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  schoolId       String    @map("school_id") @db.Uuid
+  academicYearId String    @map("academic_year_id") @db.Uuid
+  gradingScaleId String    @map("grading_scale_id") @db.Uuid
+  name           String
+  /// [{ examId, weight }] — weights add up to 100 (validated by the app)
+  components     Json
+  publishedAt    DateTime? @map("published_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  school       School           @relation(fields: [schoolId], references: [id])
+  gradingScale GradingScale     @relation(fields: [gradingScaleId], references: [id])
+  cards        TermReportCard[]
+
+  @@unique([schoolId, academicYearId, name])
+  @@map("exam_terms")
+}
+
+/// One student's consolidated report card PDF for a term (made on publish, or on first download).
+model TermReportCard {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  schoolId    String   @map("school_id") @db.Uuid
+  termId      String   @map("term_id") @db.Uuid
+  studentId   String   @map("student_id") @db.Uuid
+  fileId      String   @map("file_id") @db.Uuid
+  generatedAt DateTime @default(now()) @map("generated_at")
+
+  school School   @relation(fields: [schoolId], references: [id])
+  term   ExamTerm @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@unique([termId, studentId])
+  @@map("term_report_cards")
 }

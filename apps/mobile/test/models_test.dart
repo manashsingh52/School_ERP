@@ -72,4 +72,18 @@ void main() {
     expect(h.days['2026-10-05'], 'ABSENT');
     expect(h.percentPresent, 75.0);
   });
+
+  test('term result: weighted subjects and how it was worked out', () {
+    final t = TermResult.fromJson({
+      'term': {'id': 't1', 'name': 'Term 1', 'publishedAt': '2026-10-09T00:00:00Z', 'components': [{'name': 'Unit Test 1', 'weight': 20}, {'name': 'Half-Yearly', 'weight': 80}]},
+      'result': {
+        'studentId': 's1', 'name': 'Rahul', 'admissionNo': '1', 'rollNo': 1, 'section': {'id': 'x', 'label': '8-A'},
+        'subjects': [{'subject': {'id': 'm', 'name': 'Mathematics'}, 'components': [], 'percent': 82, 'grade': 'A2', 'passed': true}],
+        'percentage': 75.7, 'grade': 'B1', 'status': 'PASS', 'rankInSection': 1,
+      },
+    });
+    expect(t.how, 'Unit Test 1 20% + Half-Yearly 80%');
+    expect(t.subjects.single.percent, 82.0);
+    expect(t.percentage, 75.7);
+  });
 }

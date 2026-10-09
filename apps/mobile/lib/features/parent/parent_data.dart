@@ -32,6 +32,11 @@ final childResults = FutureProvider.autoDispose.family<List<StudentResult>, Stri
   return rows.cast<Json>().map(StudentResult.fromJson).toList();
 });
 
+final childTerms = FutureProvider.autoDispose.family<List<TermResult>, String>((ref, id) async {
+  final rows = await ref.read(apiProvider).get<List<dynamic>>('/students/$id/term-results');
+  return rows.cast<Json>().map(TermResult.fromJson).toList();
+});
+
 final childDocuments = FutureProvider.autoDispose.family<List<DocumentItem>, String>((ref, id) async {
   final api = ref.read(apiProvider);
   final mine = await api.get<List<dynamic>>('/documents', query: {'ownerType': 'STUDENT', 'ownerId': id});
@@ -45,4 +50,5 @@ void refreshChild(WidgetRef ref, String id) {
   ref.invalidate(childHomework(id));
   ref.invalidate(childFees(id));
   ref.invalidate(childResults(id));
+  ref.invalidate(childTerms(id));
 }

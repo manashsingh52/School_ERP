@@ -310,3 +310,59 @@ export interface ReportCardStatus {
   version: number | null;
   generatedAt: string | null;
 }
+
+// ---------------------------------------------------------------- consolidated term results
+
+/** A term made of several exams with weights that add up to 100 (e.g. Unit Test 1 × 20 + Half-Yearly × 80). */
+export const examTermSchema = z
+  .object({
+    name: z.string().trim().min(1).max(60),
+    gradingScaleId: uuidSchema,
+    components: z
+      .array(z.object({ examId: uuidSchema, weight: z.number().int().min(1).max(100) }))
+      .min(1, 'Add at least one exam')
+      .max(6),
+  })
+  .refine((t) => t.components.reduce((a, c) => a + c.weight, 0) === 100, { path: ['components'], message: 'Weights must add up to 100' })
+  .refine((t) => new Set(t.components.map((c) => c.examId)).size === t.components.length, { path: ['components'], message: 'Each exam once' });
+export type ExamTermRequest = z.input<typeof examTermSchema>;
+
+export interface ExamTermItem {
+  id: string;
+  name: string;
+  gradingScale: { id: string; name: string };
+  components: { exam: { id: string; name: string; status: ExamStatus }; weight: number }[];
+  /** All component exams have published results — the term can be published. */
+  ready: boolean;
+  publishedAt: string | null;
+}
+
+export interface TermSubjectResult {
+  subject: { id: string; name: string };
+  /** Per component exam: the % in this subject (null = no marks), absent or exempt. */
+  components: { examId: string; percent: number | null; absent: boolean; exempt: boolean }[];
+  /** Weighted %, exempt exams left out and the weights scaled up. */
+  percent: number | null;
+  grade: string | null;
+  passed: boolean | null;
+}
+
+export interface TermResultRow {
+  studentId: string;
+  name: string;
+  admissionNo: string;
+  rollNo: number | null;
+  section: { id: string; label: string };
+  subjects: TermSubjectResult[];
+  percentage: number | null;
+  grade: string | null;
+  status: 'PASS' | 'FAIL' | 'INCOMPLETE';
+  rankInSection: number | null;
+}
+
+export const termResultsQuerySchema = z.object({ sectionId: uuidSchema.optional() });
+
+export interface StudentTermResultItem {
+  term: { id: string; name: string; publishedAt: string | null; components: { name: string; weight: number }[] };
+  result: TermResultRow;
+}

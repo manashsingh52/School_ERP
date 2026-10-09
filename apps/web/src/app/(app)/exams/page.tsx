@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { GradingScales } from '@/components/exams/grading-scales';
+import { TermsPanel } from '@/components/exams/terms-panel';
 import { Gate } from '@/components/gate';
 import { ApiError, apiPost } from '@/lib/api-client';
 import { formatDate } from '@/lib/format';
@@ -15,7 +16,7 @@ import { useData } from '@/lib/hooks';
 import { EXAM_STATUS } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 
-type Tab = 'exams' | 'scales';
+type Tab = 'exams' | 'terms' | 'scales';
 
 function NewExam({ onDone }: { onDone: (id?: string) => void }) {
   const scales = useData<GradingScaleItem[]>(['grading-scales'], '/grading-scales');
@@ -78,7 +79,7 @@ function ExamsPageContent() {
   const router = useRouter();
   const params = useSearchParams();
   const qc = useQueryClient();
-  const tab: Tab = params.get('tab') === 'scales' ? 'scales' : 'exams';
+  const tab: Tab = params.get('tab') === 'scales' ? 'scales' : params.get('tab') === 'terms' ? 'terms' : 'exams';
   const canManage = can('exam.manage');
   const exams = useData<ExamItem[]>(['exams', 'list'], '/exams');
   const [creating, setCreating] = useState(false);
@@ -86,9 +87,11 @@ function ExamsPageContent() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Examinations" description="Exams, marks, results and report cards" actions={canManage && tab === 'exams' && <Button onClick={() => setCreating(true)}><Plus /> New exam</Button>} />
-      <Tabs<Tab> value={tab} onChange={(v) => router.replace(v === 'exams' ? '/exams' : '/exams?tab=scales')} items={[{ value: 'exams', label: 'Exams' }, { value: 'scales', label: 'Grading scales' }]} />
+      <Tabs<Tab> value={tab} onChange={(v) => router.replace(v === 'exams' ? '/exams' : `/exams?tab=${v}`)} items={[{ value: 'exams', label: 'Exams' }, { value: 'terms', label: 'Terms' }, { value: 'scales', label: 'Grading scales' }]} />
       {tab === 'scales' ? (
         <GradingScales canManage={canManage} />
+      ) : tab === 'terms' ? (
+        <TermsPanel />
       ) : exams.isError ? (
         <Card><ErrorState message={exams.error instanceof ApiError ? exams.error.message : undefined} onRetry={() => void exams.refetch()} /></Card>
       ) : !exams.data ? (

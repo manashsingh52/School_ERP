@@ -180,7 +180,7 @@ export class ResultsService implements OnModuleInit {
   // ---------------------------------------------------------------- read
 
   /** Sections whose results the caller may see; null = all. */
-  private async visibleSections(): Promise<string[] | null> {
+  async visibleSections(): Promise<string[] | null> {
     const perms = RequestContextStore.tenant().permissions;
     if (perms['results.publish'] || perms['results.view'] === 'ALL') return null;
     if (perms['results.view'] === 'ASSIGNED') return this.scope.assignedSectionIds();

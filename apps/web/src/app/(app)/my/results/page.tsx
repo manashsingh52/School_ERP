@@ -1,6 +1,6 @@
 'use client';
 
-import type { ExamDetail, ExamItem, StudentResultItem } from '@schoolos/contracts';
+import type { ExamDetail, ExamItem, StudentResultItem, StudentTermResultItem } from '@schoolos/contracts';
 import { Badge, Button, Card, CardHeader, EmptyState, PageHeader, Skeleton, cn, toast } from '@schoolos/ui';
 import { CalendarDays, Download, Trophy } from 'lucide-react';
 import { ForChild } from '@/components/parent/parent-gate';
@@ -85,8 +85,54 @@ function ResultCard({ item, studentId }: { item: StudentResultItem; studentId: s
   );
 }
 
+function TermCard({ item, studentId }: { item: StudentTermResultItem; studentId: string }) {
+  const r = item.result;
+  async function download() {
+    try {
+      const res = await apiFetch<{ data: { url: string } }>(`/exam-terms/${item.term.id}/report-cards/${studentId}`);
+      window.open(res.data.url, '_blank', 'noopener');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'We couldn’t open the report card.');
+    }
+  }
+  return (
+    <Card>
+      <CardHeader
+        title={item.term.name}
+        description={item.term.components.map((c) => `${c.name} ${c.weight}%`).join(' + ')}
+        action={<Button variant="secondary" size="sm" onClick={() => void download()}><Download /> Report card</Button>}
+      />
+      <div className="grid grid-cols-2 gap-3 px-5 pt-4 sm:grid-cols-4">
+        <div><div className="text-caption text-fg-tertiary">Term percentage</div><div className="tabular text-h2 font-semibold">{formatPercent(r.percentage)}</div></div>
+        <div><div className="text-caption text-fg-tertiary">Grade</div><div className="text-h2 font-semibold">{r.grade ?? '—'}</div></div>
+        <div><div className="text-caption text-fg-tertiary">Result</div><div className="mt-1"><Badge tone={RESULT_STATUS[r.status].tone}>{RESULT_STATUS[r.status].label}</Badge></div></div>
+        {r.rankInSection !== null && <div><div className="text-caption text-fg-tertiary">Rank in section</div><div className="tabular text-h2 font-semibold">{r.rankInSection}</div></div>}
+      </div>
+      <table className="mt-4 w-full text-small">
+        <thead>
+          <tr className="border-y border-border text-left text-caption text-fg-tertiary">
+            <th className="px-5 py-2 font-medium">Subject</th>
+            <th className="px-2 py-2 text-right font-medium">Term</th>
+            <th className="px-5 py-2 text-right font-medium">Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {r.subjects.map((s) => (
+            <tr key={s.subject.id} className="border-b border-border last:border-b-0">
+              <td className="px-5 py-2">{s.subject.name}</td>
+              <td className={cn('tabular px-2 py-2 text-right', s.passed === false && 'font-medium text-danger')}>{formatPercent(s.percent)}</td>
+              <td className="px-5 py-2 text-right">{s.grade ?? '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
 function ChildResults({ studentId }: { studentId: string }) {
   const results = useData<StudentResultItem[]>(['results', 'child', studentId], `/students/${studentId}/results`);
+  const terms = useData<StudentTermResultItem[]>(['results', 'child', studentId, 'terms'], `/students/${studentId}/term-results`);
   const exams = useData<ExamItem[]>(['exams', 'child', studentId], `/exams?studentId=${studentId}`);
   const upcoming = (exams.data ?? []).filter((e) => e.status === 'SCHEDULED' || e.status === 'MARKS_ENTRY');
   return (
@@ -99,6 +145,7 @@ function ChildResults({ studentId }: { studentId: string }) {
       )}
       <section className="flex flex-col gap-3">
         <h2 className="flex items-center gap-2 text-h3 font-semibold"><Trophy className="size-4 text-fg-tertiary" /> Results</h2>
+        {terms.data?.map((item) => <TermCard key={item.term.id} item={item} studentId={studentId} />)}
         {!results.data ? (
           <Skeleton className="h-64" />
         ) : !results.data.length ? (

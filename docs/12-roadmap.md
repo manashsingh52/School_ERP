@@ -179,6 +179,15 @@ Everything is scripted; nothing is created in Google Cloud until you run it (inf
 - [x] `.github/workflows/deploy.yml`: staging after CI on `main`; production by hand behind the `production` environment
 - [ ] Run it: Google Cloud project + billing, domain on Cloudflare (SETUP-LATER #5–7)
 
+### 2026-10-09: Follow-ups from earlier phases ✅ (447 API tests)
+
+- [x] **Homework submissions** (Phase 3): teachers mark who handed it in / checked it, with a note per student; parents see their child's status and the note (web + app); a parent opening it shows the teacher it was seen
+- [x] **Consolidated term report cards** (Phase 4): a term combines published exams with weights (e.g. Unit Test 1 × 20% + Half-Yearly × 80%); per-subject weighted % (absent = 0, exempt or "not in that exam" drops out and the weights scale up), weighted pass mark, overall %, grade, rank; publish to parents (notified), one A4 card per student; staff see only their sections
+- [x] **Duplicate receipts** (Phase 5): staff reprints after the first print are stamped DUPLICATE COPY and audited; parents' copies never are
+- [x] **"Use as homework"** from AI worksheet drafts (Phase 8)
+
+Still open: co-scholastic areas on report cards, marks import from Excel, settlement (bank UTR) reconciliation, Hindi in the AI evaluation set.
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

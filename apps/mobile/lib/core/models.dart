@@ -238,6 +238,30 @@ class StudentResult {
   final bool hasReportCard;
 }
 
+/// A consolidated term (several exams with weights) for one child.
+class TermResult {
+  TermResult({required this.termId, required this.name, required this.how, required this.percentage, this.grade, required this.status, this.rankInSection, required this.subjects});
+  factory TermResult.fromJson(Json j) {
+    final t = j['term'] as Json;
+    final r = j['result'] as Json;
+    return TermResult(
+      termId: t['id'] as String,
+      name: t['name'] as String,
+      how: _list(t['components']).map((c) => '${c['name']} ${c['weight']}%').join(' + '),
+      percentage: _dn(r['percentage']),
+      grade: _s(r['grade']),
+      status: r['status'] as String,
+      rankInSection: _in(r['rankInSection']),
+      subjects: _list(r['subjects']).map((s) => (name: (s['subject'] as Json)['name'] as String, percent: _dn(s['percent']), grade: _s(s['grade']), passed: s['passed'] as bool?)).toList(),
+    );
+  }
+  final String termId, name, how, status;
+  final double? percentage;
+  final String? grade;
+  final int? rankInSection;
+  final List<({String name, double? percent, String? grade, bool? passed})> subjects;
+}
+
 class MarksSheetRef {
   MarksSheetRef({required this.examId, required this.examName, required this.examSubjectId, required this.subject, required this.className, required this.sectionId, required this.sectionLabel, required this.entered, required this.total});
   final String examId, examName, examSubjectId, subject, className, sectionId, sectionLabel;

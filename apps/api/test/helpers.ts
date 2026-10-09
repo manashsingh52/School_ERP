@@ -147,6 +147,8 @@ export interface Tenant {
   /** A document on s1 (shared with parents) and a finished report export by the admin. */
   documentId: string;
   reportRunId: string;
+  /** A consolidated term made of the fixture exam (unpublished). */
+  termId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
 }
 
@@ -339,6 +341,9 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     ).id,
     reportRunId: (
       await db.reportRun.create({ data: { schoolId, type: 'student_strength', params: {}, format: 'CSV', status: 'DONE', fileId: file.id, requestedByMemberId: adminMembership.id, completedAt: new Date() } })
+    ).id,
+    termId: (
+      await db.examTerm.create({ data: { schoolId, academicYearId: year.id, name: 'Term 1', gradingScaleId: (await db.gradingScale.findFirstOrThrow({ where: { schoolId } })).id, components: [{ examId: (await db.exam.findFirstOrThrow({ where: { schoolId } })).id, weight: 100 }] } })
     ).id,
     supportGrantId: (
       await db.supportAccessGrant.create({ data: { schoolId, platformUserId: randomUUID(), reason: 'Fixture request', expiresAt: new Date(Date.now() + 3_600_000) } })

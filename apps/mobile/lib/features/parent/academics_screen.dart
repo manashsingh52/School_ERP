@@ -206,13 +206,43 @@ class _ResultsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final results = ref.watch(childResults(child.id));
+    final terms = ref.watch(childTerms(child.id)).value ?? const <TermResult>[];
     final s = StatusColors.of(context);
     return AsyncView(
       value: results,
       onRetry: () => ref.invalidate(childResults(child.id)),
-      builder: (list) => list.isEmpty
+      builder: (list) => list.isEmpty && terms.isEmpty
           ? const EmptyView(icon: Icons.emoji_events_outlined, title: 'No results published yet')
           : ListView(padding: const EdgeInsets.all(16), children: [
+              for (final term in terms)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    child: ExpansionTile(
+                      initiallyExpanded: true,
+                      title: Text(term.name),
+                      subtitle: Text([percent(term.percentage), if (term.grade != null) 'Grade ${term.grade}', if (term.rankInSection != null) 'Rank ${term.rankInSection}', term.how].join(' · ')),
+                      trailing: Pill(term.status == 'PASS' ? 'Passed' : term.status == 'FAIL' ? 'Not passed' : 'Incomplete', tone: term.status == 'PASS' ? Tone.success : term.status == 'FAIL' ? Tone.danger : Tone.warning),
+                      children: [
+                        for (final sub in term.subjects)
+                          ListTile(
+                            dense: true,
+                            title: Text(sub.name),
+                            trailing: Text('${percent(sub.percent)}${sub.grade != null ? '  ${sub.grade}' : ''}', style: TextStyle(color: sub.passed == false ? s.danger : null, fontWeight: FontWeight.w600)),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.picture_as_pdf_outlined),
+                            label: const Text('Term report card'),
+                            onPressed: () => openLink(context, () async => (await ref.read(apiProvider).get<Json>('/exam-terms/${term.termId}/report-cards/${child.id}'))['url'] as String),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               for (final r in list)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
