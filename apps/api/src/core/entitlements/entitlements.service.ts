@@ -79,6 +79,12 @@ export class EntitlementsService {
   }
 
   /** True if one more `metric` fits this month (SMS etc.). */
+  /** This month's count for a metered metric. */
+  async used(metric: Metric, schoolId: string): Promise<number> {
+    const row = await this.platform.usageCounter.findUnique({ where: { schoolId_metric_period: { schoolId, metric, period: usagePeriod() } } });
+    return Number(row?.value ?? 0);
+  }
+
   async withinMonthly(metric: Metric, schoolId: string): Promise<boolean> {
     const limits = await this.limits(schoolId);
     const cap = metric === 'sms' ? limits.smsPerMonth : metric === 'ai_calls' ? limits.aiCallsPerMonth : null;

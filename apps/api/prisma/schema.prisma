@@ -423,6 +423,7 @@ model School {
   features               SchoolFeature[]
   usageCounters          UsageCounter[]
   supportGrants          SupportAccessGrant[]
+  aiLogs                 AiLog[]
   memberships            Membership[]
   roles                  Role[]
   rolePermissions        RolePermission[]
@@ -2192,4 +2193,27 @@ model ReportRun {
 
   @@index([schoolId, createdAt])
   @@map("report_runs")
+}
+
+/// One AI request (docs/12 Phase 8). Deliberately no prompt or answer text — only what was used
+/// (tool names + their id/date arguments), sizes, timing and outcome, so logs carry no PII.
+model AiLog {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  schoolId    String   @map("school_id") @db.Uuid
+  memberId    String   @map("member_id") @db.Uuid
+  feature     String // ask | worksheet
+  provider    String // gemini | mock
+  model       String
+  tools       Json     @default("[]") // [{ name, args }]
+  inputChars  Int      @map("input_chars")
+  outputChars Int      @default(0) @map("output_chars")
+  latencyMs   Int      @default(0) @map("latency_ms")
+  status      String // OK | ERROR | REFUSED
+  errorCode   String?  @map("error_code")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, createdAt])
+  @@map("ai_logs")
 }

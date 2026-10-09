@@ -49,7 +49,7 @@ export interface RateLimitRule {
   limit: number;
   windowSeconds: number;
   /** Extra key material from the request body, e.g. the login identifier. */
-  by?: 'ip' | 'ip+body.identifier' | 'ip+body.phone';
+  by?: 'ip' | 'ip+body.identifier' | 'ip+body.phone' | 'user';
 }
 
 const RATE_LIMIT_RULES = 'rate-limit:rules';
@@ -80,6 +80,8 @@ export class RateLimitGuard implements CanActivate {
     const ip = RequestContextStore.get()?.ip ?? req.ip ?? 'unknown';
     const body = (req.body ?? {}) as Record<string, unknown>;
     switch (rule.by) {
+      case 'user': // signed-in routes: the global auth guard has already set the user
+        return RequestContextStore.get()?.userId ?? ip;
       case 'ip+body.identifier':
         return `${ip}:${String(body.identifier ?? '').trim().toLowerCase()}`;
       case 'ip+body.phone':

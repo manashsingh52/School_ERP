@@ -36,6 +36,7 @@ import {
   updateAttendanceSettingsSchema,
 } from './attendance.js';
 import { requestUploadSchema } from './files.js';
+import { askSchema, worksheetSchema } from './ai.js';
 import { createDocumentSchema, listDocumentsQuerySchema, updateDocumentSchema } from './documents.js';
 import { auditQuerySchema, createReportRunSchema, reportPreviewQuerySchema } from './reports.js';
 import {
@@ -397,4 +398,8 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/reports/runs/:id': { summary: 'One export (poll until DONE)', tag: 'Reports', access: 'permission:report.export' },
   'GET /v1/reports/runs/:id/download': { summary: 'Download link for a finished export', tag: 'Reports', access: 'permission:report.export' },
   'GET /v1/audit': { summary: "The school's audit log", tag: 'Audit', access: 'permission:audit.view', query: auditQuerySchema },
+
+  'GET /v1/ai/status': { summary: 'Is the AI assistant on for me, and how much is left this month', tag: 'AI', access: 'permission:ai.use' },
+  'POST /v1/ai/ask': { summary: 'Ask about the school (answers from permission-checked reports)', tag: 'AI', access: 'permission:ai.use', body: askSchema },
+  'POST /v1/ai/worksheet': { summary: 'Draft a worksheet (teachers)', tag: 'AI', access: 'permission:ai.use', body: worksheetSchema },
 };

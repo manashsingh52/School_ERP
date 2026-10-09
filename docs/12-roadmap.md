@@ -156,6 +156,17 @@ Known follow-ups (small): online subscription billing (V1.1), staff documents fo
 - [ ] FCM push + deep links from push (needs Firebase project)
 - [ ] iOS / Android builds, store listings, privacy labels, review prep (needs Xcode, Android Studio, accounts)
 
+### 2026-10-09: Phase 8 — AI foundation ✅ (419 API tests)
+
+- [x] `ai` module: provider interface with **Gemini** (REST, function calling) and an offline **rules provider** for development, tests and the evaluation set; `AI_PROVIDER=none|mock|gemini` (mock refused in production)
+- [x] **Tool registry**: 8 tools (attendance by class, low-attendance students, exam results, subject performance, class strength, fee collection, outstanding, defaulters) — each is a report the person could run themselves, through `ReportsService` (permissions and teacher scopes apply; no direct DB access). Only tools the person may use are offered to the model
+- [x] **Privacy**: names and phone numbers in tool results become `[P1]`-style placeholders before anything reaches the provider and are restored in the answer; `ai_logs` keeps tools used (ids/dates), sizes, timing and outcome — never the question or answer (RLS-protected)
+- [x] Gate: `ai_assistant` feature flag (per-school override; on for the demo school), `ai.use` + a report permission to ask (`homework.manage` for worksheets), monthly `aiCallsPerMonth` from the plan, 20 questions/minute per person
+- [x] Features: principal/admin Q&A, accountant fee summaries, teacher worksheet drafts (topic only — no student data sent); web Assistant page with sources and the data used
+- [x] **Evaluation set** (15 real questions → expected lookup): offline in CI; live against Gemini with `pnpm ai:eval` before enabling for schools
+
+Known follow-ups: run the live evaluation once a Gemini key exists (SETUP-LATER #19); Hindi/regional-language checks in the evaluation set; "use as homework" from a worksheet draft.
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

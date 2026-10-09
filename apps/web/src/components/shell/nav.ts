@@ -13,6 +13,7 @@ import {
   Megaphone,
   NotebookPen,
   Settings,
+  Sparkles,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -46,6 +47,7 @@ export const NAV: NavItem[] = [
   { href: '/notices', label: 'Notices', icon: Megaphone, any: ['notice.view', 'notice.create'], scopes: STAFF, ready: true },
   { href: '/documents', label: 'Documents', icon: FileText, any: ['document.view'], scopes: STAFF, ready: true },
   { href: '/reports', label: 'Reports', icon: BarChart3, any: ['report.academic', 'report.finance'], scopes: STAFF, ready: true },
+  { href: '/assistant', label: 'Assistant', icon: Sparkles, any: ['ai.use'], scopes: STAFF, ready: true },
 ];
 
 /** Parent web view (docs/06 §4): one child at a time, chosen in the header. */

@@ -261,6 +261,11 @@ async function platform(db: PlatformPrismaService, app: INestApplicationContext,
     { key: 'documents', description: 'Student and staff documents', defaultEnabled: true },
   ];
   for (const f of FLAGS) await db.featureFlag.upsert({ where: { key: f.key }, create: f, update: {} });
+  // Phase 8: the demo school tries the AI assistant (offline rules provider unless Gemini is set).
+  if (!(await db.schoolFeature.findUnique({ where: { schoolId_flagKey: { schoolId, flagKey: 'ai_assistant' } } }))) {
+    await db.schoolFeature.create({ data: { schoolId, flagKey: 'ai_assistant', enabled: true } });
+    notes.push('AI assistant on for the demo school');
+  }
   if (!(await db.subscription.findUnique({ where: { schoolId } }))) {
     const pro = await db.plan.findUniqueOrThrow({ where: { code: 'professional' } });
     await db.subscription.create({ data: { schoolId, planId: pro.id, status: 'ACTIVE', currentPeriodStart: date('2026-04-01'), currentPeriodEnd: date('2027-03-31'), notes: 'Demo: annual, paid by bank transfer' } });

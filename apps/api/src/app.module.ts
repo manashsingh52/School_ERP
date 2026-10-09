@@ -70,6 +70,9 @@ import { ImportsService } from './modules/imports/imports.service.js';
 import { SetupImports } from './modules/imports/setup-imports.js';
 import { MembersController, PermissionsController, RolesController } from './modules/members/members.controller.js';
 import { MembersService } from './modules/members/members.service.js';
+import { AiController } from './modules/ai/ai.controller.js';
+import { AiService } from './modules/ai/ai.service.js';
+import { AiTools } from './modules/ai/tools.js';
 import { DocumentsController } from './modules/documents/documents.controller.js';
 import { AppConfigController, DevicesController, OpenApiController } from './modules/mobile/mobile.controller.js';
 import { DocumentsService } from './modules/documents/documents.service.js';
@@ -223,8 +226,11 @@ export class ImportsModule {}
 @Module({ imports: [FilesModule], controllers: [DocumentsController], providers: [DocumentsService] })
 export class DocumentsModule {}
 
-@Module({ imports: [FilesModule, FinanceModule], controllers: [ReportsController, AuditController], providers: [ReportsService, ReportRunsService] })
+@Module({ imports: [FilesModule, FinanceModule], controllers: [ReportsController, AuditController], providers: [ReportsService, ReportRunsService], exports: [ReportsService] })
 export class ReportsModule {}
+
+@Module({ imports: [ReportsModule], controllers: [AiController], providers: [AiService, AiTools] })
+export class AiModule {}
 
 @Module({})
 export class AppModule {
@@ -256,6 +262,7 @@ export class AppModule {
         PlatformModule,
         DocumentsModule,
         ReportsModule,
+        AiModule,
       ],
     };
   }

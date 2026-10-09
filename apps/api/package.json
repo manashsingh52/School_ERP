@@ -17,7 +17,8 @@
     "db:reset": "prisma migrate reset --force && node --env-file-if-exists=.env scripts/apply-sql.mjs && pnpm db:seed",
     "generate": "prisma generate && node scripts/gen-tenant-models.mjs",
     "db:bootstrap": "node --env-file-if-exists=.env scripts/bootstrap-db.mjs",
-    "worker": "node --enable-source-maps --env-file-if-exists=.env dist/worker.js"
+    "worker": "node --enable-source-maps --env-file-if-exists=.env dist/worker.js",
+    "ai:eval": "vitest run test/ai-eval.live.test.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^8.2.0",

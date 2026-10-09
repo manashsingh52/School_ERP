@@ -71,6 +71,11 @@ const envSchema = z.object({
   // Payments (docs/11). mock = local sandbox (no real money, no Razorpay account needed);
   // razorpay = real API with each school's own keys.
   PAYMENTS_GATEWAY: z.enum(['mock', 'razorpay']).default('mock'),
+  // AI assistant (docs/12 Phase 8). mock = offline, deterministic (development/tests; refused in
+  // production); none = switched off. ⏸ Gemini key from Google AI Studio / Vertex — fill in later.
+  AI_PROVIDER: z.enum(['none', 'mock', 'gemini']).default('mock'),
+  GEMINI_API_KEY: optional(z.string()),
+  AI_MODEL: z.string().default('gemini-2.5-flash'),
   /** AES-256-GCM key (base64, 32 bytes) for schools' gateway secrets — run keys:generate. ⏸ Secret Manager in production. */
   PAYMENT_SECRETS_KEY: optional(z.string().min(40)),
 
@@ -101,6 +106,12 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `  • ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Invalid configuration:\n${issues}`);
+  }
+  if (parsed.data.NODE_ENV === 'production' && parsed.data.AI_PROVIDER === 'mock') {
+    throw new Error('AI_PROVIDER=mock is not allowed in production (use gemini or none)');
+  }
+  if (parsed.data.AI_PROVIDER === 'gemini' && !parsed.data.GEMINI_API_KEY) {
+    throw new Error('AI_PROVIDER=gemini needs GEMINI_API_KEY');
   }
   if (parsed.data.NODE_ENV === 'production' && parsed.data.PAYMENTS_GATEWAY === 'mock') {
     throw new Error('PAYMENTS_GATEWAY=mock is not allowed in production');
