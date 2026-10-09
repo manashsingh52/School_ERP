@@ -366,3 +366,39 @@ export interface StudentTermResultItem {
   term: { id: string; name: string; publishedAt: string | null; components: { name: string; weight: number }[] };
   result: TermResultRow;
 }
+
+// ---------------------------------------------------------------- marks from a spreadsheet
+
+/** Upload a filled-in marks sheet (from the template). apply=false only checks it. */
+export const marksImportSchema = z.object({
+  examSubjectId: uuidSchema,
+  sectionId: uuidSchema,
+  fileId: uuidSchema,
+  /** The sheet version shown when the teacher started — someone else's save in between → 409. */
+  version: z.string().max(40).optional(),
+  apply: z.boolean().default(false),
+});
+
+export interface MarksImportRow {
+  /** Row number in the spreadsheet (header = 1). */
+  row: number;
+  admissionNo: string;
+  name: string | null;
+  value: string;
+  marks: number | null;
+  absent: boolean;
+  exempt: boolean;
+  /** blank = left as it is; same = no change. */
+  change: 'new' | 'changed' | 'same' | 'blank';
+  error: string | null;
+}
+
+export interface MarksImportResult {
+  rows: MarksImportRow[];
+  errors: number;
+  changes: number;
+  /** Students in the section the file didn't mention (left as they are). */
+  missing: string[];
+  applied: boolean;
+  sheet: MarksSheet | null;
+}

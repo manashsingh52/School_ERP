@@ -1,7 +1,8 @@
 'use client';
 
 import type { MarksSheet } from '@schoolos/contracts';
-import { Badge, Button, Card, ErrorState, Input, Kbd, PageHeader, Skeleton, cn, toast } from '@schoolos/ui';
+import { Badge, Button, Card, Dialog, ErrorState, Input, Kbd, PageHeader, Skeleton, cn, toast } from '@schoolos/ui';
+import { MarksImportButtons, MarksImportDialog } from '@/components/exams/marks-import';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, ChevronLeft, Lock } from 'lucide-react';
 import Link from 'next/link';
@@ -24,6 +25,7 @@ function MarksPageContent() {
     enabled: !!examSubjectId && !!sectionId,
   });
   const s = sheet.data;
+  const [importFile, setImportFile] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col gap-6">
@@ -33,6 +35,7 @@ function MarksPageContent() {
           className="mt-2"
           title={s ? `${s.examSubject.subject.name} · ${s.section.label}` : <Skeleton className="h-8 w-56" />}
           description={s ? `Out of ${s.examSubject.maxMarks} · pass ${s.examSubject.passMarks}${s.examSubject.examDate ? ` · ${formatDate(s.examSubject.examDate)}` : ''}` : undefined}
+          actions={s && <MarksImportButtons sheet={s} onOpen={setImportFile} />}
         />
       </div>
       {sheet.isError ? (
@@ -42,6 +45,9 @@ function MarksPageContent() {
       ) : (
         <Sheet key={s.version} sheet={s} onReload={() => void sheet.refetch()} />
       )}
+      <Dialog open={!!importFile} onOpenChange={(o) => !o && setImportFile(null)}>
+        {importFile && s && <MarksImportDialog sheet={s} fileId={importFile} onDone={(saved) => { setImportFile(null); if (saved) void sheet.refetch(); }} />}
+      </Dialog>
     </div>
   );
 }

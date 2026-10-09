@@ -31,6 +31,7 @@ export const FILE_PURPOSES = {
   receipt: { label: 'Fee receipt', mimeTypes: PDF, maxBytes: 5 * MB, permission: 'payment.collect' },
   report_card: { label: 'Report card', mimeTypes: PDF, maxBytes: 10 * MB, permission: 'report_card.generate' },
   import: { label: 'Import file', mimeTypes: [...XLSX, ...CSV], maxBytes: 10 * MB, permission: 'import.run' },
+  marks_import: { label: 'Marks sheet', mimeTypes: [...XLSX, ...CSV], maxBytes: 2 * MB, permission: 'marks.enter' },
   report_export: { label: 'Report export', mimeTypes: [...PDF, ...XLSX, ...CSV], maxBytes: 50 * MB, permission: 'report.export' },
 } as const satisfies Record<string, FilePurposeRule>;
 

@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query
 import type { Response } from 'express';
 import type { z } from 'zod';
 import {
+  marksImportSchema,
   computeResultsSchema,
   createExamSchema,
   generateReportCardsSchema,
@@ -20,6 +21,7 @@ import { RequirePermission } from '../../core/auth/decorators.js';
 import { contentDisposition } from '../../core/storage/storage.js';
 import { ZodPipe } from '../../core/validation/zod.pipe.js';
 import { ExamsService } from './exams.service.js';
+import { MarksImportService } from './marks-import.service.js';
 import { MarksService } from './marks.service.js';
 import { ReportCardsService } from './report-cards.service.js';
 import { ResultsService } from './results.service.js';
@@ -70,6 +72,7 @@ export class ExamsController {
     private readonly exams: ExamsService,
     private readonly marks: MarksService,
     private readonly results: ResultsService,
+    private readonly marksImport: MarksImportService,
   ) {}
 
   @Get()
@@ -82,6 +85,22 @@ export class ExamsController {
   @RequirePermission('exam.manage')
   async create(@Body(new ZodPipe(createExamSchema)) body: Out<typeof createExamSchema>) {
     return { data: await this.exams.create(body) };
+  }
+
+  @Get('marks/template')
+  @RequirePermission('marks.enter')
+  async marksTemplate(@Query(new ZodPipe(marksSheetQuerySchema)) query: Out<typeof marksSheetQuerySchema>, @Res() res: Response) {
+    const { fileName, data } = await this.marksImport.template(query.examSubjectId, query.sectionId);
+    res.setHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('content-disposition', contentDisposition(fileName));
+    res.send(data);
+  }
+
+  @Post('marks/import')
+  @HttpCode(200)
+  @RequirePermission('marks.enter')
+  async marksImportRun(@Body(new ZodPipe(marksImportSchema)) body: Out<typeof marksImportSchema>) {
+    return { data: await this.marksImport.import(body) };
   }
 
   /** Teachers: every marks sheet still open to them (mobile home + marks tab). */
