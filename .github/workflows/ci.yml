@@ -33,6 +33,32 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: '1'
 
+  # Browser tests of the critical paths (apps/e2e): real PostgreSQL + RLS, the built API and web
+  # app, demo seed. Sign-in, attendance, counter and online fees, marks, admissions, console.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @schoolos/e2e exec playwright install --with-deps chromium
+      - run: pnpm e2e
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright
+          path: |
+            apps/e2e/playwright-report
+            apps/e2e/test-results
+          retention-days: 7
+
   mobile:
     runs-on: ubuntu-latest
     timeout-minutes: 15

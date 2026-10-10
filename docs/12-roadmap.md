@@ -191,6 +191,16 @@ Everything is scripted; nothing is created in Google Cloud until you run it (inf
 
 Still open: settlement (bank UTR) reconciliation — needs a school's live Razorpay account to see real settlement files.
 
+### 2026-10-10: Browser tests (Playwright) ✅ (21 tests)
+
+- [x] `apps/e2e`: throwaway PostgreSQL + RLS + demo seed, the built API (:4100) and web app (:3100), real Chrome; `pnpm e2e`, and a CI job that uploads traces on failure
+- [x] Critical paths: sign-in/out and redirects, today's register → parent sees the absence, counter cash with receipt, online payment success and failure (sandbox), marks entry with validation, admission with a duplicate check, platform console and its boundary, the assistant
+- Bugs they found, now fixed:
+  - the assistant page crashed after the first answer in current Chrome (`scrollIntoView` now returns a Promise, which React called as an effect cleanup)
+  - receipts of older or imported payments could never be opened: the buttons waited for a file that's only made on request (parents' fees page and the staff payment dialog)
+  - toasts sat on top of the bottom action bar (Save marks, Submit register) and, while hovered, never went away; they now appear top centre
+  - a field the server rejected (e.g. a duplicate admission number) wasn't scrolled to; forms now focus the first one
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |
@@ -335,7 +345,7 @@ A module is done only when **all** of these are true:
 - [ ] Tenant isolation covered by the auto-discovered isolation suite (and module-specific cases)
 - [ ] Loading (skeleton), empty, error and permission-denied states designed
 - [ ] Audit logging for sensitive actions
-- [ ] Unit + integration tests; critical paths in Playwright e2e
+- [ ] Unit + integration tests; critical paths in Playwright e2e (`apps/e2e`)
 - [ ] Responsive down to 375px; keyboard accessible; contrast checked
 - [ ] Docs: module README (purpose, permissions, events emitted, jobs), API docs generated
 - [ ] Demo seed data updated so the module looks alive in `demo.schoolos.in`
