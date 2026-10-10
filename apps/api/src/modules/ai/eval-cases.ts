@@ -26,4 +26,12 @@ export const EVAL_CASES: EvalCase[] = [
   { question: 'How much fee is still outstanding by class?', tool: 'fee_outstanding' },
   { question: 'Who has not paid fees yet? Show defaulters', tool: 'fee_defaulters' },
   { question: 'Which students in class 8 have overdue fees?', tool: 'fee_defaulters', args: { className: '8' } },
+  // Hindi and Hinglish — how many staff will actually ask
+  { question: 'इस महीने किन कक्षाओं की उपस्थिति 75% से कम है?', tool: 'attendance_by_class' },
+  { question: 'किन छात्रों की उपस्थिति 60% से कम है?', tool: 'low_attendance_students', args: { belowPercent: 60 } },
+  { question: 'कक्षा 8 में किसकी फीस बकाया है?', tool: 'fee_defaulters', args: { className: '8' } },
+  { question: 'आज कितनी फीस जमा हुई?', tool: 'fee_collection' },
+  { question: 'Is mahine fees kitni collect hui?', tool: 'fee_collection' },
+  { question: 'Half yearly mein sabse kamzor subject kaun sa hai?', tool: 'subject_performance' },
+  { question: 'Class 9 ki hazri kaisi rahi pichhle mahine?', tool: 'attendance_by_class', args: { className: '9' } },
 ];

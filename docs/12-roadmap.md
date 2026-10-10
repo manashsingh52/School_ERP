@@ -185,8 +185,11 @@ Everything is scripted; nothing is created in Google Cloud until you run it (inf
 - [x] **Consolidated term report cards** (Phase 4): a term combines published exams with weights (e.g. Unit Test 1 × 20% + Half-Yearly × 80%); per-subject weighted % (absent = 0, exempt or "not in that exam" drops out and the weights scale up), weighted pass mark, overall %, grade, rank; publish to parents (notified), one A4 card per student; staff see only their sections
 - [x] **Duplicate receipts** (Phase 5): staff reprints after the first print are stamped DUPLICATE COPY and audited; parents' copies never are
 - [x] **"Use as homework"** from AI worksheet drafts (Phase 8)
+- [x] **Marks import from Excel** (Phase 4): download the section's sheet, fill it offline, upload; every row is checked and shown (new / changed / same / error) and nothing is saved until the whole sheet is clean
+- [x] **Co-scholastic areas** (Phase 4): grades (school's own scale, default A/B/C) for areas like Work Education, Art, Discipline, entered per exam and printed on exam and term report cards; shown to parents on web and app
+- [x] **Hindi and Hinglish in the AI evaluation set** (Phase 8): 7 more cases (e.g. "कक्षा 8 में किसकी फीस बकाया है?", "Is mahine fees kitni collect hui?"); the offline rules provider understands them, so the whole set runs in CI
 
-Still open: co-scholastic areas on report cards, marks import from Excel, settlement (bank UTR) reconciliation, Hindi in the AI evaluation set.
+Still open: settlement (bank UTR) reconciliation — needs a school's live Razorpay account to see real settlement files.
 
 ### Implementation notes (where code differs from the plan, and why)
 

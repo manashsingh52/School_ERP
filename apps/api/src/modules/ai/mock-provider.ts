@@ -33,7 +33,24 @@ export class MockProvider implements AiProvider {
 
   /** Keyword routing, with simple argument extraction. */
   route(q: string, allowed: Set<string>): ToolCall | null {
-    const s = q.toLowerCase();
+    // Hindi and Hinglish words are mapped to the English keywords below, so the same rules apply.
+    const s = q
+      .toLowerCase()
+      .replace(/फीस|शुल्क/g, ' fee ')
+      .replace(/बकाया|देय|बाकी/g, ' due ')
+      .replace(/किसकी|किसने|कौन/g, ' who ')
+      .replace(/जमा|प्राप्त|collect hui|aayi|aai/g, ' collected ')
+      .replace(/आज|aaj/g, ' today ')
+      .replace(/उपस्थिति|हाज़िरी|हाजिरी|अनुपस्थित|hazri|haziri/g, ' attendance ')
+      .replace(/छात्रों|छात्र|बच्चों|बच्चे|students?\b|bacche/g, ' students ')
+      .replace(/से कम|कम|नीचे|kam/g, ' below ')
+      .replace(/परीक्षा|परिणाम|अंक|रिजल्ट|pariksha/g, ' exam ')
+      .replace(/विषय|vishay/g, ' subject ')
+      .replace(/कमजोर|कमज़ोर|kamzor/g, ' weak ')
+      .replace(/कक्षा|class/g, ' class ')
+      .replace(/इस महीने|is mahine/g, ' this month ')
+      .replace(/पिछले महीने|pichhle mahine/g, ' last month ')
+      .replace(/कितने छात्र|kitne students/g, ' how many students ');
     const args: Record<string, unknown> = {};
     const cls = s.match(/\b(?:class|grade|std\.?)\s*([0-9]{1,2}|[ivx]+|lkg|ukg|nursery)\b/) ?? s.match(/\b([0-9]{1,2})(?:st|nd|rd|th)\s*(?:class|grade|std)\b/);
     if (cls) args.className = cls[1];
@@ -48,7 +65,7 @@ export class MockProvider implements AiProvider {
     };
 
     if (/fee|paid|payment|collect|dues?\b|defaulter|outstanding|overdue|money|₹/.test(s)) {
-      if (/defaulter|overdue|not paid|haven'?t paid|late/.test(s)) return pick('fee_defaulters', cls ? { className: args.className } : {});
+      if (/defaulter|overdue|not paid|haven'?t paid|late/.test(s) || (/\bwho\b/.test(s) && /\bdue\b/.test(s))) return pick('fee_defaulters', cls ? { className: args.className } : {});
       if (/outstanding|due|balance|pending/.test(s)) return pick('fee_outstanding', cls ? { className: args.className } : {});
       if (s.includes('today')) return pick('fee_collection', { from: this.today(), to: this.today() });
       if (month) return pick('fee_collection', range(month));
