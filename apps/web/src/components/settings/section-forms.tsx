@@ -103,6 +103,9 @@ export function ExamSettingsCard() {
       {(v, set) => (
         <>
           <Checkbox checked={v.showAttendanceOnReportCard} onChange={(e) => set({ showAttendanceOnReportCard: e.target.checked })} label="Show attendance %" />
+          <Field label="Co-scholastic grades (best first)" htmlFor="es-co" hint="Comma-separated, 2–6 grades, e.g. A, B, C">
+            <Input id="es-co" defaultValue={v.coScholasticGrades.join(', ')} onChange={(e) => set({ coScholasticGrades: e.target.value.split(',').map((g) => g.trim()).filter(Boolean).slice(0, 6) })} className="w-64" />
+          </Field>
           <Field label="Note at the bottom" htmlFor="es-note" hint="Optional, up to 300 characters"><Textarea id="es-note" rows={3} maxLength={300} value={v.reportCardNote ?? ''} onChange={(e) => set({ reportCardNote: e.target.value || null })} placeholder="e.g. School reopens on 2 June. Parent–teacher meeting on Saturday." /></Field>
         </>
       )}

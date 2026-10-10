@@ -145,6 +145,8 @@ export const feeSettingsSchema = z.object({
 export const examSettingsSchema = z.object({
   showAttendanceOnReportCard: z.boolean().default(true),
   reportCardNote: note(300),
+  /** Grades teachers may give in co-scholastic areas (best first). */
+  coScholasticGrades: z.array(z.string().trim().min(1).max(4)).min(2).max(6).default(['A', 'B', 'C']),
 });
 
 export const brandingSettingsSchema = z.object({

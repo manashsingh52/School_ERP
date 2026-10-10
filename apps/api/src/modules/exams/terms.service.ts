@@ -15,6 +15,7 @@ import { fromDate } from '../../core/util/dates.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { FilesService } from '../files/files.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { CoScholasticService } from './co-scholastic.service.js';
 import { ResultsService } from './results.service.js';
 import { termReportCardHtml } from './term-report-card.template.js';
 
@@ -43,6 +44,7 @@ export class TermsService implements OnModuleInit {
     private readonly settings: SchoolSettingsService,
     private readonly queues: QueueService,
     private readonly notifications: NotificationsService,
+    private readonly coScholastic: CoScholasticService,
     @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
@@ -258,6 +260,15 @@ export class TermsService implements OnModuleInit {
     });
   }
 
+  /** Co-scholastic grades from the last exam in the term that has any for this student. */
+  private async coFor(t: { components: unknown }, studentId: string) {
+    for (const c of [...this.comps(t)].reverse()) {
+      const list = (await this.coScholastic.forStudents(c.examId, [studentId])).get(studentId);
+      if (list?.length) return list;
+    }
+    return [];
+  }
+
   /** A child's published terms (parents; staff on a profile). */
   async forStudent(studentId: string): Promise<StudentTermResultItem[]> {
     const ok = (await this.scope.canAccessStudent('results.view', studentId)) && (await this.prisma.db.student.count({ where: { id: studentId } })) > 0;
@@ -268,7 +279,7 @@ export class TermsService implements OnModuleInit {
       const [row] = await this.compute(t, { studentId });
       if (!row) continue;
       const [item] = await this.toItems([t]);
-      out.push({ term: { id: t.id, name: t.name, publishedAt: t.publishedAt!.toISOString(), components: item!.components.map((c) => ({ name: c.exam.name, weight: c.weight })) }, result: row });
+      out.push({ term: { id: t.id, name: t.name, publishedAt: t.publishedAt!.toISOString(), components: item!.components.map((c) => ({ name: c.exam.name, weight: c.weight })) }, result: row, coScholastic: await this.coFor(t, studentId) });
     }
     return out;
   }
@@ -324,6 +335,7 @@ export class TermsService implements OnModuleInit {
       term: { name: t.name, components: item!.components.map((c) => ({ id: c.exam.id, name: c.exam.name, weight: c.weight })) },
       student: { dateOfBirth: fmtDate(fromDate(student?.dateOfBirth)), guardian: student?.guardians[0]?.guardian.name ?? null },
       result: row,
+      coScholastic: await this.coFor(t, studentId),
       grades: t.gradingScale.bands.sort((a, b) => a.order - b.order).map((b) => ({ label: b.label, minPercent: Number(b.minPercent), maxPercent: Number(b.maxPercent) })),
     });
     const fileId = await this.files.storeGenerated({ purpose: 'report_card', fileName: `${row.name} - ${t.name}.pdf`, mimeType: 'application/pdf', data: await this.pdf.render(html), memberId });

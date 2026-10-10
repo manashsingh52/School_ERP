@@ -426,6 +426,7 @@ model School {
   aiLogs                 AiLog[]
   examTerms              ExamTerm[]
   termReportCards        TermReportCard[]
+  coScholasticGrades     CoScholasticGrade[]
   memberships            Membership[]
   roles                  Role[]
   rolePermissions        RolePermission[]
@@ -2259,4 +2260,23 @@ model TermReportCard {
 
   @@unique([termId, studentId])
   @@map("term_report_cards")
+}
+
+/// Co-scholastic grade (Work Education, Art, Health & PE…) for a student in an exam, entered by the
+/// class teacher on the school's short scale (default A/B/C, Settings → Examinations).
+model CoScholasticGrade {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  schoolId          String   @map("school_id") @db.Uuid
+  examId            String   @map("exam_id") @db.Uuid
+  studentId         String   @map("student_id") @db.Uuid
+  subjectId         String   @map("subject_id") @db.Uuid
+  grade             String
+  enteredByMemberId String   @map("entered_by_member_id") @db.Uuid
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@unique([examId, studentId, subjectId])
+  @@index([schoolId, examId])
+  @@map("co_scholastic_grades")
 }

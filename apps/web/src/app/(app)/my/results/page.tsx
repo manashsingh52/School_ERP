@@ -75,6 +75,12 @@ function ResultCard({ item, studentId }: { item: StudentResultItem; studentId: s
           ))}
         </tbody>
       </table>
+      {item.coScholastic && item.coScholastic.length > 0 && (
+        <div className="flex flex-wrap gap-x-6 gap-y-1 border-t border-border px-5 py-3 text-small">
+          <span className="text-fg-tertiary">Co-scholastic:</span>
+          {item.coScholastic.map((c) => <span key={c.area}>{c.area} <b>{c.grade}</b></span>)}
+        </div>
+      )}
       {(r.teacherRemark || r.principalRemark) && (
         <div className="flex flex-col gap-2 border-t border-border px-5 py-3 text-small">
           {r.teacherRemark && <p><span className="text-fg-tertiary">Class teacher: </span>{r.teacherRemark}</p>}
@@ -126,6 +132,12 @@ function TermCard({ item, studentId }: { item: StudentTermResultItem; studentId:
           ))}
         </tbody>
       </table>
+      {item.coScholastic && item.coScholastic.length > 0 && (
+        <div className="flex flex-wrap gap-x-6 gap-y-1 border-t border-border px-5 py-3 text-small">
+          <span className="text-fg-tertiary">Co-scholastic:</span>
+          {item.coScholastic.map((c) => <span key={c.area}>{c.area} <b>{c.grade}</b></span>)}
+        </div>
+      )}
     </Card>
   );
 }

@@ -19,6 +19,7 @@ import { PrismaService } from '../../core/prisma/prisma.service.js';
 import { fullName, todayIn, toDate } from '../../core/util/dates.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { CoScholasticService } from './co-scholastic.service.js';
 import { ExamsService } from './exams.service.js';
 import { ON_ROLL } from './marks.service.js';
 
@@ -60,6 +61,7 @@ export class ResultsService implements OnModuleInit {
     private readonly outbox: OutboxService,
     private readonly exams: ExamsService,
     private readonly notifications: NotificationsService,
+    private readonly coScholastic: CoScholasticService,
   ) {}
 
   onModuleInit(): void {
@@ -297,6 +299,7 @@ export class ResultsService implements OnModuleInit {
         exam: { id: p.exam.id, name: p.exam.name, term: p.exam.term, publishedAt: p.exam.publishedAt?.toISOString() ?? null },
         result: row!,
         reportCard: card ? { version: card.version, generatedAt: card.generatedAt.toISOString() } : null,
+        coScholastic: (await this.coScholastic.forStudents(p.examId, [studentId])).get(studentId) ?? [],
       });
     }
     return out;

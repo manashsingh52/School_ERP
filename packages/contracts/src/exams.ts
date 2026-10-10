@@ -293,6 +293,7 @@ export interface StudentResultItem {
   exam: { id: string; name: string; term: string | null; publishedAt: string | null };
   result: ResultRow;
   reportCard: { version: number; generatedAt: string } | null;
+  coScholastic?: CoScholasticItem[];
 }
 
 // ---------------------------------------------------------------- report cards
@@ -365,6 +366,8 @@ export const termResultsQuerySchema = z.object({ sectionId: uuidSchema.optional(
 export interface StudentTermResultItem {
   term: { id: string; name: string; publishedAt: string | null; components: { name: string; weight: number }[] };
   result: TermResultRow;
+  /** From the last exam in the term that has co-scholastic grades. */
+  coScholastic?: CoScholasticItem[];
 }
 
 // ---------------------------------------------------------------- marks from a spreadsheet
@@ -402,3 +405,27 @@ export interface MarksImportResult {
   applied: boolean;
   sheet: MarksSheet | null;
 }
+
+// ---------------------------------------------------------------- co-scholastic areas
+
+export const coScholasticQuerySchema = z.object({ sectionId: uuidSchema });
+
+/** Class teacher's grid: students × co-scholastic areas, on the school's short scale. */
+export interface CoScholasticSheet {
+  exam: { id: string; name: string; status: ExamStatus };
+  section: { id: string; label: string };
+  editable: boolean;
+  lockedReason: string | null;
+  /** Allowed grades, best first (Settings → Examinations). */
+  grades: string[];
+  areas: { id: string; name: string }[];
+  students: { studentId: string; name: string; rollNo: number | null; grades: Record<string, string | null> }[];
+}
+
+export const saveCoScholasticSchema = z.object({
+  sectionId: uuidSchema,
+  entries: z.array(z.object({ studentId: uuidSchema, subjectId: uuidSchema, grade: z.string().trim().max(4).nullable() })).min(1).max(2000),
+});
+
+/** On report cards and the parent's results. */
+export type CoScholasticItem = { area: string; grade: string };

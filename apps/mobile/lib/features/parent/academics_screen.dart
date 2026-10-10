@@ -231,6 +231,11 @@ class _ResultsTab extends ConsumerWidget {
                             title: Text(sub.name),
                             trailing: Text('${percent(sub.percent)}${sub.grade != null ? '  ${sub.grade}' : ''}', style: TextStyle(color: sub.passed == false ? s.danger : null, fontWeight: FontWeight.w600)),
                           ),
+                        if (term.coScholastic.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                            child: Wrap(spacing: 8, runSpacing: 4, children: [for (final c in term.coScholastic) Chip(label: Text('${c.area}: ${c.grade}'))]),
+                          ),
                         Padding(
                           padding: const EdgeInsets.all(12),
                           child: OutlinedButton.icon(
@@ -261,6 +266,11 @@ class _ResultsTab extends ConsumerWidget {
                               sub.absent ? 'Absent' : sub.exempt ? 'Exempt' : '${_n(sub.marks)} / ${_n(sub.maxMarks)}${sub.grade != null ? '  ${sub.grade}' : ''}',
                               style: TextStyle(color: sub.passed == false ? s.danger : null, fontWeight: FontWeight.w600),
                             ),
+                          ),
+                        if (r.coScholastic.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                            child: Wrap(spacing: 8, runSpacing: 4, children: [for (final c in r.coScholastic) Chip(label: Text('${c.area}: ${c.grade}'))]),
                           ),
                         if (r.hasReportCard)
                           Padding(

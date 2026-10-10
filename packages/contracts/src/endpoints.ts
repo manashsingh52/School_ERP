@@ -54,6 +54,7 @@ import {
   userLookupQuerySchema,
 } from './platform.js';
 import {
+  coScholasticQuerySchema,
   computeResultsSchema,
   createExamSchema,
   examTermSchema,
@@ -64,6 +65,7 @@ import {
   marksImportSchema,
   marksSheetQuerySchema,
   resultsQuerySchema,
+  saveCoScholasticSchema,
   saveMarksSchema,
   setExamSubjectsSchema,
   termResultsQuerySchema,
@@ -411,6 +413,8 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/ai/ask': { summary: 'Ask about the school (answers from permission-checked reports)', tag: 'AI', access: 'permission:ai.use', body: askSchema },
   'POST /v1/ai/worksheet': { summary: 'Draft a worksheet (teachers)', tag: 'AI', access: 'permission:ai.use', body: worksheetSchema },
 
+  'GET /v1/exams/:id/co-scholastic': { summary: "Co-scholastic grades for a section (class teacher's grid)", tag: 'Exams', access: 'permission:marks.enter', query: coScholasticQuerySchema },
+  'PUT /v1/exams/:id/co-scholastic': { summary: 'Save co-scholastic grades', tag: 'Exams', access: 'permission:marks.enter', body: saveCoScholasticSchema },
   'GET /v1/exam-terms': { summary: 'Consolidated terms (exams combined with weights)', tag: 'Exams', access: 'permission:exam.view' },
   'POST /v1/exam-terms': { summary: 'Create a term from published exams and weights', tag: 'Exams', access: 'permission:exam.manage', body: examTermSchema },
   'PUT /v1/exam-terms/:id': { summary: 'Change a term (not once published)', tag: 'Exams', access: 'permission:exam.manage', body: examTermSchema },

@@ -109,6 +109,8 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'POST /v1/notices/:id/read': (b) => b.noticeId,
   'GET /v1/notices/:id/stats': (b) => b.noticeId,
   'GET /v1/notices/:id/attachments/:fileId': (b) => b.noticeId,
+  'GET /v1/exams/:id/co-scholastic': (b) => ({ id: b.examId, query: `sectionId=${b.sectionA}` }),
+  'PUT /v1/exams/:id/co-scholastic': (b) => ({ id: b.examId, body: { sectionId: b.sectionA, entries: [{ studentId: b.students.s1, subjectId: b.subjectId, grade: 'A' }] } }),
   'PUT /v1/exam-terms/:id': (b) => ({ id: b.termId, body: { name: 'X', gradingScaleId: b.gradingScaleId, components: [{ examId: b.examId, weight: 100 }] } }),
   'DELETE /v1/exam-terms/:id': (b) => b.termId,
   'GET /v1/exam-terms/:id/results': (b) => b.termId,

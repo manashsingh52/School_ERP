@@ -6,6 +6,7 @@ export interface ReportCardData {
   /** Settings → Examinations. */
   note?: string | null;
   showAttendance?: boolean;
+  coScholastic?: { area: string; grade: string }[];
   academicYear: string;
   exam: { name: string; term: string | null; rankingEnabled: boolean };
   student: { dateOfBirth: string | null; guardian: string | null; photoDataUri: string | null };
@@ -127,6 +128,7 @@ export function reportCardHtml(d: ReportCardData): string {
     ${ranks}
     ${d.showAttendance === false ? '' : `<div class="stat"><span>Attendance</span><b>${r.attendancePct === null ? '—' : `${n(r.attendancePct)}%`}</b></div>`}
   </div>
+  ${d.coScholastic?.length ? `<table class="co"><thead><tr><th>Co-scholastic area</th><th class="num">Grade</th></tr></thead><tbody>${d.coScholastic.map((c) => `<tr><td>${esc(c.area)}</td><td class="num strong">${esc(c.grade)}</td></tr>`).join('')}</tbody></table>` : ''}
   <div class="remarks">
     <div class="remark"><span>Class teacher's remarks</span>${esc(r.teacherRemark ?? '')}</div>
     <div class="remark"><span>Principal's remarks</span>${esc(r.principalRemark ?? '')}</div>

@@ -7,6 +7,7 @@ import { CalendarDays, ChevronLeft, MoreHorizontal, PencilLine, Send, Trash2 } f
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { CoScholasticPanel } from '@/components/exams/co-scholastic-panel';
 import { ExamSetup } from '@/components/exams/exam-setup';
 import { MarksProgress } from '@/components/exams/marks-progress';
 import { ReportCardsPanel } from '@/components/exams/report-cards-panel';
@@ -17,7 +18,7 @@ import { formatDate } from '@/lib/format';
 import { EXAM_STATUS } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 
-type Tab = 'setup' | 'marks' | 'results' | 'cards';
+type Tab = 'setup' | 'marks' | 'co' | 'results' | 'cards';
 
 function ExamPageContent() {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +32,7 @@ function ExamPageContent() {
   const tabs: { value: Tab; label: string }[] = [
     { value: 'setup', label: canManage ? 'Subjects & dates' : 'Date sheet' },
     ...(can('marks.enter') || canManage ? [{ value: 'marks' as const, label: 'Marks' }] : []),
+    ...(can('marks.enter') ? [{ value: 'co' as const, label: 'Co-scholastic' }] : []),
     ...(can('results.view', ['ALL', 'ASSIGNED']) || can('results.publish') ? [{ value: 'results' as const, label: 'Results' }] : []),
     ...(can('report_card.generate') ? [{ value: 'cards' as const, label: 'Report cards' }] : []),
   ];
@@ -91,6 +93,7 @@ function ExamPageContent() {
           <Tabs<Tab> value={tab} onChange={(v) => router.replace(`/exams/${id}?tab=${v}`)} items={tabs} />
           {tab === 'setup' && <ExamSetup exam={e} canManage={canManage} />}
           {tab === 'marks' && <MarksProgress exam={e} />}
+          {tab === 'co' && <CoScholasticPanel exam={e} />}
           {tab === 'results' && <ResultsPanel exam={e} />}
           {tab === 'cards' && <ReportCardsPanel exam={e} />}
         </>

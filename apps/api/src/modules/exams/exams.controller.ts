@@ -2,7 +2,9 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query
 import type { Response } from 'express';
 import type { z } from 'zod';
 import {
+  coScholasticQuerySchema,
   marksImportSchema,
+  saveCoScholasticSchema,
   computeResultsSchema,
   createExamSchema,
   generateReportCardsSchema,
@@ -21,6 +23,7 @@ import { RequirePermission } from '../../core/auth/decorators.js';
 import { contentDisposition } from '../../core/storage/storage.js';
 import { ZodPipe } from '../../core/validation/zod.pipe.js';
 import { ExamsService } from './exams.service.js';
+import { CoScholasticService } from './co-scholastic.service.js';
 import { MarksImportService } from './marks-import.service.js';
 import { MarksService } from './marks.service.js';
 import { ReportCardsService } from './report-cards.service.js';
@@ -73,6 +76,7 @@ export class ExamsController {
     private readonly marks: MarksService,
     private readonly results: ResultsService,
     private readonly marksImport: MarksImportService,
+    private readonly coScholastic: CoScholasticService,
   ) {}
 
   @Get()
@@ -85,6 +89,18 @@ export class ExamsController {
   @RequirePermission('exam.manage')
   async create(@Body(new ZodPipe(createExamSchema)) body: Out<typeof createExamSchema>) {
     return { data: await this.exams.create(body) };
+  }
+
+  @Get(':id/co-scholastic')
+  @RequirePermission('marks.enter')
+  async coScholasticSheet(@Param('id', id) examId: string, @Query(new ZodPipe(coScholasticQuerySchema)) q: Out<typeof coScholasticQuerySchema>) {
+    return { data: await this.coScholastic.sheet(examId, q.sectionId) };
+  }
+
+  @Put(':id/co-scholastic')
+  @RequirePermission('marks.enter')
+  async saveCoScholastic(@Param('id', id) examId: string, @Body(new ZodPipe(saveCoScholasticSchema)) body: Out<typeof saveCoScholasticSchema>) {
+    return { data: await this.coScholastic.save(examId, body) };
   }
 
   @Get('marks/template')

@@ -7,6 +7,7 @@ export interface TermReportCardData {
   term: { name: string; components: { id: string; name: string; weight: number }[] };
   student: { dateOfBirth: string | null; guardian: string | null };
   result: TermResultRow;
+  coScholastic?: { area: string; grade: string }[];
   grades: { label: string; minPercent: number; maxPercent: number }[];
 }
 
@@ -87,6 +88,7 @@ export function termReportCardHtml(d: TermReportCardData): string {
     <div class="stat"><span>Result</span><b class="${r.status === 'PASS' ? 'pass' : r.status === 'FAIL' ? 'fail' : ''}">${STATUS[r.status]}</b></div>
     ${r.rankInSection ? `<div class="stat"><span>Rank in section</span><b>${r.rankInSection}</b></div>` : ''}
   </div>
+  ${d.coScholastic?.length ? `<table><thead><tr><th>Co-scholastic area</th><th class="num">Grade</th></tr></thead><tbody>${d.coScholastic.map((c) => `<tr><td>${esc(c.area)}</td><td class="num strong">${esc(c.grade)}</td></tr>`).join('')}</tbody></table>` : ''}
   <div class="how">How the term is worked out: ${d.term.components.map((c) => `${esc(c.name)} × ${c.weight}%`).join(' + ')}. An exempt subject leaves that exam out and the other weights are scaled up.</div>
   ${d.grades.length ? `<div class="scale">Grading: ${d.grades.map((g) => `<b>${esc(g.label)}</b> ${g.minPercent}–${Math.floor(g.maxPercent)}%`).join(' · ')}</div>` : ''}
   <div class="signs">

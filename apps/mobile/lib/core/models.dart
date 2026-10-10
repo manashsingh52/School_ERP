@@ -214,8 +214,10 @@ class SubjectResult {
   final bool? passed;
 }
 
+List<({String area, String grade})> _co(Object? v) => _list(v).map((c) => (area: c['area'] as String, grade: c['grade'] as String)).toList();
+
 class StudentResult {
-  StudentResult({required this.examId, required this.examName, this.term, required this.percentage, this.grade, required this.status, this.rankInSection, required this.subjects, required this.hasReportCard});
+  StudentResult({required this.examId, required this.examName, this.term, required this.percentage, this.grade, required this.status, this.rankInSection, required this.subjects, required this.hasReportCard, this.coScholastic = const []});
   factory StudentResult.fromJson(Json j) {
     final r = j['result'] as Json;
     return StudentResult(
@@ -228,8 +230,10 @@ class StudentResult {
       rankInSection: _in(r['rankInSection']),
       subjects: _list(r['subjects']).map(SubjectResult.fromJson).toList(),
       hasReportCard: j['reportCard'] != null,
+      coScholastic: _co(j['coScholastic']),
     );
   }
+  final List<({String area, String grade})> coScholastic;
   final String examId, examName, status;
   final String? term, grade;
   final double percentage;
@@ -240,7 +244,7 @@ class StudentResult {
 
 /// A consolidated term (several exams with weights) for one child.
 class TermResult {
-  TermResult({required this.termId, required this.name, required this.how, required this.percentage, this.grade, required this.status, this.rankInSection, required this.subjects});
+  TermResult({required this.termId, required this.name, required this.how, required this.percentage, this.grade, required this.status, this.rankInSection, required this.subjects, this.coScholastic = const []});
   factory TermResult.fromJson(Json j) {
     final t = j['term'] as Json;
     final r = j['result'] as Json;
@@ -253,8 +257,10 @@ class TermResult {
       status: r['status'] as String,
       rankInSection: _in(r['rankInSection']),
       subjects: _list(r['subjects']).map((s) => (name: (s['subject'] as Json)['name'] as String, percent: _dn(s['percent']), grade: _s(s['grade']), passed: s['passed'] as bool?)).toList(),
+      coScholastic: _co(j['coScholastic']),
     );
   }
+  final List<({String area, String grade})> coScholastic;
   final String termId, name, how, status;
   final double? percentage;
   final String? grade;

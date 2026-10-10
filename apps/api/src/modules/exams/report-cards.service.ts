@@ -12,6 +12,7 @@ import { QUEUES, QueueService } from '../../core/queue/queue.service.js';
 import { fromDate, fullName } from '../../core/util/dates.js';
 import { FilesService } from '../files/files.service.js';
 import { SchoolSettingsService } from '../../core/settings/school-settings.service.js';
+import { CoScholasticService } from './co-scholastic.service.js';
 import { ExamsService } from './exams.service.js';
 import { ON_ROLL } from './marks.service.js';
 import { reportCardHtml } from './report-card.template.js';
@@ -37,6 +38,7 @@ export class ReportCardsService implements OnModuleInit {
     private readonly results: ResultsService,
     private readonly pdf: PdfRenderer,
     private readonly settings: SchoolSettingsService,
+    private readonly coScholastic: CoScholasticService,
     @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
@@ -81,6 +83,7 @@ export class ReportCardsService implements OnModuleInit {
     const logo = await this.imageDataUri(school.logoFileId);
     const [general, examSettings, branding] = await Promise.all([this.settings.get('general'), this.settings.get('examinations'), this.settings.get('branding')]);
     const signature = await this.imageDataUri(branding.signatureFileId);
+    const coGrades = await this.coScholastic.forStudents(examId, rows.map((r) => r.studentId));
     const address = [school.addressLine1, school.addressLine2, school.city, [school.state, school.postalCode].filter(Boolean).join(' ')].filter(Boolean).join(', ') || null;
     const contact = [school.phone, school.email].filter(Boolean).join(' · ') || null;
     const grades = exam.gradingScale.bands.map((b) => ({ label: b.label, minPercent: Number(b.minPercent), maxPercent: Number(b.maxPercent), remark: b.remark }));
@@ -93,6 +96,7 @@ export class ReportCardsService implements OnModuleInit {
         principal: { name: general.principalName, signatureDataUri: signature },
         note: examSettings.reportCardNote,
         showAttendance: examSettings.showAttendanceOnReportCard,
+        coScholastic: coGrades.get(result.studentId) ?? [],
         academicYear: exam.academicYear.name,
         exam: { name: exam.name, term: exam.term, rankingEnabled: exam.rankingEnabled },
         student: { dateOfBirth: fmtDate(fromDate(st?.dateOfBirth)), guardian: st?.guardians[0]?.guardian.name ?? null, photoDataUri: await this.imageDataUri(st?.photoFileId ?? null) },
