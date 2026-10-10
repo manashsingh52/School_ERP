@@ -3,19 +3,31 @@
 import type { PaymentItem } from '@schoolos/contracts';
 import { Badge, Button, DialogBody, DialogFooter, Field, Input, Skeleton, Textarea, toast } from '@schoolos/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Download, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError, apiFetch, apiPost, idempotencyKey } from '@/lib/api-client';
 import { useMe } from '@/lib/me';
 import { METHOD_LABEL, PAYMENT_STATUS, rupees, toPaise, toRupeeInput } from '@/lib/money';
 
 export async function openReceipt(paymentId: string) {
-  try {
-    const res = await apiFetch<{ data: { url: string; duplicate?: boolean } }>(`/payments/${paymentId}/receipt`);
-    window.open(res.data.url, '_blank', 'noopener');
-    if (res.data.duplicate) toast.info('This is a reprint, so it says DUPLICATE COPY. The reprint is recorded in the audit log.');
-  } catch (err) {
-    toast.error(err instanceof ApiError ? err.message : 'We couldn’t open the receipt.');
+  // Imported and older payments get their receipt made on the first request: wait briefly for it
+  // (short enough that the browser still lets the new tab open).
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await apiFetch<{ data: { url: string; duplicate?: boolean } }>(`/payments/${paymentId}/receipt`);
+      window.open(res.data.url, '_blank', 'noopener');
+      if (res.data.duplicate) toast.info('This is a reprint, so it says DUPLICATE COPY. The reprint is recorded in the audit log.');
+      return;
+    } catch (err) {
+      const preparing = err instanceof ApiError && err.code === 'RECEIPT_NOT_READY';
+      if (preparing && attempt < 2) {
+        await new Promise((r) => setTimeout(r, 1500));
+        continue;
+      }
+      if (preparing) toast.info('The receipt is being prepared. Try again in a few seconds.');
+      else toast.error(err instanceof ApiError ? err.message : 'We couldn’t open the receipt.');
+      return;
+    }
   }
 }
 
@@ -103,9 +115,11 @@ export function PaymentDetailView({ paymentId }: { paymentId: string }) {
             {(p.status === 'CAPTURED' || p.status === 'PARTIALLY_REFUNDED') && can('payment.refund') && (
               <Button variant="secondary" onClick={() => { setAmount(toRupeeInput(refundable)); setMode('refund'); }}>Refund</Button>
             )}
-            <Button onClick={() => void openReceipt(p.id)} disabled={!p.receiptReady}>
-              {p.receiptReady ? <><Printer /> Receipt {p.receiptNo}</> : <><Download /> Preparing receipt…</>}
-            </Button>
+            {p.receiptNo && (
+              <Button onClick={() => void openReceipt(p.id)}>
+                <Printer /> Receipt {p.receiptNo}
+              </Button>
+            )}
           </>
         ) : (
           <>

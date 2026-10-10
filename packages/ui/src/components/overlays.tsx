@@ -261,10 +261,16 @@ export function CommandItem({
 
 // ---------------------------------------------------------------- Toasts
 
+/**
+ * Top centre, under the header: pages keep their main action (Save marks, Submit register, Collect)
+ * in a bar at the bottom, and a toast there would cover it — hovering a toast also pauses it.
+ */
 export function Toaster() {
   return (
     <Sonner
-      position="bottom-right"
+      position="top-center"
+      offset={{ top: 64 }}
+      mobileOffset={{ top: 64 }}
       toastOptions={{
         className: 'rounded-lg! border! border-border! bg-surface! text-fg! shadow-e2! text-body!',
       }}

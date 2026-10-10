@@ -63,7 +63,10 @@ function Ask({ suggestions, onUsed }: { suggestions: string[]; onUsed: () => voi
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), [messages, busy]);
+  // Block body on purpose: newer browsers return a Promise from scrollIntoView, and React would call it as a cleanup.
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, busy]);
 
   async function send(question: string) {
     const q = question.trim();

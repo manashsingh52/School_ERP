@@ -39,13 +39,16 @@ export function useAction<TInput, TResult>(
   });
 }
 
-/** Put server-side field errors (422/409 details) onto a React Hook Form. Returns true if any matched. */
+/**
+ * Put server-side field errors (422/409 details) onto a React Hook Form, focusing (and so scrolling
+ * to) the first one — the submit button is often far below it. Returns true if any matched.
+ */
 export function applyServerErrors<T extends FieldValues>(error: unknown, setError: UseFormSetError<T>, fields: string[]): boolean {
   if (!(error instanceof ApiError) || !error.details?.length) return false;
   let matched = false;
   for (const d of error.details) {
     if (d.field && fields.includes(d.field)) {
-      setError(d.field as Path<T>, { message: d.message });
+      setError(d.field as Path<T>, { message: d.message }, { shouldFocus: !matched });
       matched = true;
     }
   }

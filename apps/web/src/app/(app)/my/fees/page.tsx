@@ -155,7 +155,7 @@ function Statement({ studentId, firstName }: { studentId: string; firstName: str
                   <div className="text-small text-fg-secondary">{formatDate(p.receivedAt)} · {p.receiptNo}</div>
                 </div>
                 <Badge tone={PAYMENT_STATUS[p.status]!.tone}>{PAYMENT_STATUS[p.status]!.label}</Badge>
-                <Button variant="ghost" size="sm" onClick={() => void openReceipt(p.id)} disabled={!p.receiptReady}><Download /> Receipt</Button>
+                {p.receiptNo && <Button variant="ghost" size="sm" onClick={() => void openReceipt(p.id)}><Download /> Receipt</Button>}
               </li>
             ))}
           </ul>
