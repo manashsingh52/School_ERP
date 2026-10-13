@@ -86,4 +86,63 @@ void main() {
     expect(t.subjects.single.percent, 82.0);
     expect(t.percentage, 75.7);
   });
+
+  test('attendance: session totals and months', () {
+    final h = AttendanceHistory.fromJson({
+      'studentId': 'c1', 'from': '2026-04-01', 'to': '2026-10-13',
+      'counts': {'PRESENT': 17, 'ABSENT': 3, 'LATE': 1, 'HALF_DAY': 0, 'LEAVE': 0, 'unmarked': 0},
+      'percentPresent': 85.7,
+      'summary': {'conducted': 21, 'attended': 18, 'missed': 3, 'onLeave': 0, 'percentPresent': 85.7},
+      'months': [{'month': '2026-10', 'conducted': 7, 'attended': 4, 'missed': 3, 'onLeave': 0, 'percentPresent': 57.1}],
+      'days': [{'date': '2026-10-02', 'status': 'ABSENT', 'remark': 'Fever'}],
+    });
+    expect(h.summary.conducted, 21);
+    expect(h.summary.missed, 3);
+    expect(h.months.single.month, '2026-10');
+    expect(h.remarks['2026-10-02'], 'Fever');
+  });
+
+  test('performance: radar subjects with their tests', () {
+    final p = Performance.fromJson({
+      'studentId': 'c1', 'overallPct': 82.5,
+      'exams': [{'examId': 'e1', 'name': 'Unit Test 1', 'term': 'Term 1', 'startDate': '2026-07-14', 'percentage': 90, 'grade': 'A2', 'rankInSection': 1, 'sectionAveragePct': 55}],
+      'subjects': [
+        {'subject': {'id': 'm', 'name': 'Mathematics'}, 'averagePct': 83.3, 'sectionAveragePct': 57.5, 'trend': 'down', 'exams': [
+          {'examId': 'e1', 'examName': 'Unit Test 1', 'marks': 45, 'maxMarks': 50, 'percent': 90, 'grade': 'A2', 'absent': false, 'exempt': false, 'passed': true, 'sectionAveragePct': 55},
+        ]},
+      ],
+    });
+    expect(p.overallPct, 82.5);
+    expect(p.subjects.single.trend, 'down');
+    expect(p.subjects.single.exams.single.marks, 45.0);
+    expect(p.exams.single.sectionAveragePct, 55.0);
+  });
+
+  test('messages, meetings and reminders', () {
+    final c = Conversation.fromJson({
+      'id': 'c1', 'student': {'id': 's1', 'name': 'Rahul Kumar', 'classLabel': '8-A'},
+      'parent': {'memberId': 'p', 'name': 'Raj Kumar'}, 'staff': null, 'category': 'COMPLAINT', 'subject': 'Bus late', 'status': 'OPEN',
+      'lastMessageAt': '2026-10-13T08:00:00Z', 'lastMessage': {'body': 'Late again', 'senderName': 'Raj Kumar', 'fromMe': true}, 'unread': false,
+      'myRole': 'PARENT', 'canChangeStatus': false, 'createdAt': '2026-10-13T08:00:00Z', 'resolvedAt': null,
+      'messages': [{'id': 'm1', 'body': 'Late again', 'sender': {'memberId': 'p', 'name': 'Raj Kumar', 'side': 'PARENT'}, 'fromMe': true, 'seen': true, 'createdAt': '2026-10-13T08:00:00Z'}],
+    });
+    expect(c.otherName, 'School office');
+    expect(c.lastMessage, 'You: Late again');
+    expect(c.messages.single.seen, isTrue);
+
+    final m = Meeting.fromJson({
+      'id': 'mt', 'student': {'id': 's1', 'name': 'Rahul Kumar', 'classLabel': '8-A'}, 'organizer': {'memberId': 't', 'name': 'Priya Sharma'},
+      'title': 'Progress chat', 'agenda': null, 'category': 'ACADEMIC', 'scheduledAt': '2026-10-14T11:00:00.000Z', 'durationMinutes': 20,
+      'status': 'SCHEDULED', 'cancelReason': null, 'joinUrl': 'https://meet.jit.si/SchoolOS-abc', 'joinable': false, 'canManage': false, 'createdAt': '2026-10-13T08:00:00Z',
+    });
+    expect(m.joinUrl, startsWith('https://meet.jit.si/'));
+    expect(m.scheduledAt.toUtc().hour, 11);
+
+    final r = Reminder.fromJson({
+      'id': 'r', 'title': 'Pick up Rahul', 'notes': 'Gate 2', 'remindAt': '2026-10-14T08:00:00.000Z', 'repeat': 'WEEKDAYS',
+      'student': {'id': 's1', 'name': 'Rahul Kumar'}, 'completedAt': null, 'lastFiredAt': null, 'createdAt': '2026-10-13T08:00:00Z',
+    });
+    expect(r.studentName, 'Rahul Kumar');
+    expect(reminderRepeatLabel[r.repeat], 'Monday to Saturday');
+  });
 }

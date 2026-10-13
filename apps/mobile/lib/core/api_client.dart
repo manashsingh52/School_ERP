@@ -26,6 +26,7 @@ class ApiClient {
   Future<T> get<T>(String path, {Map<String, Object?>? query}) => _send<T>('GET', path, query: query);
   Future<T> post<T>(String path, [Object? body, Map<String, String>? headers]) => _send<T>('POST', path, body: body ?? const {}, headers: headers);
   Future<T> put<T>(String path, [Object? body]) => _send<T>('PUT', path, body: body ?? const {});
+  Future<T> patch<T>(String path, [Object? body]) => _send<T>('PATCH', path, body: body ?? const {});
   Future<T> delete<T>(String path, [Object? body]) => _send<T>('DELETE', path, body: body);
 
   /// Unwraps `{ data }`. Endpoints that answer without the envelope (auth) are returned whole.

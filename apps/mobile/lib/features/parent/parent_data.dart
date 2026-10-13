@@ -18,6 +18,12 @@ final childMonthAttendance = FutureProvider.autoDispose.family<AttendanceHistory
   return AttendanceHistory.fromJson(await ref.read(apiProvider).get<Json>('/students/$id/attendance', query: {'from': isoDate(first), 'to': isoDate(last)}));
 });
 
+/// The whole session so far: totals and month-by-month.
+final childSessionAttendance = FutureProvider.autoDispose.family<AttendanceHistory, String>((ref, id) async => AttendanceHistory.fromJson(await ref.read(apiProvider).get<Json>('/students/$id/attendance')));
+
+/// Marks shaped for the results charts (radar, progress, each subject's tests).
+final childPerformance = FutureProvider.autoDispose.family<Performance, String>((ref, id) async => Performance.fromJson(await ref.read(apiProvider).get<Json>('/students/$id/performance')));
+
 final childSchedule = FutureProvider.autoDispose.family<TodaySchedule, String>((ref, id) async => TodaySchedule.fromJson(await ref.read(apiProvider).get<Json>('/timetables/today', query: {'studentId': id})));
 
 final childHomework = FutureProvider.autoDispose.family<List<Homework>, String>((ref, id) async {
@@ -51,4 +57,6 @@ void refreshChild(WidgetRef ref, String id) {
   ref.invalidate(childFees(id));
   ref.invalidate(childResults(id));
   ref.invalidate(childTerms(id));
+  ref.invalidate(childSessionAttendance(id));
+  ref.invalidate(childPerformance(id));
 }

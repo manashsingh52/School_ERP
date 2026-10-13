@@ -117,17 +117,40 @@ class TodaySchedule {
 
 const attendanceStatuses = ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'LEAVE'];
 
+/// Classes held / attended / missed for a range (a month or the whole session).
+class AttendanceTally {
+  AttendanceTally({required this.conducted, required this.attended, required this.missed, required this.onLeave, required this.percentPresent, this.month});
+  factory AttendanceTally.fromJson(Json j) => AttendanceTally(
+        conducted: _i(j['conducted']),
+        attended: _i(j['attended']),
+        missed: _i(j['missed']),
+        onLeave: _i(j['onLeave']),
+        percentPresent: _dn(j['percentPresent']),
+        month: _s(j['month']),
+      );
+  final int conducted, attended, missed, onLeave;
+  final double? percentPresent;
+  /// "2026-10" for a month row.
+  final String? month;
+}
+
 class AttendanceHistory {
-  AttendanceHistory({required this.percentPresent, required this.counts, required this.days});
+  AttendanceHistory({required this.percentPresent, required this.counts, required this.days, required this.summary, required this.months, this.remarks = const {}});
   factory AttendanceHistory.fromJson(Json j) => AttendanceHistory(
         percentPresent: _dn(j['percentPresent']),
         counts: (j['counts'] as Map).map((k, v) => MapEntry(k as String, _i(v))),
         days: {for (final d in _list(j['days'])) d['date'] as String: d['status'] as String},
+        remarks: {for (final d in _list(j['days'])) if (d['remark'] != null) d['date'] as String: d['remark'] as String},
+        summary: j['summary'] == null ? AttendanceTally(conducted: 0, attended: 0, missed: 0, onLeave: 0, percentPresent: _dn(j['percentPresent'])) : AttendanceTally.fromJson(j['summary'] as Json),
+        months: _list(j['months']).map(AttendanceTally.fromJson).toList(),
       );
   final double? percentPresent;
   final Map<String, int> counts;
   /// date → status
   final Map<String, String> days;
+  final Map<String, String> remarks;
+  final AttendanceTally summary;
+  final List<AttendanceTally> months;
 }
 
 class RegisterStudent {
@@ -423,4 +446,201 @@ class SessionItem {
   final String id, platform, lastUsedAt;
   final String? deviceName;
   final bool current;
+}
+
+// ---------------------------------------------------------------- performance (results charts)
+
+class PerformanceExam {
+  PerformanceExam({required this.examId, required this.name, required this.percentage, this.grade, this.rankInSection, this.sectionAveragePct});
+  factory PerformanceExam.fromJson(Json j) => PerformanceExam(
+        examId: j['examId'] as String,
+        name: j['name'] as String,
+        percentage: _dn(j['percentage']) ?? 0,
+        grade: _s(j['grade']),
+        rankInSection: _in(j['rankInSection']),
+        sectionAveragePct: _dn(j['sectionAveragePct']),
+      );
+  final String examId, name;
+  final double percentage;
+  final String? grade;
+  final int? rankInSection;
+  final double? sectionAveragePct;
+}
+
+class PerformanceSubjectExam {
+  PerformanceSubjectExam({required this.examId, required this.examName, this.marks, required this.maxMarks, this.percent, this.grade, required this.absent, required this.exempt, this.passed, this.sectionAveragePct});
+  factory PerformanceSubjectExam.fromJson(Json j) => PerformanceSubjectExam(
+        examId: j['examId'] as String,
+        examName: j['examName'] as String,
+        marks: _dn(j['marks']),
+        maxMarks: _dn(j['maxMarks']) ?? 0,
+        percent: _dn(j['percent']),
+        grade: _s(j['grade']),
+        absent: j['absent'] as bool? ?? false,
+        exempt: j['exempt'] as bool? ?? false,
+        passed: j['passed'] as bool?,
+        sectionAveragePct: _dn(j['sectionAveragePct']),
+      );
+  final String examId, examName;
+  final double? marks, percent, sectionAveragePct;
+  final double maxMarks;
+  final String? grade;
+  final bool absent, exempt;
+  final bool? passed;
+}
+
+class PerformanceSubject {
+  PerformanceSubject({required this.id, required this.name, this.averagePct, this.sectionAveragePct, this.trend, required this.exams});
+  factory PerformanceSubject.fromJson(Json j) => PerformanceSubject(
+        id: (j['subject'] as Json)['id'] as String,
+        name: (j['subject'] as Json)['name'] as String,
+        averagePct: _dn(j['averagePct']),
+        sectionAveragePct: _dn(j['sectionAveragePct']),
+        trend: _s(j['trend']),
+        exams: _list(j['exams']).map(PerformanceSubjectExam.fromJson).toList(),
+      );
+  final String id, name;
+  final double? averagePct, sectionAveragePct;
+  /// up · down · steady
+  final String? trend;
+  final List<PerformanceSubjectExam> exams;
+}
+
+class Performance {
+  Performance({this.overallPct, required this.exams, required this.subjects});
+  factory Performance.fromJson(Json j) => Performance(
+        overallPct: _dn(j['overallPct']),
+        exams: _list(j['exams']).map(PerformanceExam.fromJson).toList(),
+        subjects: _list(j['subjects']).map(PerformanceSubject.fromJson).toList(),
+      );
+  final double? overallPct;
+  final List<PerformanceExam> exams;
+  final List<PerformanceSubject> subjects;
+}
+
+// ---------------------------------------------------------------- messages, meetings, reminders
+
+const conversationCategories = ['GENERAL', 'ACADEMIC', 'ATTENDANCE', 'HOMEWORK', 'BEHAVIOUR', 'COMPLAINT', 'SUGGESTION', 'OTHER'];
+const conversationCategoryLabel = {
+  'GENERAL': 'General query',
+  'ACADEMIC': 'Academic issue',
+  'ATTENDANCE': 'Attendance issue',
+  'HOMEWORK': 'Homework',
+  'BEHAVIOUR': 'Behaviour',
+  'COMPLAINT': 'Complaint',
+  'SUGGESTION': 'Suggestion or feedback',
+  'OTHER': 'Other concern',
+};
+const conversationStatusLabel = {'OPEN': 'Open', 'IN_PROGRESS': 'In progress', 'RESOLVED': 'Resolved'};
+
+class StudentRef {
+  StudentRef({required this.id, required this.name, this.classLabel});
+  factory StudentRef.fromJson(Json j) => StudentRef(id: j['id'] as String, name: j['name'] as String, classLabel: _s(j['classLabel']));
+  final String id, name;
+  final String? classLabel;
+}
+
+class Party {
+  Party({required this.memberId, required this.name});
+  factory Party.fromJson(Json j) => Party(memberId: j['memberId'] as String, name: j['name'] as String);
+  final String memberId, name;
+}
+
+class ChatMessage {
+  ChatMessage({required this.id, required this.body, required this.senderName, required this.fromMe, required this.seen, required this.createdAt});
+  factory ChatMessage.fromJson(Json j) => ChatMessage(
+        id: j['id'] as String,
+        body: j['body'] as String,
+        senderName: (j['sender'] as Json)['name'] as String,
+        fromMe: j['fromMe'] as bool? ?? false,
+        seen: j['seen'] as bool? ?? false,
+        createdAt: j['createdAt'] as String,
+      );
+  final String id, body, senderName, createdAt;
+  final bool fromMe, seen;
+}
+
+class Conversation {
+  Conversation({required this.id, required this.student, required this.parent, this.staff, required this.category, required this.subject, required this.status, required this.lastMessageAt, this.lastMessage, required this.unread, required this.myRole, required this.canChangeStatus, this.messages = const []});
+  factory Conversation.fromJson(Json j) {
+    final last = j['lastMessage'] as Json?;
+    return Conversation(
+      id: j['id'] as String,
+      student: StudentRef.fromJson(j['student'] as Json),
+      parent: Party.fromJson(j['parent'] as Json),
+      staff: j['staff'] == null ? null : Party.fromJson(j['staff'] as Json),
+      category: j['category'] as String,
+      subject: j['subject'] as String,
+      status: j['status'] as String,
+      lastMessageAt: j['lastMessageAt'] as String,
+      lastMessage: last == null ? null : '${last['fromMe'] == true ? 'You' : last['senderName']}: ${last['body']}',
+      unread: j['unread'] as bool? ?? false,
+      myRole: j['myRole'] as String,
+      canChangeStatus: j['canChangeStatus'] as bool? ?? false,
+      messages: _list(j['messages']).map(ChatMessage.fromJson).toList(),
+    );
+  }
+  final String id, category, subject, status, lastMessageAt, myRole;
+  final StudentRef student;
+  final Party parent;
+  final Party? staff;
+  final String? lastMessage;
+  final bool unread, canChangeStatus;
+  final List<ChatMessage> messages;
+
+  /// The other side, as I see it.
+  String get otherName => myRole == 'PARENT' ? (staff?.name ?? 'School office') : parent.name;
+}
+
+class MessageContact {
+  MessageContact({this.memberId, required this.name, required this.role});
+  factory MessageContact.fromJson(Json j) => MessageContact(memberId: _s(j['memberId']), name: j['name'] as String, role: j['role'] as String);
+  /// null = the school office.
+  final String? memberId;
+  final String name, role;
+}
+
+class Meeting {
+  Meeting({required this.id, required this.student, required this.organizer, required this.title, this.agenda, required this.category, required this.scheduledAt, required this.durationMinutes, required this.status, this.cancelReason, this.joinUrl, required this.joinable, required this.canManage});
+  factory Meeting.fromJson(Json j) => Meeting(
+        id: j['id'] as String,
+        student: StudentRef.fromJson(j['student'] as Json),
+        organizer: Party.fromJson(j['organizer'] as Json),
+        title: j['title'] as String,
+        agenda: _s(j['agenda']),
+        category: j['category'] as String,
+        scheduledAt: DateTime.parse(j['scheduledAt'] as String).toLocal(),
+        durationMinutes: _i(j['durationMinutes']),
+        status: j['status'] as String,
+        cancelReason: _s(j['cancelReason']),
+        joinUrl: _s(j['joinUrl']),
+        joinable: j['joinable'] as bool? ?? false,
+        canManage: j['canManage'] as bool? ?? false,
+      );
+  final String id, title, category, status;
+  final StudentRef student;
+  final Party organizer;
+  final String? agenda, cancelReason, joinUrl;
+  final DateTime scheduledAt;
+  final int durationMinutes;
+  final bool joinable, canManage;
+}
+
+const reminderRepeatLabel = {'NONE': 'Once', 'DAILY': 'Every day', 'WEEKDAYS': 'Monday to Saturday', 'WEEKLY': 'Every week'};
+
+class Reminder {
+  Reminder({required this.id, required this.title, this.notes, required this.remindAt, required this.repeat, this.studentId, this.studentName, this.completedAt});
+  factory Reminder.fromJson(Json j) => Reminder(
+        id: j['id'] as String,
+        title: j['title'] as String,
+        notes: _s(j['notes']),
+        remindAt: DateTime.parse(j['remindAt'] as String).toLocal(),
+        repeat: j['repeat'] as String,
+        studentId: _s((j['student'] as Map?)?['id']),
+        studentName: _s((j['student'] as Map?)?['name']),
+        completedAt: _s(j['completedAt']),
+      );
+  final String id, title, repeat;
+  final String? notes, studentId, studentName, completedAt;
+  final DateTime remindAt;
 }

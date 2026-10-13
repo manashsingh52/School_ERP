@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/attendance_queue.dart';
 import '../../core/session.dart';
 import '../../widgets/common.dart';
+import '../connect/connect_row.dart';
 import 'marks_screen.dart';
 import 'register_screen.dart';
 import 'teacher_data.dart';
@@ -28,6 +29,7 @@ class TeacherHome extends ConsumerWidget {
       },
       children: [
         Text('Good day, ${me.user.name.split(' ').first}', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
+        const ConnectRow(),
         if (queued.isNotEmpty) const QueueBanner(),
         AsyncView(
           value: dash,

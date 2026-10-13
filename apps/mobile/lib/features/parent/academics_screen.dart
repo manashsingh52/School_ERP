@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../widgets/common.dart';
 import 'parent_data.dart';
 import 'parent_home.dart';
+import 'performance_section.dart';
 
 /// Academics (docs/06 §4): attendance calendar, homework, timetable, results.
 class AcademicsScreen extends ConsumerWidget {
@@ -47,23 +48,68 @@ class _AttendanceTab extends ConsumerStatefulWidget {
 
 class _AttendanceTabState extends ConsumerState<_AttendanceTab> {
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
+  bool _session = false;
+  String? _picked;
 
   @override
   Widget build(BuildContext context) {
     final key = DateFormat('yyyy-MM').format(_month);
     final data = ref.watch(childMonthAttendance((widget.child.id, key)));
+    final session = ref.watch(childSessionAttendance(widget.child.id));
     final s = StatusColors.of(context);
     final colors = {'PRESENT': s.success, 'ABSENT': s.danger, 'LATE': s.warning, 'HALF_DAY': s.info, 'LEAVE': s.muted};
     final isCurrent = _month.year == DateTime.now().year && _month.month == DateTime.now().month;
     return Refreshable(
-      onRefresh: () async => ref.invalidate(childMonthAttendance((widget.child.id, key))),
+      onRefresh: () async {
+        ref.invalidate(childMonthAttendance((widget.child.id, key)));
+        ref.invalidate(childSessionAttendance(widget.child.id));
+      },
       children: [
-        Row(children: [
+        AsyncView(
+          value: session,
+          onRetry: () => ref.invalidate(childSessionAttendance(widget.child.id)),
+          loading: const SizedBox(height: 84),
+          builder: (h) => _SessionTotals(t: h.summary),
+        ),
+        SegmentedButton<bool>(
+          segments: const [ButtonSegment(value: false, label: Text('Days'), icon: Icon(Icons.calendar_month_outlined)), ButtonSegment(value: true, label: Text('Whole session'), icon: Icon(Icons.bar_chart))],
+          selected: {_session},
+          onSelectionChanged: (v) => setState(() => _session = v.first),
+        ),
+        if (_session)
+          AsyncView(
+            value: session,
+            onRetry: () => ref.invalidate(childSessionAttendance(widget.child.id)),
+            builder: (h) => h.months.isEmpty
+                ? const EmptyView(icon: Icons.event_busy_outlined, title: 'No registers yet this session')
+                : Card(
+                    child: Column(children: [
+                      for (final m in h.months.reversed)
+                        ListTile(
+                          onTap: () => setState(() {
+                            _month = DateTime.parse('${m.month}-01');
+                            _session = false;
+                          }),
+                          title: Text(DateFormat('MMMM yyyy').format(DateTime.parse('${m.month}-01'))),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              ClipRRect(borderRadius: BorderRadius.circular(99), child: LinearProgressIndicator(value: (m.percentPresent ?? 0) / 100, minHeight: 6, color: (m.percentPresent ?? 0) >= 75 ? s.success : s.danger, backgroundColor: s.subtle)),
+                              const SizedBox(height: 4),
+                              Text('${m.attended} of ${m.conducted} days${m.missed > 0 ? ' · ${m.missed} missed' : ''}'),
+                            ]),
+                          ),
+                          trailing: Text(percent(m.percentPresent), style: TextStyle(fontWeight: FontWeight.w700, color: (m.percentPresent ?? 0) >= 75 ? null : s.danger)),
+                        ),
+                    ]),
+                  ),
+          ),
+        if (!_session) Row(children: [
           IconButton(tooltip: 'Previous month', onPressed: () => setState(() => _month = DateTime(_month.year, _month.month - 1)), icon: const Icon(Icons.chevron_left)),
           Expanded(child: Text(DateFormat('MMMM yyyy').format(_month), textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium)),
           IconButton(tooltip: 'Next month', onPressed: isCurrent ? null : () => setState(() => _month = DateTime(_month.year, _month.month + 1)), icon: const Icon(Icons.chevron_right)),
         ]),
-        AsyncView(
+        if (!_session) AsyncView(
           value: data,
           onRetry: () => ref.invalidate(childMonthAttendance((widget.child.id, key))),
           builder: (h) {
@@ -84,19 +130,32 @@ class _AttendanceTabState extends ConsumerState<_AttendanceTab> {
                       for (var i = 0; i < lead; i++) const SizedBox.shrink(),
                       for (var d = 1; d <= days; d++)
                         Builder(builder: (context) {
-                          final status = h.days[isoDate(DateTime(first.year, first.month, d))];
+                          final date = isoDate(DateTime(first.year, first.month, d));
+                          final status = h.days[date];
                           return Semantics(
                             label: '$d ${status == null ? 'not marked' : attendanceLabel[status]}',
+                            button: true,
+                            child: GestureDetector(
+                            onTap: () => setState(() => _picked = date),
                             child: Container(
                               margin: const EdgeInsets.all(3),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(color: status == null ? null : colors[status]!.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(8)),
                               child: Text('$d', style: TextStyle(color: status == null ? s.muted : colors[status], fontWeight: status == null ? null : FontWeight.w600)),
                             ),
+                            ),
                           );
                         }),
                     ],
                   ),
+                  if (_picked != null && _picked!.startsWith(key))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        '${formatDay(_picked!)}: ${h.days[_picked] == null ? (_picked!.compareTo(today()) > 0 ? 'not yet' : 'no register (holiday or weekend)') : attendanceLabel[h.days[_picked]]}${h.remarks[_picked] == null ? '' : ' — ${h.remarks[_picked]}'}',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
                   const Divider(height: 24),
                   Wrap(spacing: 12, runSpacing: 6, children: [
                     Text('Attendance ${percent(h.percentPresent)}', style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -109,6 +168,35 @@ class _AttendanceTabState extends ConsumerState<_AttendanceTab> {
           },
         ),
       ],
+    );
+  }
+}
+
+/// Classes held · attended · missed · % for the session so far.
+class _SessionTotals extends StatelessWidget {
+  const _SessionTotals({required this.t});
+  final AttendanceTally t;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = StatusColors.of(context);
+    Widget cell(String label, String value, [Color? color]) => Expanded(
+          child: Column(children: [
+            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+            const SizedBox(height: 2),
+            Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
+          ]),
+        );
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        child: Row(children: [
+          cell('Classes held', '${t.conducted}'),
+          cell('Attended', '${t.attended}', s.success),
+          cell('Missed', '${t.missed}', t.missed > 0 ? s.danger : null),
+          cell('This session', percent(t.percentPresent), (t.percentPresent ?? 100) < 75 ? s.danger : null),
+        ]),
+      ),
     );
   }
 }
@@ -213,7 +301,17 @@ class _ResultsTab extends ConsumerWidget {
       onRetry: () => ref.invalidate(childResults(child.id)),
       builder: (list) => list.isEmpty && terms.isEmpty
           ? const EmptyView(icon: Icons.emoji_events_outlined, title: 'No results published yet')
-          : ListView(padding: const EdgeInsets.all(16), children: [
+          : RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(childResults(child.id));
+                ref.invalidate(childTerms(child.id));
+                ref.invalidate(childPerformance(child.id));
+              },
+              child: ListView(padding: const EdgeInsets.all(16), children: [
+              PerformanceSection(childId: child.id),
+              const SizedBox(height: 20),
+              Text('Results and report cards', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 10),
               for (final term in terms)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -286,6 +384,7 @@ class _ResultsTab extends ConsumerWidget {
                   ),
                 ),
             ]),
+            ),
     );
   }
 }

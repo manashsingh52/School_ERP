@@ -6,6 +6,7 @@ import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../widgets/common.dart';
+import '../connect/connect_row.dart';
 import 'parent_data.dart';
 
 /// Parent home (docs/06 §4): today, homework due, fees due, latest results.
@@ -29,6 +30,7 @@ class ParentHome extends ConsumerWidget {
       onRefresh: () async => refreshChild(ref, child.id),
       children: [
         Text('Hello, ${me.user.name.split(' ').first}', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
+        const ConnectRow(),
         SectionCard(
           title: 'Today',
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

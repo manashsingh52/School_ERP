@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/attendance_queue.dart';
 import '../../core/session.dart';
 import '../common/notifications_screen.dart';
+import '../connect/connect_row.dart';
 import '../common/profile_screen.dart';
 import '../parent/academics_screen.dart';
 import '../parent/child_chip.dart';
@@ -52,6 +53,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   }
 
   void _openRoute(String route) {
+    if (openConnectRoute(context, route)) return;
     final target = tabForRoute(route);
     if (target == null) return;
     final (mode, tab) = target;
