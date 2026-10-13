@@ -41,32 +41,37 @@ export class CommunicationPeople {
     return new Map(rows.map((m) => [m.id, m.user.name]));
   }
 
-  /** The child's class teacher and subject teachers who can sign in, with what they teach. */
-  async teachersOf(studentId: string): Promise<{ memberId: string; name: string; role: string }[]> {
+  /**
+   * The child's class teacher and subject teachers, with what they teach — including those who
+   * can't sign in yet (`memberId: null`), so parents see who teaches their child.
+   */
+  async teachersOf(studentId: string): Promise<{ memberId: string | null; name: string; role: string; subjects: string[] }[]> {
     const yearId = await this.scope.currentAcademicYearId();
     if (!yearId) return [];
     const enrollment = await this.prisma.db.studentEnrollment.findFirst({ where: { studentId, academicYearId: yearId }, select: { sectionId: true } });
     if (!enrollment) return [];
     const [section, assignments] = await Promise.all([
-      this.prisma.db.section.findUnique({ where: { id: enrollment.sectionId }, select: { classTeacher: { select: { id: true, membershipId: true, firstName: true, lastName: true } } } }),
+      this.prisma.db.section.findUnique({ where: { id: enrollment.sectionId }, select: { classTeacher: { select: { id: true, membershipId: true, firstName: true, lastName: true, status: true } } } }),
       this.prisma.db.teachingAssignment.findMany({
         where: { sectionId: enrollment.sectionId, academicYearId: yearId },
-        select: { subject: { select: { name: true } }, teacher: { select: { id: true, membershipId: true, firstName: true, lastName: true } } },
+        orderBy: { subject: { name: 'asc' } },
+        select: { subject: { select: { name: true } }, teacher: { select: { id: true, membershipId: true, firstName: true, lastName: true, status: true } } },
       }),
     ]);
-    const out = new Map<string, { memberId: string; name: string; roles: string[]; classTeacher: boolean }>();
-    const add = (t: { membershipId: string | null; firstName: string; lastName: string | null }, role: string, classTeacher = false) => {
-      if (!t.membershipId) return;
-      const e = out.get(t.membershipId) ?? { memberId: t.membershipId, name: fullName(t.firstName, t.lastName), roles: [], classTeacher: false };
-      if (!e.roles.includes(role)) e.roles.push(role);
+    type T = { id: string; membershipId: string | null; firstName: string; lastName: string | null; status: string };
+    const out = new Map<string, { memberId: string | null; name: string; subjects: string[]; classTeacher: boolean }>();
+    const add = (t: T, subject: string | null, classTeacher = false) => {
+      if (t.status === 'LEFT') return;
+      const e = out.get(t.id) ?? { memberId: t.membershipId, name: fullName(t.firstName, t.lastName), subjects: [], classTeacher: false };
+      if (subject && !e.subjects.includes(subject)) e.subjects.push(subject);
       e.classTeacher ||= classTeacher;
-      out.set(t.membershipId, e);
+      out.set(t.id, e);
     };
-    if (section?.classTeacher) add(section.classTeacher, 'Class teacher', true);
+    if (section?.classTeacher) add(section.classTeacher, null, true);
     for (const a of assignments) add(a.teacher, a.subject.name);
     return [...out.values()]
       .sort((a, b) => Number(b.classTeacher) - Number(a.classTeacher) || a.name.localeCompare(b.name))
-      .map((e) => ({ memberId: e.memberId, name: e.name, role: e.roles.join(', ') }));
+      .map((e) => ({ memberId: e.memberId, name: e.name, role: [...(e.classTeacher ? ['Class teacher'] : []), ...e.subjects].join(', '), subjects: e.subjects }));
   }
 
   /** The child's parents who can sign in. */

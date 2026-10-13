@@ -123,7 +123,11 @@ class ParentHome extends ConsumerWidget {
               if (p.subjects.isEmpty)
                 const Card(child: EmptyView(icon: Icons.emoji_events_outlined, title: 'No marks yet', subtitle: 'Subjects appear here when the first test results are out.'))
               else
-                for (final x in p.subjects) Padding(padding: const EdgeInsets.only(bottom: 12), child: _SubjectHomeCard(subject: x, onOpenResults: () => _academics(ref, 3))),
+                for (final x in p.subjects)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _SubjectHomeCard(subject: x, teacher: teachers?.where((t) => t.subjects.contains(x.name)).firstOrNull, onOpenResults: () => _academics(ref, 3)),
+                  ),
             ]),
           ),
         ]),
@@ -234,8 +238,10 @@ class _TodayStrip extends StatelessWidget {
 
 /// A subject on the home screen: average in a ring, marks got / max across tests, a status chip.
 class _SubjectHomeCard extends StatelessWidget {
-  const _SubjectHomeCard({required this.subject, required this.onOpenResults});
+  const _SubjectHomeCard({required this.subject, required this.onOpenResults, this.teacher});
   final PerformanceSubject subject;
+  /// Who teaches this subject to the child (for "Message …").
+  final MessageContact? teacher;
   final VoidCallback onOpenResults;
 
   @override
@@ -282,6 +288,17 @@ class _SubjectHomeCard extends StatelessWidget {
                   ]),
                 ),
               const SizedBox(height: 8),
+              if (teacher != null && teacher!.available) ...[
+                FilledButton.tonalIcon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => NewMessageScreen(toMemberId: teacher!.memberId, subject: 'About ${subject.name}', category: 'ACADEMIC')));
+                  },
+                  icon: const Icon(Icons.mail_rounded),
+                  label: Text('Message ${teacher!.name} (${subject.name} teacher)', overflow: TextOverflow.ellipsis),
+                ),
+                const SizedBox(height: 8),
+              ],
               OutlinedButton.icon(
                 onPressed: () {
                   Navigator.pop(ctx);

@@ -1,14 +1,17 @@
 'use client';
 
-import type { PerformanceSubject, StudentPerformance } from '@schoolos/contracts';
-import { Badge, Card, CardHeader, EmptyState, ErrorState, Skeleton, cn } from '@schoolos/ui';
-import { BookOpen, ChevronDown, FileText, Minus, TrendingDown, TrendingUp, Trophy } from 'lucide-react';
+import type { MessageContact, PerformanceSubject, StudentPerformance } from '@schoolos/contracts';
+import { Badge, Button, Card, CardHeader, EmptyState, ErrorState, Skeleton, cn } from '@schoolos/ui';
+import { BookOpen, ChevronDown, FileText, MessageSquare, Minus, TrendingDown, TrendingUp, Trophy } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { ProgressChart } from '@/components/charts/progress-chart';
 import { RadarChart } from '@/components/charts/radar-chart';
 import { ApiError } from '@/lib/api-client';
 import { formatPercent } from '@/lib/format';
+import { useIsParentView } from '@/lib/child';
 import { useData } from '@/lib/hooks';
+import { useMe } from '@/lib/me';
 
 /** Same bands for every number on the page: 75+ good, 50+ fair, below needs attention. */
 export const pctTone = (p: number | null) => (p === null ? 'text-fg-tertiary' : p >= 75 ? 'text-success' : p >= 50 ? 'text-warning' : 'text-danger');
@@ -19,7 +22,7 @@ const TREND = {
   steady: { icon: Minus, label: 'Steady', className: 'text-fg-tertiary' },
 } as const;
 
-function SubjectCard({ s, open, onToggle }: { s: PerformanceSubject; open: boolean; onToggle: () => void }) {
+function SubjectCard({ s, open, onToggle, teacher }: { s: PerformanceSubject; open: boolean; onToggle: () => void; teacher?: MessageContact }) {
   const trend = s.trend ? TREND[s.trend] : null;
   const Icon = trend?.icon;
   return (
@@ -61,6 +64,18 @@ function SubjectCard({ s, open, onToggle }: { s: PerformanceSubject; open: boole
               ))}
             </tbody>
           </table>
+          {teacher && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3 text-small">
+              <span className="text-fg-secondary">{s.subject.name} is taught by <b className="text-fg">{teacher.name}</b></span>
+              {teacher.available && teacher.memberId ? (
+                <Button size="sm" variant="secondary" asChild>
+                  <Link href={`/messages?to=${teacher.memberId}&about=${encodeURIComponent(s.subject.name)}`}><MessageSquare /> Message {teacher.name.split(' ')[0]}</Link>
+                </Button>
+              ) : (
+                <span className="text-caption text-fg-tertiary">Not on the app yet</span>
+              )}
+            </div>
+          )}
         </div>
       )}
     </Card>
@@ -74,6 +89,11 @@ function SubjectCard({ s, open, onToggle }: { s: PerformanceSubject; open: boole
  */
 export function StudentPerformanceView({ studentId }: { studentId: string }) {
   const perf = useData<StudentPerformance>(['performance', studentId], `/students/${studentId}/performance`);
+  // Parents can write to the teacher of a subject straight from its card.
+  const parentView = useIsParentView();
+  const { can } = useMe();
+  const contacts = useData<MessageContact[]>(['conversations', 'contacts', studentId], parentView && can('message.use') ? `/conversations/contacts?studentId=${studentId}` : null);
+  const teacherFor = (subject: string) => contacts.data?.find((c) => c.subjects.includes(subject));
   const [openId, setOpenId] = useState<string | null>(null);
   if (perf.isError) return <Card><ErrorState message={perf.error instanceof ApiError ? perf.error.message : undefined} onRetry={() => void perf.refetch()} /></Card>;
   if (!perf.data) return <Skeleton className="h-96" />;
@@ -144,7 +164,7 @@ export function StudentPerformanceView({ studentId }: { studentId: string }) {
       </div>
       <div className="flex flex-col gap-3">
         {p.subjects.map((s) => (
-          <SubjectCard key={s.subject.id} s={s} open={openId === s.subject.id} onToggle={() => setOpenId(openId === s.subject.id ? null : s.subject.id)} />
+          <SubjectCard key={s.subject.id} s={s} teacher={teacherFor(s.subject.name)} open={openId === s.subject.id} onToggle={() => setOpenId(openId === s.subject.id ? null : s.subject.id)} />
         ))}
       </div>
     </div>

@@ -5,12 +5,13 @@ import { Badge, Button, Card, Dialog, EmptyState, ErrorState, PageHeader, Pagina
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { AlertTriangle, MessagesSquare, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { Gate } from '@/components/gate';
-import { CategoryBadge, NewConversation, STATUS } from '@/components/messages/message-bits';
+import { CategoryBadge, ChildTeachers, NewConversation, STATUS } from '@/components/messages/message-bits';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { timeAgo } from '@/lib/format';
-import { useIsParentView } from '@/lib/child';
+import { useChild, useIsParentView } from '@/lib/child';
 import { useTabParam } from '@/lib/hooks';
 import { useMe } from '@/lib/me';
 
@@ -50,7 +51,12 @@ function MessagesPageContent() {
   const [category, setCategory] = useState<ConversationCategory | ''>('');
   const [view, setView] = useState<'mine' | 'all'>('mine');
   const [page, setPage] = useState(1);
-  const [writing, setWriting] = useState<ConversationCategory | null>(null);
+  const [writing, setWriting] = useState<ConversationCategory | null>(useSearchParams().get('to') ? 'ACADEMIC' : null);
+  // ?to=<member>&about=<subject>: opened from a subject's "Message the teacher" button.
+  const params = useSearchParams();
+  const [writeTo, setWriteTo] = useState<string | undefined>(params.get('to') ?? undefined);
+  const [about] = useState(params.get('about') ?? '');
+  const { child } = useChild();
   const qs = new URLSearchParams({ page: String(page), pageSize: String(PAGE), view, ...(status !== 'all' ? { status } : {}), ...(category ? { category } : {}) });
   const list = useQuery({
     queryKey: ['conversations', status, category, view, page],
@@ -71,6 +77,7 @@ function MessagesPageContent() {
           </div>
         }
       />
+      {parentView && child && <ChildTeachers studentId={child.id} firstName={child.firstName} onWrite={(to) => { setWriteTo(to); setWriting('GENERAL'); }} />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs<StatusTab>
           value={status}
@@ -102,8 +109,8 @@ function MessagesPageContent() {
         )}
       </Card>
       {list.data && list.data.page.total > PAGE && <Pagination page={page} pageSize={PAGE} total={list.data.page.total} onPageChange={setPage} />}
-      <Dialog open={!!writing} onOpenChange={(o) => !o && setWriting(null)}>
-        {writing && <NewConversation initialCategory={writing} onDone={() => setWriting(null)} />}
+      <Dialog open={!!writing} onOpenChange={(o) => { if (!o) { setWriting(null); setWriteTo(undefined); } }}>
+        {writing && <NewConversation initialCategory={writing} initialStudentId={writeTo ? child?.id : undefined} initialTo={writeTo} initialSubject={writeTo && about ? `About ${about}` : undefined} onDone={() => { setWriting(null); setWriteTo(undefined); }} />}
       </Dialog>
     </div>
   );

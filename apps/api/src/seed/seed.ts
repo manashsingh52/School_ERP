@@ -8,6 +8,7 @@
  *   principal@demo.school       Principal           +91 90000 00002
  *   accountant@demo.school      Accountant          +91 90000 00003
  *   teacher@demo.school         Teacher (8-A class teacher, Maths 8-B)  +91 90000 00004
+ *   emp-002@demo.school …       Every other teacher, by employee number (emp-002 … emp-040)
  *   parent@demo.school          Parent of Rahul (8-A) and Ananya (5-B)  +91 90000 00005
  *
  * Web: http://demo.localhost:3000
@@ -239,6 +240,7 @@ async function topUp(db: PlatformPrismaService, schoolId: string, app: INestAppl
   notes.push(...(await exams(db, app, schoolId, yearId)));
   notes.push(...(await finance(db, app, schoolId, yearId)));
   notes.push(...(await platform(db, app, schoolId)));
+  notes.push(...(await teacherLogins(db, app, schoolId)));
   notes.push(...(await moreTests(db, app, schoolId, yearId)));
   notes.push(...(await communication(db, schoolId)));
   return notes.filter(Boolean).join(', ');
@@ -763,6 +765,29 @@ async function communication(db: PlatformPrismaService, schoolId: string): Promi
     ],
   });
   return ['messages, a meeting and reminders for the demo parent'];
+}
+
+/**
+ * Every demo teacher can sign in (emp-002@demo.school …), so parents can message their child's
+ * class and subject teachers. In a real school the office invites teachers from the Teachers page.
+ * Idempotent.
+ */
+async function teacherLogins(db: PlatformPrismaService, app: INestApplicationContext, schoolId: string): Promise<string[]> {
+  const without = await db.teacher.findMany({ where: { schoolId, membershipId: null, status: { not: 'LEFT' } } });
+  if (!without.length) return [];
+  const schools = app.get(SchoolsService);
+  for (const t of without) {
+    const { membership } = await schools.addMember({
+      schoolId,
+      name: [t.firstName, t.lastName].filter(Boolean).join(' '),
+      email: `${t.employeeId.toLowerCase()}@demo.school`,
+      password: process.env.SEED_PASSWORD!,
+      roleKeys: ['teacher'],
+      status: 'ACTIVE',
+    });
+    await db.teacher.update({ where: { id: t.id }, data: { membershipId: membership.id } });
+  }
+  return [`app logins for ${without.length} more teachers`];
 }
 
 await main();

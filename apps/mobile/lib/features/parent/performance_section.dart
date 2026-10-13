@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/models.dart';
+import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../widgets/charts.dart';
 import '../../widgets/common.dart';
+import '../../widgets/home_kit.dart';
+import '../connect/connect_data.dart';
+import '../connect/messages_screen.dart';
 import 'parent_data.dart';
 
 Color pctColor(BuildContext context, double? p) {
@@ -39,6 +43,7 @@ class _PerformanceSectionState extends ConsumerState<PerformanceSection> {
   @override
   Widget build(BuildContext context) {
     final perf = ref.watch(childPerformance(widget.childId));
+    final teachers = ref.watch(meProvider).can('message.use') ? ref.watch(contactsProvider(widget.childId)).value : null;
     return AsyncView(
       value: perf,
       onRetry: () => ref.invalidate(childPerformance(widget.childId)),
@@ -208,6 +213,7 @@ class _PerformanceSectionState extends ConsumerState<PerformanceSection> {
               const SizedBox(height: 8),
               _SubjectCard(
                 subject: x,
+                teacher: teachers?.where((t) => t.subjects.contains(x.name)).firstOrNull,
                 open: _open == x.id,
                 onToggle: () =>
                     setState(() => _open = _open == x.id ? null : x.id),
@@ -259,8 +265,11 @@ class _SubjectCard extends StatelessWidget {
     required this.subject,
     required this.open,
     required this.onToggle,
+    this.teacher,
   });
   final PerformanceSubject subject;
+  /// Who teaches this subject to the child (for "Message").
+  final MessageContact? teacher;
   final bool open;
   final VoidCallback onToggle;
 
@@ -382,6 +391,18 @@ class _SubjectCard extends StatelessWidget {
                   'Section average in ${subject.name}: ${percent(subject.sectionAveragePct)}',
                   style: text.bodySmall,
                 ),
+              ),
+            if (teacher != null)
+              ListTile(
+                leading: GradientAvatar(name: teacher!.name, size: 36),
+                title: Text(teacher!.name),
+                subtitle: Text(teacher!.available ? '${subject.name} teacher' : '${subject.name} teacher · not on the app yet'),
+                trailing: teacher!.available
+                    ? FilledButton.tonal(
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => NewMessageScreen(toMemberId: teacher!.memberId, subject: 'About ${subject.name}', category: 'ACADEMIC'))),
+                        child: const Text('Message'),
+                      )
+                    : null,
               ),
           ],
         ],

@@ -35,11 +35,45 @@ describe('messages and complaints', () => {
     const res = await as('parent').get(`/v1/conversations/contacts?studentId=${A.students.s1}`);
     expect(res.status).toBe(200);
     expect(res.body.data as MessageContact[]).toEqual([
-      { memberId: A.teacherMembershipId, name: 'Teacher', role: 'Class teacher' },
-      { memberId: null, name: 'School office', role: 'Principal and office staff' },
+      { memberId: A.teacherMembershipId, name: 'Teacher', role: 'Class teacher', subjects: [], available: true },
+      { memberId: null, name: 'School office', role: 'Principal and office staff', subjects: [], available: true },
     ]);
     expect((await as('parent').get(`/v1/conversations/contacts?studentId=${A.students.s2}`)).status).toBe(404);
     expect((await as('accountant').get('/v1/conversations')).status).toBe(403);
+  });
+
+  it("subject teachers are listed too; only those who teach the child and can sign in can be written to", async () => {
+    const db = t.platform;
+    const english = await db.subject.create({ data: { schoolId: A.schoolId, name: 'English', code: 'ENG' } });
+    const science = await db.subject.create({ data: { schoolId: A.schoolId, name: 'Science', code: 'SCI' } });
+    // English teacher of 8-A with a login; Science teacher of 8-A without one; a Maths teacher of 8-B only.
+    const withLogin = await t.schools.addMember({ schoolId: A.schoolId, name: 'Anita Rao', email: `anita-${A.slug}@test.school`, password: 'Test@Pass123', roleKeys: ['teacher'] });
+    const anita = await db.teacher.create({ data: { schoolId: A.schoolId, membershipId: withLogin.membership.id, employeeId: 'T12', firstName: 'Anita', lastName: 'Rao', phone: '+919811000002' } });
+    const noLogin = await db.teacher.create({ data: { schoolId: A.schoolId, employeeId: 'T13', firstName: 'Vikram', lastName: 'Shah', phone: '+919811000003' } });
+    const otherLogin = await t.schools.addMember({ schoolId: A.schoolId, name: 'Bina Das', email: `bina-${A.slug}@test.school`, password: 'Test@Pass123', roleKeys: ['teacher'] });
+    const bina = await db.teacher.create({ data: { schoolId: A.schoolId, membershipId: otherLogin.membership.id, employeeId: 'T14', firstName: 'Bina', lastName: 'Das', phone: '+919811000004' } });
+    await db.teachingAssignment.createMany({
+      data: [
+        { schoolId: A.schoolId, academicYearId: A.yearId, sectionId: A.sectionA, subjectId: english.id, teacherId: anita.id },
+        { schoolId: A.schoolId, academicYearId: A.yearId, sectionId: A.sectionA, subjectId: science.id, teacherId: noLogin.id },
+        { schoolId: A.schoolId, academicYearId: A.yearId, sectionId: A.sectionB, subjectId: A.subjectId, teacherId: bina.id },
+      ],
+    });
+
+    const contacts = (await as('parent').get(`/v1/conversations/contacts?studentId=${A.students.s1}`)).body.data as MessageContact[];
+    expect(contacts.map((c) => [c.name, c.role, c.available])).toEqual([
+      ['Teacher', 'Class teacher', true],
+      ['Anita Rao', 'English', true],
+      ['Vikram Shah', 'Science', false],
+      ['School office', 'Principal and office staff', true],
+    ]);
+    expect(contacts.find((c) => c.name === 'Vikram Shah')!.memberId).toBeNull();
+
+    const ok = await as('parent').post('/v1/conversations', { studentId: A.students.s1, toMemberId: withLogin.membership.id, category: 'ACADEMIC', subject: 'English reading', body: 'Which book should we read at home?' });
+    expect(ok.status, JSON.stringify(ok.body)).toBe(201);
+    expect(ok.body.data.staff.name).toBe('Anita Rao');
+    // A teacher who doesn't teach this child can't be written to.
+    expect((await as('parent').post('/v1/conversations', { studentId: A.students.s1, toMemberId: otherLogin.membership.id, subject: 'Hello there', body: 'Hi' })).status).toBe(422);
   });
 
   it('a complaint reaches the teacher, who sees it unread; opening it shows the parent it was seen', async () => {
@@ -100,7 +134,7 @@ describe('messages and complaints', () => {
 
   it('a teacher can start a thread with a parent of a child they teach — nobody else', async () => {
     const contacts = (await as('teacher').get(`/v1/conversations/contacts?studentId=${A.students.s1}`)).body.data as MessageContact[];
-    expect(contacts).toEqual([{ memberId: A.parentMembershipId, name: 'Parent', role: 'Father' }]);
+    expect(contacts).toEqual([{ memberId: A.parentMembershipId, name: 'Parent', role: 'Father', subjects: [], available: true }]);
     const res = await as('teacher').post('/v1/conversations', { studentId: A.students.s1, toMemberId: A.parentMembershipId, category: 'BEHAVIOUR', subject: 'Great week', body: 'Student1 helped a classmate today.' });
     expect(res.status).toBe(201);
     expect(res.body.data.myRole).toBe('STAFF');

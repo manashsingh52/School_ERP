@@ -593,11 +593,24 @@ class Conversation {
 }
 
 class MessageContact {
-  MessageContact({this.memberId, required this.name, required this.role});
-  factory MessageContact.fromJson(Json j) => MessageContact(memberId: _s(j['memberId']), name: j['name'] as String, role: j['role'] as String);
-  /// null = the school office.
+  MessageContact({this.memberId, required this.name, required this.role, this.subjects = const [], this.available = true});
+  factory MessageContact.fromJson(Json j) => MessageContact(
+        memberId: _s(j['memberId']),
+        name: j['name'] as String,
+        role: j['role'] as String,
+        subjects: ((j['subjects'] as List?) ?? const []).cast<String>(),
+        available: j['available'] as bool? ?? true,
+      );
+  /// null = the school office (or someone without an app login — see [available]).
   final String? memberId;
   final String name, role;
+  /// What this teacher teaches the child.
+  final List<String> subjects;
+  /// False until the school invites them to the app; they can't be written to yet.
+  final bool available;
+
+  bool get isOffice => memberId == null && available;
+  bool get isTeacher => subjects.isNotEmpty || role.startsWith('Class teacher');
 }
 
 class Meeting {

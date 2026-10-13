@@ -145,4 +145,16 @@ void main() {
     expect(r.studentName, 'Rahul Kumar');
     expect(reminderRepeatLabel[r.repeat], 'Monday to Saturday');
   });
+
+  test('message contacts: subject teachers, and who is on the app', () {
+    final list = [
+      {'memberId': 'm1', 'name': 'Priya Sharma', 'role': 'Class teacher, Mathematics', 'subjects': ['Mathematics'], 'available': true},
+      {'memberId': null, 'name': 'Vikram Shah', 'role': 'Science', 'subjects': ['Science'], 'available': false},
+      {'memberId': null, 'name': 'School office', 'role': 'Principal and office staff', 'subjects': <String>[], 'available': true},
+    ].map(MessageContact.fromJson).toList();
+    expect(list.where((c) => c.isTeacher).map((c) => c.name), ['Priya Sharma', 'Vikram Shah']);
+    expect(list[1].available, isFalse);
+    expect(list[2].isOffice, isTrue);
+    expect(list[0].subjects, ['Mathematics']);
+  });
 }

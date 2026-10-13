@@ -92,13 +92,20 @@ export interface ConversationDetail extends ConversationItem {
   messages: ConversationMessageItem[];
 }
 
-/** Who I can start a conversation with about this child. */
+/**
+ * Who I can start a conversation with about this child: a parent sees the child's class teacher
+ * and subject teachers (and the school office); a teacher sees the child's parents.
+ */
 export interface MessageContact {
-  /** null = the school office. */
+  /** null = the school office, or someone who can't sign in yet (see `available`). */
   memberId: string | null;
   name: string;
-  /** "Class teacher", "Mathematics, Science", "Father", "School office". */
+  /** "Class teacher, Mathematics", "Science", "Father", "School office". */
   role: string;
+  /** Subjects this teacher teaches the child (empty for the class-teacher-only, parents and the office). */
+  subjects: string[];
+  /** False when this person has no app login yet — they can't receive messages until the school invites them. */
+  available: boolean;
 }
 
 // ---------------------------------------------------------------- meetings (video)

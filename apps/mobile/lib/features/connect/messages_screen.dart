@@ -9,6 +9,7 @@ import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../widgets/common.dart';
+import '../../widgets/home_kit.dart';
 import 'connect_data.dart';
 
 Tone statusTone(String s) => switch (s) { 'OPEN' => Tone.info, 'IN_PROGRESS' => Tone.warning, _ => Tone.success };
@@ -35,6 +36,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
         label: const Text('New'),
       ),
       body: Column(children: [
+        if (parent) const TeachersStrip(),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
@@ -249,8 +251,11 @@ class _ThreadScreenState extends ConsumerState<ThreadScreen> {
 /// Start a conversation. Parents: about their child, to a teacher or the school office. Teachers:
 /// pick a student, then one of the parents.
 class NewMessageScreen extends ConsumerStatefulWidget {
-  const NewMessageScreen({super.key, this.category = 'GENERAL'});
+  const NewMessageScreen({super.key, this.category = 'GENERAL', this.toMemberId, this.subject});
   final String category;
+  /// Opened from a teacher's card or a subject: who to write to, and a starting subject line.
+  final String? toMemberId;
+  final String? subject;
   @override
   ConsumerState<NewMessageScreen> createState() => _NewMessageScreenState();
 }
@@ -258,8 +263,8 @@ class NewMessageScreen extends ConsumerStatefulWidget {
 class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   late String _category = widget.category;
   StudentRef? _student;
-  String? _to;
-  final _subject = TextEditingController();
+  late String? _to = widget.toMemberId;
+  late final _subject = TextEditingController(text: widget.subject ?? '');
   final _body = TextEditingController();
   final _search = TextEditingController();
   String _q = '';
@@ -285,7 +290,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   Future<void> _send(List<MessageContact> contacts) async {
     setState(() => _busy = true);
     try {
-      final to = _to ?? (contacts.isEmpty ? null : (contacts.first.memberId ?? 'office'));
+      final first = contacts.where((c) => c.available).firstOrNull;
+      final to = _to ?? (first == null ? null : (first.memberId ?? 'office'));
       final res = await ref.read(apiProvider).post<Json>('/conversations', {
         'studentId': _student!.id,
         'toMemberId': to == 'office' ? null : to,
@@ -310,7 +316,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     final kids = ref.watch(meProvider).children;
     final contacts = _student == null ? const AsyncValue<List<MessageContact>>.data([]) : ref.watch(contactsProvider(_student!.id));
     final list = contacts.value ?? const <MessageContact>[];
-    final ready = _student != null && list.isNotEmpty && _subject.text.trim().length >= 3 && _body.text.trim().isNotEmpty;
+    final ready = _student != null && list.any((c) => c.available) && _subject.text.trim().length >= 3 && _body.text.trim().isNotEmpty;
     return Scaffold(
       appBar: AppBar(title: Text(_category == 'COMPLAINT' ? 'Raise a complaint' : 'New message')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
@@ -343,10 +349,15 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
             builder: (cs) => cs.isEmpty
                 ? Text(parent ? 'No teachers found for this class yet.' : 'None of this child’s parents use the app yet.', style: Theme.of(context).textTheme.bodySmall)
                 : DropdownButtonFormField<String>(
-                    initialValue: _to ?? (cs.first.memberId ?? 'office'),
+                    initialValue: _to ?? (cs.where((c) => c.available).firstOrNull?.memberId ?? 'office'),
                     isExpanded: true,
                     decoration: InputDecoration(labelText: parent ? 'To' : 'To which parent'),
-                    items: [for (final c in cs) DropdownMenuItem(value: c.memberId ?? 'office', child: Text('${c.name} — ${c.role}', overflow: TextOverflow.ellipsis))],
+                    items: [
+                      for (final (i, c) in cs.indexed)
+                        c.available
+                            ? DropdownMenuItem(value: c.memberId ?? 'office', child: Text('${c.name} — ${c.role}', overflow: TextOverflow.ellipsis))
+                            : DropdownMenuItem(value: 'off-$i', enabled: false, child: Text('${c.name} — ${c.role} (not on the app yet)', overflow: TextOverflow.ellipsis, style: TextStyle(color: StatusColors.of(context).muted))),
+                    ],
                     onChanged: (v) => setState(() => _to = v),
                   ),
           ),
@@ -365,5 +376,58 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         FilledButton.icon(onPressed: ready && !_busy ? () => _send(list) : null, icon: const Icon(Icons.send), label: Text(_busy ? 'Sending…' : 'Send')),
       ]),
     );
+  }
+}
+
+/// "Your child's teachers": the class teacher and subject teachers, tap one to write to them.
+class TeachersStrip extends ConsumerWidget {
+  const TeachersStrip({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final child = ref.watch(childProvider);
+    if (child == null) return const SizedBox.shrink();
+    final contacts = ref.watch(contactsProvider(child.id)).value ?? const <MessageContact>[];
+    final teachers = contacts.where((c) => c.isTeacher).toList();
+    if (teachers.isEmpty) return const SizedBox.shrink();
+    final s = StatusColors.of(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+        child: Text("${child.firstName}'s teachers", style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+      ),
+      SizedBox(
+        height: 128,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          itemCount: teachers.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
+          itemBuilder: (_, i) {
+            final t = teachers[i];
+            return SizedBox(
+              width: 128,
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: t.available
+                      ? () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => NewMessageScreen(toMemberId: t.memberId, subject: t.subjects.isEmpty ? null : 'About ${t.subjects.first}')))
+                      : () => toast(context, '${t.name} isn\'t on the app yet — write to the school office instead.'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(children: [
+                      Opacity(opacity: t.available ? 1 : 0.45, child: GradientAvatar(name: t.name, size: 44)),
+                      const SizedBox(height: 6),
+                      Text(t.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                      Text(t.available ? t.role : 'Not on the app', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: s.muted, fontSize: 12)),
+                    ]),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ]);
   }
 }

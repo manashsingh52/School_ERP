@@ -66,9 +66,24 @@ export class ConversationsService {
     if (!(await this.scope.canAccessStudent('message.use', studentId))) throw AppError.notFound('student');
     if (this.isParentScope()) {
       const teachers = await this.people.teachersOf(studentId);
-      return [...teachers, { memberId: null, name: 'School office', role: 'Principal and office staff' }];
+      // Only teachers who can sign in can be written to; the others are listed so parents know who teaches their child.
+      const active = await this.activeMembers(teachers.map((t) => t.memberId));
+      return [
+        ...teachers.map((t) => ({ ...t, memberId: t.memberId && active.has(t.memberId) ? t.memberId : null, available: !!t.memberId && active.has(t.memberId) })),
+        { memberId: null, name: 'School office', role: 'Principal and office staff', subjects: [], available: true },
+      ];
     }
-    return this.people.parentsOf(studentId);
+    const parents = await this.people.parentsOf(studentId);
+    const active = await this.activeMembers(parents.map((p) => p.memberId));
+    return parents.map((p) => ({ ...p, subjects: [], available: active.has(p.memberId) }));
+  }
+
+  /** Memberships that can sign in (not removed or suspended). */
+  private async activeMembers(ids: (string | null)[]): Promise<Set<string>> {
+    const wanted = ids.filter((x): x is string => !!x);
+    if (!wanted.length) return new Set();
+    const rows = await this.prisma.db.membership.findMany({ where: { id: { in: wanted }, status: { in: ['ACTIVE', 'INVITED'] } }, select: { id: true } });
+    return new Set(rows.map((r) => r.id));
   }
 
   async list(query: z.output<typeof listConversationsQuerySchema>): Promise<PageResponse<ConversationItem>> {
@@ -175,7 +190,8 @@ export class ConversationsService {
     const contacts = await this.contacts(input.studentId); // also checks I may see the child
     const parentSide = this.isParentScope();
     if (!parentSide && input.toMemberId === null) throw new AppError('CHOOSE_PARENT', 422, 'Choose which parent to write to.', [{ field: 'toMemberId', message: 'Choose a parent' }]);
-    if (!contacts.some((c) => c.memberId === input.toMemberId)) throw AppError.invalidReference('toMemberId', parentSide ? 'teacher' : 'parent');
+    // Only someone who teaches this child (or the office) — and who can sign in — can be written to.
+    if (!contacts.some((c) => c.available && c.memberId === input.toMemberId)) throw AppError.invalidReference('toMemberId', parentSide ? 'teacher' : 'parent');
 
     const now = new Date();
     const id = await this.prisma.tenantTx(async (tx) => {
