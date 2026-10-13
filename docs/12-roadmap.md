@@ -201,6 +201,17 @@ Still open: settlement (bank UTR) reconciliation — needs a school's live Razor
   - toasts sat on top of the bottom action bar (Save marks, Submit register) and, while hovered, never went away; they now appear top centre
   - a field the server rejected (e.g. a duplicate admission number) wasn't scrolled to; forms now focus the first one
 
+### 2026-10-13: Parent–teacher features ✅ (492 API · 27 browser · 20 app tests)
+
+- [x] **Attendance tracking for parents**: classes held / attended / missed and % for the whole session, month by month, and any day with its note (web + app); student profile → Attendance tab for staff
+- [x] **Results charts**: performance radar by subject (tap a subject → every unit test and exam with marks, %, grade and the section average), progress line across exams, trend per subject (`GET /v1/students/:id/performance`; parents see published results only, staff also computed ones). Demo data has three published tests
+- [x] **Live video meetings**: teachers/office book a meeting about a child; parents are notified (booked, moved, cancelled, 15 minutes before) and join a Jitsi room from the app or a browser — free, no paid video service (`MEETING_BASE_URL`, SETUP-LATER #20)
+- [x] **Reminders**: a parent's own alarms (pick-up 1:30 PM, Monday to Saturday …) — edit, reschedule, done, delete; the scheduler sends an in-app alert + push at the time (always on; not a school setting)
+- [x] **"Arrived at school"**: today's register marking a child present / late / half day tells the parents, with the time it was recorded — once per child per day, never for past days (school can switch it off)
+- [x] **Messages & complaints**: threads about one child between a parent and a teacher or the school office; categories, Open / In progress / Resolved with alerts to the parent, read receipts ("Seen"), full history; teachers see only their own threads, the office can see every one
+- [x] Student profile: Attendance, Homework, Exams and Fees tabs (were placeholders); tabs on several pages now live in the address (`?tab=`)
+- Note: permissions for existing schools need a data migration that lifts FORCE RLS for the statement (`20261013110000_…`); the first attempt (`20261013100000`) saw no rows
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

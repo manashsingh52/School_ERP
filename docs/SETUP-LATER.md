@@ -7,7 +7,7 @@ Search the code for `⏸` to find every slot.
 
 | # | What | Needed for | Where it goes | Until then |
 |---|---|---|---|---|
-| 1 | **GitHub login on this Mac** | Pushing code | `git push -u origin main` (asks for username + a [personal access token](https://github.com/settings/tokens)) | Commits stay local |
+| 1 | ~~**GitHub login on this Mac**~~ ✅ done (manashsingh52/School_ERP) | Pushing code | Token needs the `repo` **and** `workflow` scopes | — |
 | 2 | **Docker Desktop** (needs Mac admin password) | Optional: `docker-compose.yml` services | [docker.com](https://www.docker.com/products/docker-desktop/) → Apple Silicon | `pnpm db:start` (embedded PostgreSQL) |
 | 3 | **Company registration** | DLT, Razorpay test account, app stores | — | — |
 | 4 | **DLT registration + MSG91** (sender ID, OTP template) | Real SMS one-time codes | `apps/api/.env`: `OTP_PROVIDER=msg91`, `MSG91_AUTH_KEY`, `MSG91_SENDER_ID`, `MSG91_OTP_TEMPLATE_ID` | Codes printed in the API log (`[dev OTP]`); password login works. Notification SMS use the same account: `SMS_PROVIDER=msg91` (slot in `channel-gateway.ts`) |
@@ -26,6 +26,8 @@ Search the code for `⏸` to find every slot.
 | 13 | **Legal review** — DPA, privacy policy, DPDP Act | Before the first real school goes live | docs/09 §7 | — |
 | 14 | **Product name** | Branding | Replace "SchoolOS" / `schoolos.in` | Placeholder |
 | 15 | **DNS for `admin.<domain>`** (super-admin console), ideally behind Cloudflare Access / an IP allow-list | Platform console in staging/prod | Same `APP_BASE_DOMAIN`; the console is served by the web app on the `admin` subdomain | `http://admin.localhost:3000` (seed: `superadmin@schoolos.local`, `support@schoolos.local`) |
+| 20 | **Video meetings host** — *optional* | Parent–teacher video meetings without the "sign in to start" step | `MEETING_BASE_URL` (API `.env`) → your own Jitsi (Docker, a small VM) or a Jitsi-as-a-Service tenant | Public `https://meet.jit.si` (free): works now; the first person to join signs in with Google/GitHub to open the room. Rooms are random per meeting |
+| 21 | **Move the project off the iCloud-synced Desktop** | Safety of the local database | e.g. `~/Developer/schoolerp` (then reopen it there) | iCloud makes conflict copies inside `apps/api/.data/pg` — a live database must not be synced |
 
 ## Secrets that must be **regenerated** for staging/production
 
