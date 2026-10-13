@@ -60,7 +60,7 @@ void main() {
     expect(tokens.refresh, 'r' * 40);
     expect(find.text('Attendance to take'), findsOneWidget);
     expect(find.text('8-A'), findsOneWidget);
-    expect(find.text('Classes'), findsOneWidget); // teacher bottom bar
+    expect(find.byTooltip('Classes'), findsOneWidget); // teacher bottom bar (icon; name as tooltip)
     final login = api.calls.firstWhere((c) => c.$2 == '/auth/login').$3 as Map;
     expect(login['platform'], isNotNull);
   });

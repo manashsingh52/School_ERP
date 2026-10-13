@@ -7,35 +7,56 @@ import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../widgets/common.dart';
+import '../shell/tab_requests.dart';
 import 'parent_data.dart';
 import 'parent_home.dart';
 import 'performance_section.dart';
 
 /// Academics (docs/06 §4): attendance calendar, homework, timetable, results.
-class AcademicsScreen extends ConsumerWidget {
+class AcademicsScreen extends ConsumerStatefulWidget {
   const AcademicsScreen({super.key});
+  @override
+  ConsumerState<AcademicsScreen> createState() => _AcademicsScreenState();
+}
+
+class _AcademicsScreenState extends ConsumerState<AcademicsScreen> with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 4, vsync: this, initialIndex: ref.read(academicsTabProvider));
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _tabs.addListener(() {
+      if (!_tabs.indexIsChanging) ref.read(academicsTabProvider.notifier).go(_tabs.index);
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(academicsTabProvider, (_, next) {
+      if (next != _tabs.index) _tabs.animateTo(next);
+    });
     final child = ref.watch(childProvider);
     if (child == null) return const EmptyView(icon: Icons.family_restroom, title: 'No children linked yet');
-    return DefaultTabController(
-      length: 4,
-      child: Column(children: [
-        Material(
-          color: Theme.of(context).colorScheme.surface,
-          child: const TabBar(isScrollable: true, tabAlignment: TabAlignment.start, tabs: [Tab(text: 'Attendance'), Tab(text: 'Homework'), Tab(text: 'Timetable'), Tab(text: 'Results')]),
-        ),
-        Expanded(
-          child: TabBarView(children: [
-            _AttendanceTab(child: child),
-            _HomeworkTab(child: child),
-            _TimetableTab(child: child),
-            _ResultsTab(child: child),
-          ]),
-        ),
-      ]),
-    );
+    return Column(children: [
+      Material(
+        color: Theme.of(context).colorScheme.surface,
+        child: TabBar(controller: _tabs, isScrollable: true, tabAlignment: TabAlignment.start, tabs: const [Tab(text: 'Attendance'), Tab(text: 'Homework'), Tab(text: 'Timetable'), Tab(text: 'Results')]),
+      ),
+      Expanded(
+        child: TabBarView(controller: _tabs, children: [
+          _AttendanceTab(child: child),
+          _HomeworkTab(child: child),
+          _TimetableTab(child: child),
+          _ResultsTab(child: child),
+        ]),
+      ),
+    ]);
   }
 }
 

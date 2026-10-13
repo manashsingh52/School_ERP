@@ -41,7 +41,7 @@ ThemeData buildTheme(Brightness brightness, Color accent) {
     outlineVariant: dark ? Tokens.darkBorder : Tokens.lightBorder,
     error: dark ? Tokens.dangerDark : Tokens.danger,
   );
-  const radius = BorderRadius.all(Radius.circular(12));
+  const radius = BorderRadius.all(Radius.circular(18));
   final border = dark ? Tokens.darkBorder : Tokens.lightBorder;
   return ThemeData(
     useMaterial3: true,

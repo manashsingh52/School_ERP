@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/attendance_queue.dart';
 import '../../core/session.dart';
+import '../../widgets/home_kit.dart';
 import '../common/notifications_screen.dart';
 import '../connect/connect_row.dart';
 import '../common/profile_screen.dart';
@@ -73,39 +74,42 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
     final pages = parent
         ? [ParentHome(onOpenTab: (t) => setState(() => _tab = t)), const AcademicsScreen(), const FeesScreen(), NotificationsScreen(onOpenRoute: _openRoute), const ProfileScreen()]
-        : [const TeacherHome(), const AttendanceTab(), const ClassesTab(), NotificationsScreen(onOpenRoute: _openRoute), const ProfileScreen()];
+        : [TeacherHome(onOpenTab: (t) => setState(() => _tab = t)), const AttendanceTab(), const ClassesTab(), NotificationsScreen(onOpenRoute: _openRoute), const ProfileScreen()];
     final titles = parent ? ['Home', 'Academics', 'Fees', 'Notifications', 'Profile'] : ['Home', 'Attendance', 'Classes', 'Notifications', 'Profile'];
-    final badge = Badge(isLabelVisible: unread > 0, label: Text('$unread'), child: const Icon(Icons.notifications_outlined));
+    void select(int i) {
+      setState(() => _tab = i);
+      if (i == 3) ref.invalidate(notificationsProvider);
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(titles[_tab]),
-          Text(me.membership?.school.name ?? '', style: Theme.of(context).textTheme.bodySmall),
-        ]),
-        actions: [if (parent) const ChildChip()],
-      ),
+      // Home draws its own header (avatar, greeting, actions); other tabs keep a simple bar.
+      appBar: _tab == 0
+          ? null
+          : AppBar(
+              title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(titles[_tab]),
+                Text(me.membership?.school.name ?? '', style: Theme.of(context).textTheme.bodySmall),
+              ]),
+              actions: [if (parent) const ChildChip()],
+            ),
       body: IndexedStack(index: _tab, children: pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) {
-          setState(() => _tab = i);
-          if (i == 3) ref.invalidate(notificationsProvider);
-        },
-        destinations: parent
+      bottomNavigationBar: PillNavBar(
+        selected: _tab,
+        onSelect: select,
+        items: parent
             ? [
-                const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-                const NavigationDestination(icon: Icon(Icons.school_outlined), selectedIcon: Icon(Icons.school), label: 'Academics'),
-                const NavigationDestination(icon: Icon(Icons.currency_rupee), label: 'Fees'),
-                NavigationDestination(icon: badge, label: 'Alerts'),
-                const NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+                const PillNavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
+                const PillNavItem(Icons.school_outlined, Icons.school_rounded, 'Academics'),
+                const PillNavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Fees'),
+                PillNavItem(Icons.notifications_outlined, Icons.notifications_rounded, 'Alerts', badge: unread),
+                const PillNavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
               ]
             : [
-                const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-                const NavigationDestination(icon: Icon(Icons.how_to_reg_outlined), selectedIcon: Icon(Icons.how_to_reg), label: 'Attendance'),
-                const NavigationDestination(icon: Icon(Icons.class_outlined), selectedIcon: Icon(Icons.class_), label: 'Classes'),
-                NavigationDestination(icon: badge, label: 'Alerts'),
-                const NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+                const PillNavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
+                const PillNavItem(Icons.how_to_reg_outlined, Icons.how_to_reg_rounded, 'Attendance'),
+                const PillNavItem(Icons.class_outlined, Icons.class_rounded, 'Classes'),
+                PillNavItem(Icons.notifications_outlined, Icons.notifications_rounded, 'Alerts', badge: unread),
+                const PillNavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
               ],
       ),
     );

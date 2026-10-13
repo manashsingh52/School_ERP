@@ -9,27 +9,48 @@ import '../../widgets/common.dart';
 import '../parent/parent_home.dart' show showHomework;
 import 'marks_screen.dart';
 import 'teacher_data.dart';
+import '../shell/tab_requests.dart';
 
 /// Classes tab (docs/06 §5): homework I set (and new homework), and marks entry.
-class ClassesTab extends ConsumerWidget {
+class ClassesTab extends ConsumerStatefulWidget {
   const ClassesTab({super.key});
+  @override
+  ConsumerState<ClassesTab> createState() => _ClassesTabState();
+}
+
+class _ClassesTabState extends ConsumerState<ClassesTab> with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 2, vsync: this, initialIndex: ref.read(classesTabProvider));
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _tabs.addListener(() {
+      if (!_tabs.indexIsChanging) ref.read(classesTabProvider.notifier).go(_tabs.index);
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(classesTabProvider, (_, next) {
+      if (next != _tabs.index) _tabs.animateTo(next);
+    });
     final me = ref.watch(meProvider);
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: const TabBar(tabs: [Tab(text: 'Homework'), Tab(text: 'Marks')]),
-        floatingActionButton: me.can('homework.manage')
-            ? FloatingActionButton.extended(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const HomeworkCreateScreen(), fullscreenDialog: true)),
-                icon: const Icon(Icons.add),
-                label: const Text('Homework'),
-              )
-            : null,
-        body: const TabBarView(children: [_MyHomework(), _MarksList()]),
-      ),
+    return Scaffold(
+      appBar: TabBar(controller: _tabs, tabs: const [Tab(text: 'Homework'), Tab(text: 'Marks')]),
+      floatingActionButton: me.can('homework.manage')
+          ? FloatingActionButton.extended(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const HomeworkCreateScreen(), fullscreenDialog: true)),
+              icon: const Icon(Icons.add),
+              label: const Text('Homework'),
+            )
+          : null,
+      body: TabBarView(controller: _tabs, children: const [_MyHomework(), _MarksList()]),
     );
   }
 }
