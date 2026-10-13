@@ -7,17 +7,23 @@ import { ArrowLeft, Pencil, Star, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { use, useState, type ReactNode } from 'react';
 import { DocumentsPanel } from '@/components/documents/documents-panel';
+import { StudentAttendance } from '@/components/student/attendance-view';
+import { FeeStatement } from '@/components/student/fee-statement';
+import { StudentHomework } from '@/components/student/homework-list';
+import { StudentPerformanceView } from '@/components/student/performance-view';
+import { StudentResults } from '@/components/student/results-list';
 import { PhotoUpload } from '@/components/photo-upload';
 import { AuditList } from '@/components/platform/audit-list';
 import { ApiError, apiPatch } from '@/lib/api-client';
 import { classLabel, formatDate, fullName } from '@/lib/format';
-import { useData } from '@/lib/hooks';
+import { useData, useTabParam } from '@/lib/hooks';
 import { LOGIN_BADGE, RELATION_LABEL } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 import { StudentForm } from '../student-form';
 
 const TABS = ['Overview', 'Attendance', 'Homework', 'Exams', 'Fees', 'Documents', 'Activity'] as const;
 type Tab = (typeof TABS)[number];
+const TAB_KEYS = TABS.map((t) => t.toLowerCase()) as Lowercase<Tab>[];
 
 export default function StudentProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -25,8 +31,19 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
   const qc = useQueryClient();
   const student = useData<StudentDetail>(['student', id], `/students/${id}`);
   const [editing, setEditing] = useState(false);
-  const [tab, setTab] = useState<Tab>('Overview');
-  const enabled = (t: Tab) => t === 'Overview' || (t === 'Documents' && can('document.view')) || (t === 'Activity' && can('audit.view'));
+  const [tabKey, setTabKey] = useTabParam(TAB_KEYS);
+  const tab = TABS[TAB_KEYS.indexOf(tabKey)]!;
+  const setTab = (t: Tab) => setTabKey(t.toLowerCase() as Lowercase<Tab>);
+  const NEEDS: Record<Tab, Parameters<typeof can>[0] | null> = {
+    Overview: null,
+    Attendance: 'attendance.view',
+    Homework: 'homework.view',
+    Exams: 'results.view',
+    Fees: 'invoice.view',
+    Documents: 'document.view',
+    Activity: 'audit.view',
+  };
+  const enabled = (t: Tab) => NEEDS[t] === null || can(NEEDS[t]!);
   const canEdit = can('student.edit');
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['student', id] }), qc.invalidateQueries({ queryKey: ['students'] })]);
 
@@ -90,7 +107,7 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
 
       <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border" role="tablist">
         {TABS.map((t) => (
-          <Tooltip key={t} content="Coming with its module" disabled={enabled(t)}>
+          <Tooltip key={t} content="You don't have access to this" disabled={enabled(t)}>
             <button
               role="tab"
               aria-selected={tab === t}
@@ -104,6 +121,16 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
         ))}
       </div>
 
+      {tab === 'Attendance' && enabled(tab) && <StudentAttendance studentId={id} />}
+      {tab === 'Homework' && enabled(tab) && <StudentHomework studentId={id} staff />}
+      {tab === 'Exams' && enabled(tab) && (
+        <div className="flex flex-col gap-6">
+          <StudentPerformanceView studentId={id} />
+          <h2 className="text-h3 font-semibold">Results and report cards</h2>
+          <StudentResults studentId={id} />
+        </div>
+      )}
+      {tab === 'Fees' && enabled(tab) && s && <FeeStatement studentId={id} firstName={s.firstName} staff />}
       {tab === 'Documents' && <DocumentsPanel ownerType="STUDENT" ownerId={id} shareLabel="Parents can see and download this" />}
       {tab === 'Activity' && <Card><CardHeader title="Activity" description="Every change to this student's record." /><div className="mt-3 border-t border-border"><AuditList path={`/audit?entityType=Student&entityId=${id}`} /></div></Card>}
 

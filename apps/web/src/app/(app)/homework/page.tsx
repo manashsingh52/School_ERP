@@ -31,7 +31,7 @@ import { AttachmentLinks, dueBadge } from '@/components/homework/homework-bits';
 import { HOMEWORK_DRAFT_KEY, HomeworkForm, type HomeworkDraft } from '@/components/homework/homework-form';
 import { SubmissionsDialog } from '@/components/homework/submissions-panel';
 import { ApiError, apiDelete, apiFetch, apiPost } from '@/lib/api-client';
-import { useData } from '@/lib/hooks';
+import { useData, useTabParam } from '@/lib/hooks';
 import { formatDate } from '@/lib/format';
 import { useMe } from '@/lib/me';
 
@@ -103,7 +103,7 @@ function HomeworkCard({ hw, onOpen, onEdit, onSubmissions }: { hw: HomeworkItem;
 function HomeworkPageContent() {
   const { can } = useMe();
   const canManage = can('homework.manage');
-  const [tab, setTab] = useState<Tab>('PUBLISHED');
+  const [tab, setTab] = useTabParam<Tab>(['PUBLISHED', 'SCHEDULED', 'DRAFT']);
   const [sectionId, setSectionId] = useState('');
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');

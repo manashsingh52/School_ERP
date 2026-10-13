@@ -1,5 +1,6 @@
 import type { Permission, PermissionScope } from '@schoolos/permissions';
 import {
+  AlarmClock,
   BarChart3,
   BookOpen,
   CalendarCheck,
@@ -11,10 +12,12 @@ import {
   IndianRupee,
   LayoutDashboard,
   Megaphone,
+  MessagesSquare,
   NotebookPen,
   Settings,
   Sparkles,
   Users,
+  Video,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -45,6 +48,9 @@ export const NAV: NavItem[] = [
   { href: '/fees', label: 'Fees', icon: IndianRupee, any: ['fee.manage', 'invoice.view'], scopes: ['ALL'], ready: true },
   { href: '/payments', label: 'Payments', icon: CreditCard, any: ['payment.view', 'payment.collect'], scopes: ['ALL'], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: ['notice.view', 'notice.create'], scopes: STAFF, ready: true },
+  { href: '/messages', label: 'Messages', icon: MessagesSquare, any: ['message.use'], scopes: STAFF, ready: true },
+  { href: '/meetings', label: 'Meetings', icon: Video, any: ['meeting.view'], scopes: STAFF, ready: true },
+  { href: '/reminders', label: 'Reminders', icon: AlarmClock, any: ['reminder.use'], scopes: ['ALL'], ready: true },
   { href: '/documents', label: 'Documents', icon: FileText, any: ['document.view'], scopes: STAFF, ready: true },
   { href: '/reports', label: 'Reports', icon: BarChart3, any: ['report.academic', 'report.finance'], scopes: STAFF, ready: true },
   { href: '/assistant', label: 'Assistant', icon: Sparkles, any: ['ai.use'], scopes: STAFF, ready: true },
@@ -60,6 +66,9 @@ export const PARENT_NAV: NavItem[] = [
   { href: '/my/fees', label: 'Fees', icon: IndianRupee, any: [], ready: true },
   { href: '/my/documents', label: 'Documents', icon: FileText, any: [], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: [], ready: true },
+  { href: '/messages', label: 'Messages', icon: MessagesSquare, any: [], ready: true },
+  { href: '/meetings', label: 'Meetings', icon: Video, any: [], ready: true },
+  { href: '/reminders', label: 'Reminders', icon: AlarmClock, any: [], ready: true },
 ];
 
 export const SETTINGS_NAV: NavItem = {

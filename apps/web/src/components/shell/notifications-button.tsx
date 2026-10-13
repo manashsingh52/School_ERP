@@ -3,10 +3,11 @@
 import type { NotificationItem } from '@schoolos/contracts';
 import { Button, Menu, MenuContent, MenuTrigger, Skeleton, cn } from '@schoolos/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CalendarX, Check, Megaphone, NotebookPen } from 'lucide-react';
+import { AlarmClock, Bell, CalendarCheck, CalendarX, Check, Megaphone, MessagesSquare, NotebookPen, Video } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiFetch, apiPost } from '@/lib/api-client';
+import { useIsParentView } from '@/lib/child';
 import { timeAgo } from '@/lib/format';
 
 const ICON: Record<string, typeof Bell> = {
@@ -14,12 +15,24 @@ const ICON: Record<string, typeof Bell> = {
   'attendance.late': CalendarX,
   'homework.published': NotebookPen,
   'notice.published': Megaphone,
+  'attendance.arrived': CalendarCheck,
+  'message.received': MessagesSquare,
+  'complaint.status_changed': MessagesSquare,
+  'meeting.scheduled': Video,
+  'meeting.rescheduled': Video,
+  'meeting.cancelled': Video,
+  'meeting.starting': Video,
+  'reminder.due': AlarmClock,
 };
+
+/** Alerts carry the staff route; parents have their own pages for the same things. */
+const PARENT_ROUTE: Record<string, string> = { '/attendance': '/my/attendance', '/homework': '/my/homework', '/results': '/my/results', '/fees': '/my/fees' };
 
 /** Header bell: unread badge (polled), latest notifications, mark read. */
 export function NotificationsButton() {
   const qc = useQueryClient();
   const router = useRouter();
+  const parentView = useIsParentView();
   const [open, setOpen] = useState(false);
   const unread = useQuery({
     queryKey: ['notifications', 'unread'],
@@ -39,7 +52,8 @@ export function NotificationsButton() {
     setOpen(false);
     if (!n.readAt) await apiPost(`/notifications/${n.id}/read`).catch(() => null);
     void refresh();
-    if (n.data.route) router.push(n.data.route);
+    const route = typeof n.data.route === 'string' ? n.data.route : null;
+    if (route) router.push(parentView ? (PARENT_ROUTE[route] ?? route) : route);
   }
 
   return (

@@ -3,6 +3,8 @@
 import type { FileInfo, FilePurpose, SchoolProfile, UploadTicket } from '@schoolos/contracts';
 import { toast } from '@schoolos/ui';
 import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useCallback } from 'react';
 import type { FieldValues, Path, UseFormSetError } from 'react-hook-form';
 import { ApiError, apiFetch, apiPost } from './api-client';
 
@@ -78,4 +80,27 @@ export async function uploadFile(file: File, purpose: FilePurpose): Promise<File
 
 export function useSchool() {
   return useData<SchoolProfile>(['school'], '/school', { staleTime: 60_000 });
+}
+
+/**
+ * A tab kept in the address (?tab=…), so a link, a refresh or the back button opens the same tab.
+ * Unknown values fall back to the first tab; the first tab keeps the URL clean.
+ */
+export function useTabParam<T extends string>(allowed: readonly T[], fallback: T = allowed[0]!): [T, (next: T) => void] {
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const raw = params.get('tab');
+  const tab = allowed.find((t) => t === raw) ?? fallback;
+  const set = useCallback(
+    (next: T) => {
+      const q = new URLSearchParams(params.toString());
+      if (next === fallback) q.delete('tab');
+      else q.set('tab', next);
+      const qs = q.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [params, pathname, router, fallback],
+  );
+  return [tab, set];
 }

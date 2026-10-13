@@ -10,7 +10,7 @@ import { HOMEWORK_DRAFT_KEY } from '@/components/homework/homework-form';
 import { Markdown } from '@/components/notices/markdown';
 import { ApiError, apiPost } from '@/lib/api-client';
 import { formatDate, formatNumber } from '@/lib/format';
-import { useData } from '@/lib/hooks';
+import { useData, useTabParam } from '@/lib/hooks';
 import { useMe } from '@/lib/me';
 import { rupees } from '@/lib/money';
 
@@ -25,11 +25,11 @@ export default function AssistantPage() {
 
 function Assistant() {
   const status = useData<AiStatus>(['ai', 'status'], '/ai/status', { staleTime: 0 });
-  const [tab, setTab] = useState<'ask' | 'worksheet'>('ask');
+  const [tab, setTab] = useTabParam<'ask' | 'worksheet'>(['ask', 'worksheet']);
   const s = status.data;
   useEffect(() => {
-    if (s && !s.canAsk && s.canDraftWorksheets) setTab('worksheet');
-  }, [s]);
+    if (s && !s.canAsk && s.canDraftWorksheets && tab !== 'worksheet') setTab('worksheet');
+  }, [s, tab, setTab]);
   if (!s) return <Skeleton className="h-96" />;
   return (
     <div className="flex flex-col gap-6">

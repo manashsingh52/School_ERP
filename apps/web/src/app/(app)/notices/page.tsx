@@ -12,6 +12,7 @@ import { NoticeForm } from '@/components/notices/notice-form';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { formatDate, timeAgo } from '@/lib/format';
 import { NOTICE_TYPE } from '@/lib/labels';
+import { useTabParam } from '@/lib/hooks';
 import { useMe } from '@/lib/me';
 
 type Tab = 'PUBLISHED' | 'SCHEDULED' | 'DRAFT';
@@ -50,7 +51,7 @@ function NoticesPageContent() {
   const { can } = useMe();
   const router = useRouter();
   const canCreate = can('notice.create');
-  const [tab, setTab] = useState<Tab>('PUBLISHED');
+  const [tab, setTab] = useTabParam<Tab>(['PUBLISHED', 'SCHEDULED', 'DRAFT']);
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
