@@ -1,6 +1,6 @@
 # 12 — V1 Roadmap
 
-Built by **one developer working with Claude**: web + API first, Flutter after the core is stable.
+Built by **one developer**: web + API first, Flutter after the core is stable.
 This follows the Master Prompt's phase order (§71), with a few items pulled earlier where a later
 phase depends on them (marked ⤴).
 

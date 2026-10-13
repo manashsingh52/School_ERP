@@ -32,7 +32,7 @@ Each document is short enough to review in one sitting and ends with **Open ques
 | Jobs | BullMQ **on PostgreSQL** (no Redis in V1; Upstash only if ever needed); workers are a separate Cloud Run service or run in the API (lean mode) | 01, 10, 12 |
 | Repo | pnpm + Turborepo monorepo | 01 |
 | Payments | Each school connects **its own Razorpay account**; platform never holds school money | 11 |
-| Team | Solo developer + Claude → web + API first, Flutter later | 12 |
+| Team | Solo developer → web + API first, Flutter later | 12 |
 | V1 scope | No student login (students visible via parents). English UI, i18n-ready | 04, 06 |
 | Region | Google Cloud `asia-south1` (Mumbai); all personal data stays in India | 10 |
 | Fees | **Full payment only** (no partial payments), **no cheque/DD**. Counter: cash, UPI, bank transfer, card | 11 |

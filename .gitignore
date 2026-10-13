@@ -17,3 +17,33 @@ next-env.d.ts
 apps/e2e/test-results/
 apps/e2e/playwright-report/
 apps/e2e/.auth/
+
+# Local tool and editor settings
+.claude/
+.vscode/
+.idea/
+
+# Secrets and credentials — never commit (use Secret Manager / CI secrets)
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+key.properties
+local.properties
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log
+service-account*.json
+*-service-account.json
+credentials*.json
+gcp-key*.json
+.secrets/
+secrets/
+.dev.vars
+.wrangler/
+infra/cloudflare/wrangler.toml
+infra/gcp/*.local.sh
