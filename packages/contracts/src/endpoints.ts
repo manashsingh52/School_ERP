@@ -1,4 +1,5 @@
 import type { ZodType } from 'zod';
+import { calendarEventSchema, calendarQuerySchema, updateCalendarEventSchema } from './calendar.js';
 import {
   cancelMeetingSchema,
   contactsQuerySchema,
@@ -447,6 +448,10 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/conversations/:id': { summary: 'A thread with its messages (marks it read)', tag: 'Messages', access: 'permission:message.use' },
   'POST /v1/conversations/:id/messages': { summary: 'Reply', tag: 'Messages', access: 'permission:message.use', body: sendMessageSchema },
   'PATCH /v1/conversations/:id': { summary: 'Change the status (open, in progress, resolved)', tag: 'Messages', access: 'permission:message.use', body: updateConversationSchema },
+  'GET /v1/calendar': { summary: 'School calendar: holidays, vacations, events and exam dates in a date range', tag: 'Calendar', access: 'permission:calendar.view', query: calendarQuerySchema },
+  'POST /v1/calendar': { summary: 'Add a holiday or event (optionally notify parents and staff)', tag: 'Calendar', access: 'permission:calendar.manage', body: calendarEventSchema },
+  'PATCH /v1/calendar/:id': { summary: 'Edit a calendar entry', tag: 'Calendar', access: 'permission:calendar.manage', body: updateCalendarEventSchema },
+  'DELETE /v1/calendar/:id': { summary: 'Remove a calendar entry', tag: 'Calendar', access: 'permission:calendar.manage' },
   'GET /v1/meetings': { summary: 'Parent–teacher video meetings', tag: 'Meetings', access: 'permission:meeting.view', query: listMeetingsQuerySchema },
   'POST /v1/meetings': { summary: "Schedule a video meeting with a child's parents", tag: 'Meetings', access: 'permission:meeting.manage', body: createMeetingSchema },
   'GET /v1/meetings/:id': { summary: 'One meeting with its join link', tag: 'Meetings', access: 'permission:meeting.view' },

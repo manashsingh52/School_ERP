@@ -42,3 +42,9 @@ final studentSearchProvider = FutureProvider.autoDispose.family<List<StudentRef>
       StudentRef(id: s['id'] as String, name: s['name'] as String, classLabel: [s['className'], s['sectionName']].whereType<String>().map((x) => x.replaceFirst(RegExp(r'^Class\s+', caseSensitive: false), '')).join('-')),
   ];
 });
+
+/// Calendar entries between two dates ("2026-10-01", "2026-10-31").
+final calendarProvider = FutureProvider.autoDispose.family<List<CalendarItem>, (String, String)>((ref, range) async {
+  final rows = await ref.read(apiProvider).get<List<dynamic>>('/calendar', query: {'from': range.$1, 'to': range.$2});
+  return rows.cast<Json>().map(CalendarItem.fromJson).toList();
+});

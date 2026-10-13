@@ -152,6 +152,8 @@ export interface Tenant {
   /** The parent's question to the class teacher about s1; a video meeting about s1 tomorrow; the parent's own reminder. */
   conversationId: string;
   meetingId: string;
+  /** A whole-school holiday on the calendar. */
+  calendarEventId: string;
   reminderId: string;
   parentMembershipId: string;
   teacherMembershipId: string;
@@ -363,7 +365,8 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
         data: { schoolId, studentId: s1, organizerMemberId: teacherM.membership.id, title: 'Progress chat', scheduledAt: new Date(Date.now() + 86_400_000), roomCode: randomUUID() },
       });
       const reminder = await db.reminder.create({ data: { schoolId, memberId: parentM.membership.id, title: 'Pick up', remindAt: new Date(Date.now() + 3_600_000) } });
-      return { conversationId: conv.id, meetingId: meeting.id, reminderId: reminder.id, parentMembershipId: parentM.membership.id, teacherMembershipId: teacherM.membership.id };
+      const holiday = await db.calendarEvent.create({ data: { schoolId, title: 'Founders Day', kind: 'HOLIDAY', startDate: date('2026-11-14'), endDate: date('2026-11-14'), createdByMemberId: adminMembership.id } });
+      return { calendarEventId: holiday.id, conversationId: conv.id, meetingId: meeting.id, reminderId: reminder.id, parentMembershipId: parentM.membership.id, teacherMembershipId: teacherM.membership.id };
     })()),
     supportGrantId: (
       await db.supportAccessGrant.create({ data: { schoolId, platformUserId: randomUUID(), reason: 'Fixture request', expiresAt: new Date(Date.now() + 3_600_000) } })

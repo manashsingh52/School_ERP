@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'calendar_screen.dart';
 import 'meetings_screen.dart';
 import 'messages_screen.dart';
 import 'reminders_screen.dart';
@@ -14,7 +15,9 @@ bool openConnectRoute(BuildContext context, String route) {
               ? const MeetingsScreen()
               : route.startsWith('/reminders')
                   ? const RemindersScreen()
-                  : null;
+                  : route.startsWith('/calendar')
+                      ? const CalendarScreen()
+                      : null;
   if (screen == null) return false;
   Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   return true;

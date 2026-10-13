@@ -212,6 +212,13 @@ Still open: settlement (bank UTR) reconciliation — needs a school's live Razor
 - [x] Student profile: Attendance, Homework, Exams and Fees tabs (were placeholders); tabs on several pages now live in the address (`?tab=`)
 - Note: permissions for existing schools need a data migration that lifts FORCE RLS for the statement (`20261013110000_…`); the first attempt (`20261013100000`) saw no rows
 
+### 2026-10-14: School calendar ✅ (500 API · 28 browser · 22 app tests)
+
+- [x] Calendar of holidays, vacations, events and parent–teacher meetings, managed by the office (whole school or chosen classes), optionally announced to parents and staff
+- [x] Exam dates come from the exams themselves; parents also see each of their child's papers with its time. Draft exams stay hidden from parents
+- [x] Web `/calendar` (month grid, day details, coming up; add/edit/delete for the office) for staff and parents; app Calendar screen with the same colours — replaces Documents on the home grid (documents stay under Profile)
+- [x] Parents can message their child's class and subject teachers (not only the office); teachers without an app login are listed as "not on the app yet"
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

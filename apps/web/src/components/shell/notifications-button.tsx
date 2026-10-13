@@ -3,7 +3,7 @@
 import type { NotificationItem } from '@schoolos/contracts';
 import { Button, Menu, MenuContent, MenuTrigger, Skeleton, cn } from '@schoolos/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlarmClock, Bell, CalendarCheck, CalendarX, Check, Megaphone, MessagesSquare, NotebookPen, Video } from 'lucide-react';
+import { AlarmClock, Bell, CalendarCheck, CalendarDays, CalendarX, Check, Megaphone, MessagesSquare, NotebookPen, Video } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiFetch, apiPost } from '@/lib/api-client';
@@ -23,6 +23,7 @@ const ICON: Record<string, typeof Bell> = {
   'meeting.cancelled': Video,
   'meeting.starting': Video,
   'reminder.due': AlarmClock,
+  'calendar.added': CalendarDays,
 };
 
 /** Alerts carry the staff route; parents have their own pages for the same things. */

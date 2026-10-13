@@ -67,6 +67,8 @@ export const PERMISSIONS = {
   'meeting.view': s('Communication', 'View parent–teacher meetings', 'ALL', 'ASSIGNED', 'OWN_CHILDREN'),
   'meeting.manage': s('Communication', 'Schedule parent–teacher meetings', 'ALL', 'ASSIGNED'),
   'reminder.use': s('Communication', 'Set personal reminders'),
+  'calendar.view': s('Calendar', 'View the school calendar'),
+  'calendar.manage': s('Calendar', 'Add holidays and events to the calendar'),
 
   // Exams
   'exam.view': s('Exams', 'View exams', 'ALL', 'ASSIGNED', 'OWN_CHILDREN'),

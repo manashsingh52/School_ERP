@@ -6,6 +6,7 @@ import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/home_kit.dart';
+import '../connect/calendar_screen.dart';
 import '../connect/connect_data.dart';
 import '../connect/meetings_screen.dart';
 import '../connect/messages_screen.dart';
@@ -52,8 +53,8 @@ class TeacherHome extends ConsumerWidget {
       if (me.can('message.use')) Feature('Messages', Icons.mail_rounded, FeatureColors.blue, () => _push(context, const MessagesScreen()), badge: unread),
       if (me.can('meeting.view')) Feature('Meetings', Icons.videocam_rounded, FeatureColors.purple, () => _push(context, const MeetingsScreen())),
       if (me.can('reminder.use')) Feature('Reminders', Icons.alarm_rounded, FeatureColors.orange, () => _push(context, const RemindersScreen())),
-      Feature('Alerts', Icons.campaign_rounded, FeatureColors.red, () => onOpenTab?.call(3)),
-      Feature('Profile', Icons.badge_rounded, FeatureColors.indigo, () => onOpenTab?.call(4)),
+      Feature('Alerts', Icons.campaign_rounded, FeatureColors.indigo, () => onOpenTab?.call(3)),
+      if (me.can('calendar.view')) Feature('Calendar', Icons.event_rounded, FeatureColors.red, () => _push(context, const CalendarScreen())),
     ];
 
     return SafeArea(

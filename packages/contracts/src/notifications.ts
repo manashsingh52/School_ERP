@@ -133,6 +133,16 @@ export const NOTIFICATION_EVENTS = {
     title: '"{{title}}" starts at {{time}}',
     body: 'Video meeting about {{student}}. Tap to join.',
   },
+  'calendar.added': {
+    label: 'Holiday or event announced',
+    description: 'When the school adds a holiday or event to the calendar and chooses to tell everyone.',
+    audience: 'Parents and staff',
+    channels: ['IN_APP', 'PUSH', 'SMS'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '{{kind}}: {{title}}',
+    body: '{{when}}.{{description}}',
+  },
   'reminder.due': {
     label: 'Personal reminder',
     description: 'A reminder someone set for themselves (always delivered).',

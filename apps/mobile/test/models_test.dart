@@ -157,4 +157,15 @@ void main() {
     expect(list[2].isOffice, isTrue);
     expect(list[0].subjects, ['Mathematics']);
   });
+
+  test('calendar: spans, papers and days off', () {
+    final v = CalendarItem.fromJson({'id': 'e1', 'source': 'CALENDAR', 'kind': 'VACATION', 'title': 'Diwali break', 'description': null, 'startDate': '2026-11-07', 'endDate': '2026-11-10', 'audience': 'Whole school', 'examId': null, 'time': null, 'canEdit': false});
+    expect(v.days, 4);
+    expect(v.covers('2026-11-09'), isTrue);
+    expect(v.covers('2026-11-11'), isFalse);
+    expect(v.isDayOff, isTrue);
+    final p = CalendarItem.fromJson({'id': 'p1', 'source': 'PAPER', 'kind': 'EXAM', 'title': 'Mathematics paper', 'description': 'Unit Test 3', 'startDate': '2026-11-24', 'endDate': '2026-11-24', 'audience': '8', 'examId': 'x', 'time': '09:00–10:00', 'canEdit': false});
+    expect(p.time, '09:00–10:00');
+    expect(p.isDayOff, isFalse);
+  });
 }

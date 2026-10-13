@@ -21,3 +21,4 @@ export * from './reports.js';
 export * from './openapi.js';
 export * from './ai.js';
 export * from './communication.js';
+export * from './calendar.js';

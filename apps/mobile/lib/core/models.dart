@@ -657,3 +657,29 @@ class Reminder {
   final String? notes, studentId, studentName, completedAt;
   final DateTime remindAt;
 }
+
+// ---------------------------------------------------------------- school calendar
+
+const calendarKindLabel = {'HOLIDAY': 'Holiday', 'VACATION': 'Vacation', 'EVENT': 'Event', 'PTM': 'Parent–teacher meeting', 'EXAM': 'Exam', 'OTHER': 'Other'};
+
+class CalendarItem {
+  CalendarItem({required this.id, required this.source, required this.kind, required this.title, this.description, required this.startDate, required this.endDate, required this.audience, this.time});
+  factory CalendarItem.fromJson(Json j) => CalendarItem(
+        id: j['id'] as String,
+        source: j['source'] as String,
+        kind: j['kind'] as String,
+        title: j['title'] as String,
+        description: _s(j['description']),
+        startDate: j['startDate'] as String,
+        endDate: j['endDate'] as String,
+        audience: j['audience'] as String,
+        time: _s(j['time']),
+      );
+  /// CALENDAR · EXAM (the whole exam) · PAPER (one of the child's papers).
+  final String id, source, kind, title, startDate, endDate, audience;
+  final String? description, time;
+
+  bool covers(String date) => startDate.compareTo(date) <= 0 && endDate.compareTo(date) >= 0;
+  int get days => DateTime.parse(endDate).difference(DateTime.parse(startDate)).inDays + 1;
+  bool get isDayOff => kind == 'HOLIDAY' || kind == 'VACATION';
+}

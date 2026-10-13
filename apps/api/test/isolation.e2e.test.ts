@@ -128,6 +128,8 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'POST /v1/meetings/:id/complete': (b) => b.meetingId,
   'PATCH /v1/reminders/:id': (b) => ({ id: b.reminderId, body: { title: 'Changed' } }),
   'DELETE /v1/reminders/:id': (b) => b.reminderId,
+  'PATCH /v1/calendar/:id': (b) => ({ id: b.calendarEventId, body: { title: 'Changed' } }),
+  'DELETE /v1/calendar/:id': (b) => b.calendarEventId,
   'GET /v1/homework/:id/submissions': (b) => b.homeworkId,
   'PUT /v1/homework/:id/submissions': (b) => ({ id: b.homeworkId, body: { entries: [{ studentId: b.students.s1, status: 'SUBMITTED' }] } }),
   'POST /v1/homework/:id/seen': (b) => ({ id: b.homeworkId, body: { studentId: b.students.s1 } }),

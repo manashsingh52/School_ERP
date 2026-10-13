@@ -92,6 +92,8 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
       'meeting.view',
       'meeting.manage',
       'reminder.use',
+      'calendar.view',
+      'calendar.manage',
     ),
   },
   principal: {
@@ -138,6 +140,8 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
       'meeting.view',
       'meeting.manage',
       'reminder.use',
+      'calendar.view',
+      'calendar.manage',
     ),
   },
   accountant: {
@@ -167,6 +171,7 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
       'report.export',
       'ai.use',
       'reminder.use',
+      'calendar.view',
     ),
   },
   teacher: {
@@ -174,7 +179,7 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
     name: 'Teacher',
     description: 'Works within assigned sections and subjects.',
     grants: [
-      ...all('dashboard.view', 'academic.view', 'teacher.view', 'timetable.view', 'notice.view', 'ai.use', 'reminder.use'),
+      ...all('dashboard.view', 'academic.view', 'teacher.view', 'timetable.view', 'notice.view', 'ai.use', 'reminder.use', 'calendar.view'),
       ...scoped(
         'ASSIGNED',
         'student.view',
@@ -202,7 +207,7 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
     name: 'Parent',
     description: "Sees their own children's information.",
     grants: [
-      ...all('dashboard.view', 'notice.view', 'ai.use', 'reminder.use'),
+      ...all('dashboard.view', 'notice.view', 'ai.use', 'reminder.use', 'calendar.view'),
       ...scoped(
         'OWN_CHILDREN',
         'student.view',

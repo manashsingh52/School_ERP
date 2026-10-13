@@ -243,6 +243,8 @@ async function topUp(db: PlatformPrismaService, schoolId: string, app: INestAppl
   notes.push(...(await teacherLogins(db, app, schoolId)));
   notes.push(...(await moreTests(db, app, schoolId, yearId)));
   notes.push(...(await communication(db, schoolId)));
+  notes.push(...(await upcomingExams(db, schoolId, yearId)));
+  notes.push(...(await schoolCalendar(db, schoolId)));
   return notes.filter(Boolean).join(', ');
 }
 
@@ -788,6 +790,58 @@ async function teacherLogins(db: PlatformPrismaService, app: INestApplicationCon
     await db.teacher.update({ where: { id: t.id }, data: { membershipId: membership.id } });
   }
   return [`app logins for ${without.length} more teachers`];
+}
+
+/** Two exams still to come (scheduled, with a date sheet), so the calendar shows exams in advance. Idempotent. */
+async function upcomingExams(db: PlatformPrismaService, schoolId: string, yearId: string): Promise<string[]> {
+  const scale = await db.gradingScale.findFirst({ where: { schoolId } });
+  if (!scale || (await db.exam.count({ where: { schoolId, name: 'Annual Exams' } }))) return [];
+  const classSubjects = await db.classSubject.findMany({ where: { schoolId, academicYearId: yearId }, orderBy: { subject: { name: 'asc' } } });
+  for (const t of [
+    { name: 'Unit Test 3', term: 'Term 2', start: '2026-11-23', max: 25, pass: 9, time: ['09:00', '10:00'] },
+    { name: 'Annual Exams', term: 'Term 2', start: '2027-03-01', max: 80, pass: 27, time: ['09:00', '12:00'] },
+  ]) {
+    // One paper a day, Sundays skipped.
+    const days: string[] = [];
+    for (let d = Date.parse(`${t.start}T00:00:00Z`); days.length < 8; d += 86_400_000) if (new Date(d).getUTCDay() !== 0) days.push(new Date(d).toISOString().slice(0, 10));
+    const perClass = new Map<string, number>();
+    const rows = classSubjects.map((cs) => {
+      const i = perClass.get(cs.classId) ?? 0;
+      perClass.set(cs.classId, i + 1);
+      return { schoolId, classId: cs.classId, subjectId: cs.subjectId, maxMarks: t.max, passMarks: t.pass, examDate: date(days[i % days.length]!), startTime: t.time[0], endTime: t.time[1] };
+    });
+    const used = rows.map((r) => r.examDate.toISOString().slice(0, 10)).sort();
+    await db.exam.create({
+      data: { schoolId, academicYearId: yearId, gradingScaleId: scale.id, name: t.name, term: t.term, startDate: date(used[0]!), endDate: date(used.at(-1)!), status: 'SCHEDULED', subjects: { create: rows.map(({ schoolId: _s, ...r }) => ({ ...r, schoolId })) } },
+    });
+  }
+  return ['2 upcoming exams with date sheets'];
+}
+
+/** The 2026–27 school calendar: holidays, vacations, events and parent–teacher meetings. Idempotent. */
+async function schoolCalendar(db: PlatformPrismaService, schoolId: string): Promise<string[]> {
+  if (await db.calendarEvent.count({ where: { schoolId } })) return [];
+  const admin = await db.membership.findFirstOrThrow({ where: { schoolId, roles: { some: { role: { key: 'school_admin' } } } } });
+  const senior = await db.schoolClass.findMany({ where: { schoolId, name: { in: ['Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'] } }, select: { id: true } });
+  const rows: { title: string; kind: 'HOLIDAY' | 'VACATION' | 'EVENT' | 'PTM'; start: string; end?: string; description?: string; classIds?: string[] }[] = [
+    { title: 'Gandhi Jayanti', kind: 'HOLIDAY', start: '2026-10-02' },
+    { title: 'Dussehra', kind: 'HOLIDAY', start: '2026-10-20' },
+    { title: 'Parent–teacher meeting', kind: 'PTM', start: '2026-10-24', description: 'Half-Yearly results and report cards. 9 AM – 1 PM in the classrooms.' },
+    { title: 'Diwali break', kind: 'VACATION', start: '2026-11-07', end: '2026-11-10', description: 'School reopens on Wednesday, 11 November.' },
+    { title: "Children's Day celebration", kind: 'EVENT', start: '2026-11-14', description: 'Cultural programme; no regular classes after 10 AM.' },
+    { title: 'Annual Sports Day', kind: 'EVENT', start: '2026-11-21', description: 'Parents are welcome. Sports uniform.' },
+    { title: 'Guru Nanak Jayanti', kind: 'HOLIDAY', start: '2026-11-24' },
+    { title: 'Annual Day', kind: 'EVENT', start: '2026-12-19', description: 'Evening programme at the school auditorium, 5 PM.' },
+    { title: 'Winter vacation', kind: 'VACATION', start: '2026-12-24', end: '2027-01-02', description: 'School reopens on Monday, 4 January.' },
+    { title: 'Republic Day', kind: 'HOLIDAY', start: '2027-01-26', description: 'Flag hoisting at 8 AM — students in uniform.' },
+    { title: 'Science exhibition', kind: 'EVENT', start: '2027-02-06', classIds: senior.map((c) => c.id), description: 'Classes 6–10 present their projects.' },
+    { title: 'Holi', kind: 'HOLIDAY', start: '2027-03-22' },
+    { title: 'Result day and parent–teacher meeting', kind: 'PTM', start: '2027-03-27', description: 'Annual results and report cards.' },
+  ];
+  await db.calendarEvent.createMany({
+    data: rows.map((r) => ({ schoolId, title: r.title, kind: r.kind, description: r.description ?? null, startDate: date(r.start), endDate: date(r.end ?? r.start), classIds: r.classIds ?? [], createdByMemberId: admin.id })),
+  });
+  return [`school calendar (${rows.length} holidays and events)`];
 }
 
 await main();

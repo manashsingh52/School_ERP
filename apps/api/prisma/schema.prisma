@@ -501,6 +501,7 @@ model School {
   conversationMessages   ConversationMessage[]
   meetings               Meeting[]
   reminders              Reminder[]
+  calendarEvents         CalendarEvent[]
 
   @@map("schools")
 }
@@ -2425,4 +2426,37 @@ model Reminder {
   @@index([schoolId, memberId, remindAt])
   @@index([remindAt])
   @@map("reminders")
+}
+
+// ============================================================================
+// School calendar: holidays, vacations, events (exam dates come from exams)
+// ============================================================================
+
+enum CalendarEventKind {
+  HOLIDAY
+  VACATION
+  EVENT
+  PTM
+  EXAM
+  OTHER
+}
+
+/// A day or a run of days on the school calendar. `classIds` empty = the whole school.
+model CalendarEvent {
+  id                String            @id @default(uuid(7)) @db.Uuid
+  schoolId          String            @map("school_id") @db.Uuid
+  title             String
+  description       String?
+  kind              CalendarEventKind @default(EVENT)
+  startDate         DateTime          @map("start_date") @db.Date
+  endDate           DateTime          @map("end_date") @db.Date
+  classIds          String[]          @default([]) @map("class_ids") @db.Uuid
+  createdByMemberId String            @map("created_by_member_id") @db.Uuid
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, startDate])
+  @@map("calendar_events")
 }

@@ -42,6 +42,8 @@ import { ConversationsService } from './modules/communication/conversations.serv
 import { MeetingsService } from './modules/communication/meetings.service.js';
 import { CommunicationPeople } from './modules/communication/people.js';
 import { RemindersService } from './modules/communication/reminders.service.js';
+import { CalendarController } from './modules/calendar/calendar.controller.js';
+import { CalendarService } from './modules/calendar/calendar.service.js';
 import { HomeworkController } from './modules/homework/homework.controller.js';
 import { HomeworkService } from './modules/homework/homework.service.js';
 import { BellSchedulesController, TimetablesController } from './modules/timetable/timetable.controller.js';
@@ -249,6 +251,9 @@ export class AiModule {}
 })
 export class CommunicationModule {}
 
+@Module({ imports: [NotificationsModule], controllers: [CalendarController], providers: [CalendarService] })
+export class CalendarModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: Env, logger: Logger): DynamicModule {
@@ -281,6 +286,7 @@ export class AppModule {
         ReportsModule,
         AiModule,
         CommunicationModule,
+        CalendarModule,
       ],
     };
   }
