@@ -11,6 +11,8 @@ export interface NotificationEventDef {
   channels: NotificationChannel[];
   defaultChannels: NotificationChannel[];
   defaultEnabled: boolean;
+  /** Someone's own alert (a reminder they set): always on, not in the school's alert settings. */
+  personal?: boolean;
   /** {{placeholders}} are filled from the event. */
   title: string;
   body: string;
@@ -30,6 +32,16 @@ export const NOTIFICATION_EVENTS = {
     defaultEnabled: true,
     title: '{{student}} was marked absent',
     body: '{{student}} ({{class}}) was marked absent on {{date}}. Please contact the school if this is unexpected.',
+  },
+  'attendance.arrived': {
+    label: 'Arrived at school',
+    description: "When today's register marks a student present, late or half day.",
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '{{student}} has arrived at school',
+    body: '{{student}} ({{class}}) was marked {{status}} at {{time}} today, {{date}}.',
   },
   'attendance.late': {
     label: 'Arrived late',
@@ -60,6 +72,77 @@ export const NOTIFICATION_EVENTS = {
     defaultEnabled: true,
     title: '{{exam}} results are out',
     body: "{{student}}'s {{exam}} results and report card are now available.",
+  },
+  'message.received': {
+    label: 'New message',
+    description: 'When a parent or teacher replies in a conversation.',
+    audience: 'Parents and staff',
+    channels: ['IN_APP', 'PUSH'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '{{sender}}: {{subject}}',
+    body: '{{preview}}',
+  },
+  'complaint.status_changed': {
+    label: 'Query or complaint updated',
+    description: "When the school marks a parent's query or complaint in progress or resolved.",
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '"{{subject}}" is now {{status}}',
+    body: '{{who}} updated your {{category}} about {{student}}.',
+  },
+  'meeting.scheduled': {
+    label: 'Meeting scheduled',
+    description: 'When a teacher schedules a video meeting with parents.',
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH', 'EMAIL'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: 'Video meeting with {{teacher}} on {{when}}',
+    body: '{{title}} — about {{student}}. Join from the app when it starts.',
+  },
+  'meeting.rescheduled': {
+    label: 'Meeting moved',
+    description: 'When a meeting is moved to a new time.',
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH', 'EMAIL'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: 'Meeting moved to {{when}}',
+    body: '{{teacher}} moved "{{title}}" (about {{student}}) to {{when}}.',
+  },
+  'meeting.cancelled': {
+    label: 'Meeting cancelled',
+    description: 'When a meeting is cancelled.',
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH', 'EMAIL'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: 'Meeting cancelled: {{title}}',
+    body: '{{teacher}} cancelled the meeting on {{when}}.{{reason}}',
+  },
+  'meeting.starting': {
+    label: 'Meeting starting soon',
+    description: '15 minutes before a meeting (parents and the teacher).',
+    audience: 'Parents and staff',
+    channels: ['IN_APP', 'PUSH'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '"{{title}}" starts at {{time}}',
+    body: 'Video meeting about {{student}}. Tap to join.',
+  },
+  'reminder.due': {
+    label: 'Personal reminder',
+    description: 'A reminder someone set for themselves (always delivered).',
+    audience: 'Whoever set it',
+    personal: true,
+    channels: ['IN_APP', 'PUSH'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '⏰ {{title}}',
+    body: '{{notes}}',
   },
   'payment.received': {
     label: 'Payment received',

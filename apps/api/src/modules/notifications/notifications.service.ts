@@ -8,6 +8,7 @@ import {
   renderTemplate,
   type NotificationChannel,
   type NotificationEvent,
+  type NotificationEventDef,
   type NotificationItem,
   type NotificationRuleItem,
   type updateNotificationRulesSchema,
@@ -140,7 +141,8 @@ export class NotificationsService implements OnModuleInit {
   // ---------------------------------------------------------------- rules
 
   private async rule(event: NotificationEvent): Promise<{ enabled: boolean; channels: NotificationChannel[] }> {
-    const def = NOTIFICATION_EVENTS[event];
+    const def: NotificationEventDef = NOTIFICATION_EVENTS[event];
+    if (def.personal) return { enabled: true, channels: [...def.defaultChannels] };
     const row = await this.prisma.db.notificationRule.findUnique({ where: { schoolId_event: { schoolId: RequestContextStore.school().schoolId, event } } });
     if (!row) return { enabled: def.defaultEnabled, channels: [...def.defaultChannels] };
     const allowed = new Set<string>(def.channels);
@@ -149,7 +151,7 @@ export class NotificationsService implements OnModuleInit {
 
   async listRules(): Promise<NotificationRuleItem[]> {
     return Promise.all(
-      NOTIFICATION_EVENT_KEYS.map(async (event) => {
+      NOTIFICATION_EVENT_KEYS.filter((e) => !(NOTIFICATION_EVENTS[e] as NotificationEventDef).personal).map(async (event) => {
         const def = NOTIFICATION_EVENTS[event];
         const rule = await this.rule(event);
         return {

@@ -20,3 +20,4 @@ export * from './documents.js';
 export * from './reports.js';
 export * from './openapi.js';
 export * from './ai.js';
+export * from './communication.js';

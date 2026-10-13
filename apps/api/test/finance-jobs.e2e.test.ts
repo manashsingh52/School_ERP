@@ -67,7 +67,8 @@ describe('scheduler', () => {
     const scheduler = t.app.get(SchedulerService);
     const at = new Date('2026-10-08T19:00:00Z'); // 00:30 IST on 9 Oct
     const queued = await scheduler.tick(at);
-    expect(queued).toBeGreaterThanOrEqual(2);
-    expect(await scheduler.tick(new Date('2026-10-08T19:01:00Z'))).toBe(0); // 00:31 — nothing due
+    // 00:31: only the every-minute jobs (reminders, meeting alerts) — not late fees or reconciliation.
+    const everyMinute = await scheduler.tick(new Date('2026-10-08T19:01:00Z'));
+    expect(queued - everyMinute).toBeGreaterThanOrEqual(2);
   });
 });

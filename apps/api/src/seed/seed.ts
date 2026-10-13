@@ -239,6 +239,8 @@ async function topUp(db: PlatformPrismaService, schoolId: string, app: INestAppl
   notes.push(...(await exams(db, app, schoolId, yearId)));
   notes.push(...(await finance(db, app, schoolId, yearId)));
   notes.push(...(await platform(db, app, schoolId)));
+  notes.push(...(await moreTests(db, app, schoolId, yearId)));
+  notes.push(...(await communication(db, schoolId)));
   return notes.filter(Boolean).join(', ');
 }
 
@@ -661,6 +663,106 @@ async function finance(db: PlatformPrismaService, app: INestApplicationContext, 
     await asAdmin(() => gateway.activate('TEST', true));
   }
   return [`fees (${structures.length} structures, ${issued} invoices, ${paid} payments, ${late.invoices} late fees, sandbox gateway on)`];
+}
+
+/**
+ * Two more internal tests between Unit Test 1 and the Half-Yearly, published, so the results
+ * charts have a progress line and every subject opens into several tests. Each student drifts a
+ * little from test to test (some improve, some slip). Idempotent.
+ */
+async function moreTests(db: PlatformPrismaService, app: INestApplicationContext, schoolId: string, yearId: string): Promise<string[]> {
+  const scale = await db.gradingScale.findFirst({ where: { schoolId } });
+  if (!scale || (await db.exam.count({ where: { schoolId, name: 'Monthly Test (August)' } }))) return [];
+  const random = rng(23);
+  const admin = await db.membership.findFirstOrThrow({ where: { schoolId, roles: { some: { role: { key: 'school_admin' } } } } });
+  const permissions = Object.fromEntries(PERMISSION_KEYS.map((k) => [k, 'ALL'])) as PermissionSet;
+  const asAdmin = <T>(fn: () => Promise<T>) =>
+    RequestContextStore.run({ requestId: `seed-${randomUUID()}`, schoolId, userId: admin.userId, membershipId: admin.id, permissions, actor: 'user' }, fn);
+  const classSubjects = await db.classSubject.findMany({ where: { schoolId, academicYearId: yearId } });
+  const enrollments = await db.studentEnrollment.findMany({ where: { schoolId, academicYearId: yearId, status: 'ENROLLED' }, select: { studentId: true, classId: true } });
+  // Start from each student's Unit Test 1 level so the line continues from there.
+  const ut1 = await db.examResult.findMany({ where: { schoolId, exam: { name: 'Unit Test 1' } }, select: { studentId: true, percentage: true } });
+  const level = new Map(ut1.map((r) => [r.studentId, Number(r.percentage) / 100]));
+  const slope = new Map(enrollments.map((e) => [e.studentId, (random() - 0.4) * 0.12]));
+
+  let marks = 0;
+  for (const [i, t] of [
+    { name: 'Monthly Test (August)', start: '2026-08-18', end: '2026-08-22', max: 20, pass: 7 },
+    { name: 'Unit Test 2', start: '2026-09-07', end: '2026-09-12', max: 25, pass: 9 },
+  ].entries()) {
+    const exam = await db.exam.create({ data: { schoolId, academicYearId: yearId, gradingScaleId: scale.id, name: t.name, term: 'Term 1', startDate: date(t.start), endDate: date(t.end), rankingEnabled: true, status: 'MARKS_ENTRY' } });
+    await db.examSubject.createMany({
+      data: classSubjects.map((cs, k) => ({ schoolId, examId: exam.id, classId: cs.classId, subjectId: cs.subjectId, maxMarks: t.max, passMarks: t.pass, examDate: date(new Date(Date.parse(`${t.start}T00:00:00Z`) + (k % 5) * 86_400_000).toISOString().slice(0, 10)), startTime: '09:00', endTime: '10:00' })),
+    });
+    const subjects = await db.examSubject.findMany({ where: { examId: exam.id } });
+    const rows = [];
+    for (const es of subjects) {
+      for (const e of enrollments.filter((x) => x.classId === es.classId)) {
+        const base = (level.get(e.studentId) ?? 0.6) + slope.get(e.studentId)! * (i + 1);
+        const raw = base * t.max + (random() - 0.5) * t.max * 0.3;
+        const absent = random() < 0.01;
+        rows.push({ schoolId, examSubjectId: es.id, studentId: e.studentId, marksObtained: absent ? null : Math.max(0, Math.min(t.max, Math.round(raw))), isAbsent: absent, enteredByMemberId: admin.id });
+      }
+    }
+    for (let k = 0; k < rows.length; k += 2000) await db.mark.createMany({ data: rows.slice(k, k + 2000) });
+    marks += rows.length;
+    await asAdmin(() => app.get(ResultsService).compute(exam.id, false));
+    await asAdmin(() => app.get(ResultsService).publish(exam.id));
+  }
+  return [`2 more published tests (${marks} marks)`];
+}
+
+/**
+ * Parent–teacher communication for the demo parent (Raj, Rahul's father): a question being worked
+ * on with the class teacher, a complaint to the office, a video meeting tomorrow and two reminders.
+ * Idempotent.
+ */
+async function communication(db: PlatformPrismaService, schoolId: string): Promise<string[]> {
+  if (await db.conversation.count({ where: { schoolId } })) return [];
+  const parent = await db.membership.findFirst({ where: { schoolId, user: { email: 'parent@demo.school' } } });
+  const teacher = await db.membership.findFirst({ where: { schoolId, user: { email: 'teacher@demo.school' } } });
+  if (!parent || !teacher) return [];
+  const guardian = await db.guardian.findFirst({ where: { schoolId, membershipId: parent.id } });
+  const links = guardian ? await db.studentGuardian.findMany({ where: { guardianId: guardian.id }, include: { student: true } }) : [];
+  const rahul = links.find((l) => l.student.firstName === 'Rahul')?.student;
+  if (!rahul) return [];
+  const ago = (hours: number) => new Date(Date.now() - hours * 3_600_000);
+
+  await db.conversation.create({
+    data: {
+      schoolId, studentId: rahul.id, parentMemberId: parent.id, staffMemberId: teacher.id, category: 'ACADEMIC', subject: 'Help with fractions', status: 'IN_PROGRESS',
+      startedByMemberId: parent.id, lastMessageAt: ago(3), parentReadAt: ago(20), staffReadAt: ago(3), createdAt: ago(26),
+      messages: {
+        create: [
+          { schoolId, senderMemberId: parent.id, body: 'Rahul is finding fractions hard this week. Is there extra practice we can do at home?', createdAt: ago(26) },
+          { schoolId, senderMemberId: teacher.id, body: "Thanks for letting me know. I'll send a short worksheet tomorrow and check in with him in class.", createdAt: ago(22) },
+          { schoolId, senderMemberId: teacher.id, body: 'Worksheet sent with his homework. Ten minutes a day is plenty.', createdAt: ago(3) },
+        ],
+      },
+    },
+  });
+  await db.conversation.create({
+    data: {
+      schoolId, studentId: rahul.id, parentMemberId: parent.id, staffMemberId: null, category: 'COMPLAINT', subject: 'Bus on Route 4 is often late', status: 'OPEN',
+      startedByMemberId: parent.id, lastMessageAt: ago(5), parentReadAt: ago(5), createdAt: ago(5),
+      messages: { create: [{ schoolId, senderMemberId: parent.id, body: 'The Route 4 bus reached our stop 25 minutes late three times this week.', createdAt: ago(5) }] },
+    },
+  });
+
+  // Tomorrow 4:30 PM IST; the pick-up alarm at the next 1:30 PM IST.
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  await db.meeting.create({
+    data: { schoolId, studentId: rahul.id, organizerMemberId: teacher.id, title: 'Mid-term progress chat', agenda: 'Maths (fractions), class participation, and the Half-Yearly plan.', category: 'ACADEMIC', scheduledAt: new Date(`${tomorrow}T11:00:00Z`), durationMinutes: 20, roomCode: randomUUID().replace(/-/g, '').slice(0, 16) },
+  });
+  let pickUp = new Date(`${new Date().toISOString().slice(0, 10)}T08:00:00Z`);
+  while (pickUp.getTime() <= Date.now() || pickUp.getUTCDay() === 0) pickUp = new Date(pickUp.getTime() + 86_400_000);
+  await db.reminder.createMany({
+    data: [
+      { schoolId, memberId: parent.id, studentId: rahul.id, title: 'Pick up Rahul', notes: 'Gate 2', remindAt: pickUp, repeat: 'WEEKDAYS' },
+      { schoolId, memberId: parent.id, title: 'Pay Quarter 3 fees', remindAt: new Date(Date.now() + 2 * 86_400_000), repeat: 'NONE' },
+    ],
+  });
+  return ['messages, a meeting and reminders for the demo parent'];
 }
 
 await main();

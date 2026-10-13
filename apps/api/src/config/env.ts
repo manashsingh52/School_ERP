@@ -74,6 +74,12 @@ const envSchema = z.object({
   // AI assistant (docs/12 Phase 8). mock = offline, deterministic (development/tests; refused in
   // production); none = switched off. ⏸ Gemini key from Google AI Studio / Vertex — fill in later.
   AI_PROVIDER: z.enum(['none', 'mock', 'gemini']).default('mock'),
+  /**
+   * Parent–teacher video meetings run on Jitsi Meet (free, open source). The public meet.jit.si
+   * works out of the box (the first person in signs in with Google/GitHub to open the room); a
+   * self-hosted Jitsi (docs/SETUP-LATER) removes that step. Rooms are unguessable per meeting.
+   */
+  MEETING_BASE_URL: z.url().default('https://meet.jit.si'),
   GEMINI_API_KEY: optional(z.string()),
   AI_MODEL: z.string().default('gemini-2.5-flash'),
   /** AES-256-GCM key (base64, 32 bytes) for schools' gateway secrets — run keys:generate. ⏸ Secret Manager in production. */

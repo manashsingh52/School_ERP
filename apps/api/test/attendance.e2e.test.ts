@@ -137,6 +137,11 @@ describe('views', () => {
     const res = await t.as(tok.parent, A.slug).get(`/v1/students/${A.students.s1}/attendance`);
     expect(res.status).toBe(200);
     expect(res.body.data.counts.ABSENT).toBe(1);
+    // Earlier tests also took a past register; the summary and months must agree with the days.
+    const { summary, months, days, counts } = res.body.data as { summary: Record<string, number>; months: { month: string; conducted: number; missed: number }[]; days: unknown[]; counts: Record<string, number> };
+    expect(summary).toMatchObject({ conducted: days.length, missed: 1, attended: counts.PRESENT! + counts.LATE! + counts.HALF_DAY! });
+    expect(months.reduce((n, m) => n + m.conducted, 0)).toBe(days.length);
+    expect(months.find((m) => m.month === today.slice(0, 7))?.missed).toBe(1);
     expect(res.body.data.days.find((d: { date: string }) => d.date === today)).toMatchObject({ status: 'ABSENT', remark: 'Fever' });
     expect((await t.as(tok.parent, A.slug).get(`/v1/students/${A.students.s2}/attendance`)).status).toBe(404);
     expect((await t.as(tok.parent, A.slug).get(`/v1/sections/${A.sectionA}/attendance`)).status).toBe(404);
@@ -201,5 +206,36 @@ describe('notifications', () => {
     });
     await new Promise((r) => setTimeout(r, 1500));
     expect((await parentInbox()).filter((n) => n.event === 'attendance.absent')).toHaveLength(1);
+  });
+});
+
+describe('arrived at school', () => {
+  const arrivals = async () => (await parentInbox()).filter((n) => n.event === 'attendance.arrived');
+
+  it("tells the parent when today's register marks the child in — once", async () => {
+    // s1 turns up late: the register is corrected from absent to late.
+    await t.as(tok.teacher, A.slug).put(`/v1/sections/${A.sectionA}/attendance`, { date: today, records: [{ studentId: A.students.s1, status: 'LATE' }] });
+    const alerts = await waitFor(async () => {
+      const list = await arrivals();
+      return list.length ? list : null;
+    });
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0]!.title).toBe('Student1 has arrived at school');
+    const full = (await t.as(tok.parent, A.slug).get('/v1/notifications')).body.data.find((n: { id: string }) => n.id === alerts[0]!.id);
+    expect(full.body).toMatch(/^Student1 \(8-A\) was marked late at \d{1,2}:\d{2} (AM|PM) today, /);
+    expect(full.data).toMatchObject({ studentId: A.students.s1, date: today, status: 'LATE' });
+
+    // Another correction the same day doesn't send a second alert.
+    await t.as(tok.teacher, A.slug).put(`/v1/sections/${A.sectionA}/attendance`, { date: today, records: [{ studentId: A.students.s1, status: 'PRESENT' }] });
+    await new Promise((r) => setTimeout(r, 1500));
+    expect(await arrivals()).toHaveLength(1);
+  });
+
+  it('marking a past day never says "arrived"', async () => {
+    const day = daysAgo(1);
+    const res = await t.as(tok.admin, A.slug).put(`/v1/sections/${A.sectionA}/attendance`, { date: day, submit: true, records: [{ studentId: A.students.s1, status: 'PRESENT' }, { studentId: A.students.s2, status: 'PRESENT' }] });
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    await new Promise((r) => setTimeout(r, 1500));
+    expect(await arrivals()).toHaveLength(1);
   });
 });

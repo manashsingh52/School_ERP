@@ -27,6 +27,7 @@ import { CoScholasticService } from './co-scholastic.service.js';
 import { MarksImportService } from './marks-import.service.js';
 import { MarksService } from './marks.service.js';
 import { ReportCardsService } from './report-cards.service.js';
+import { PerformanceService } from './performance.service.js';
 import { ResultsService } from './results.service.js';
 
 const id = new ZodPipe(uuidSchema);
@@ -255,11 +256,20 @@ export class ReportCardsController {
 
 @Controller('students')
 export class StudentResultsController {
-  constructor(private readonly results: ResultsService) {}
+  constructor(
+    private readonly results: ResultsService,
+    private readonly performance: PerformanceService,
+  ) {}
 
   @Get(':id/results')
   @RequirePermission('results.view')
   async list(@Param('id', id) studentId: string) {
     return { data: await this.results.forStudent(studentId) };
+  }
+
+  @Get(':id/performance')
+  @RequirePermission('results.view')
+  async performanceOf(@Param('id', id) studentId: string) {
+    return { data: await this.performance.forStudent(studentId) };
   }
 }

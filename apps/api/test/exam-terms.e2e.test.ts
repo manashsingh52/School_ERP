@@ -127,3 +127,29 @@ describe('publishing', () => {
     expect(audit).toEqual(expect.arrayContaining(['exam_term.create', 'exam_term.publish', 'exam_term.unpublish', 'exam_term.update']));
   });
 });
+
+describe('performance charts', () => {
+  it('subject averages across exams, each subject opening into its exams, with the section beside it', async () => {
+    const res = await as('parent').get(`/v1/students/${A.students.s1}/performance`);
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    const p = res.body.data as import('@schoolos/contracts').StudentPerformance;
+    expect(p.exams.map((e) => [e.name, e.percentage])).toEqual([['Unit Test 1', 90], ['Half-Yearly', 75]]);
+    expect(p.overallPct).toBe(82.5);
+    const maths = p.subjects.find((s) => s.subject.name === 'Mathematics')!;
+    expect(maths.averagePct).toBe(83.3); // (45 + 80) / (50 + 100)
+    expect(maths.trend).toBe('down'); // 90% → 80%
+    expect(maths.exams.map((e) => [e.examName, e.marks, e.maxMarks, e.percent, e.sectionAveragePct])).toEqual([
+      ['Unit Test 1', 45, 50, 90, 55], // section A: s1 90%, s2 20%
+      ['Half-Yearly', 80, 100, 80, 60], // s1 80%, s2 40%
+    ]);
+    expect(maths.sectionAveragePct).toBe(57.5);
+    const english = p.subjects.find((s) => s.subject.name === 'English')!;
+    expect(english).toMatchObject({ averagePct: 70, trend: null });
+  });
+
+  it("parents only see their own child; teachers see their sections", async () => {
+    expect((await as('parent').get(`/v1/students/${A.students.s2}/performance`)).status).toBe(404);
+    expect((await as('teacher').get(`/v1/students/${A.students.s2}/performance`)).status).toBe(200);
+    expect((await as('teacher').get(`/v1/students/${A.students.s3}/performance`)).status).toBe(404);
+  });
+});

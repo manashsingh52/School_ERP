@@ -149,6 +149,12 @@ export interface Tenant {
   reportRunId: string;
   /** A consolidated term made of the fixture exam (unpublished). */
   termId: string;
+  /** The parent's question to the class teacher about s1; a video meeting about s1 tomorrow; the parent's own reminder. */
+  conversationId: string;
+  meetingId: string;
+  reminderId: string;
+  parentMembershipId: string;
+  teacherMembershipId: string;
   users: { admin: string; teacher: string; parent: string; accountant: string };
 }
 
@@ -282,7 +288,7 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
       const structure = await db.feeStructure.create({ data: { schoolId, academicYearId: year.id, name: 'Class 8', status: 'PUBLISHED', classes: { create: [{ schoolId, classId: cls.id }] } } });
       const item = await db.feeStructureItem.create({ data: { schoolId, feeStructureId: structure.id, feeHeadId: head.id, amountPaise: 1_200_000 } });
       const [q1, q2] = await Promise.all(
-        [['Term 1', '2026-04-10', 1], ['Term 2', '2026-10-10', 2]].map(([name, due, order]) =>
+        [['Term 1', '2026-04-10', 1], ['Term 2', '2027-01-10', 2]].map(([name, due, order]) =>
           db.feeInstallment.create({ data: { schoolId, feeStructureId: structure.id, name: name as string, dueDate: date(due as string), order: order as number, splits: { create: [{ schoolId, itemId: item.id, amountPaise: 600_000 }] } } }),
         ),
       );
@@ -345,6 +351,20 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     termId: (
       await db.examTerm.create({ data: { schoolId, academicYearId: year.id, name: 'Term 1', gradingScaleId: (await db.gradingScale.findFirstOrThrow({ where: { schoolId } })).id, components: [{ examId: (await db.exam.findFirstOrThrow({ where: { schoolId } })).id, weight: 100 }] } })
     ).id,
+    ...(await (async () => {
+      const conv = await db.conversation.create({
+        data: {
+          schoolId, studentId: s1, parentMemberId: parentM.membership.id, staffMemberId: teacherM.membership.id, category: 'ACADEMIC', subject: 'Maths homework',
+          startedByMemberId: parentM.membership.id, parentReadAt: new Date(),
+          messages: { create: [{ schoolId, senderMemberId: parentM.membership.id, body: 'Could you share the extra worksheet?' }] },
+        },
+      });
+      const meeting = await db.meeting.create({
+        data: { schoolId, studentId: s1, organizerMemberId: teacherM.membership.id, title: 'Progress chat', scheduledAt: new Date(Date.now() + 86_400_000), roomCode: randomUUID() },
+      });
+      const reminder = await db.reminder.create({ data: { schoolId, memberId: parentM.membership.id, title: 'Pick up', remindAt: new Date(Date.now() + 3_600_000) } });
+      return { conversationId: conv.id, meetingId: meeting.id, reminderId: reminder.id, parentMembershipId: parentM.membership.id, teacherMembershipId: teacherM.membership.id };
+    })()),
     supportGrantId: (
       await db.supportAccessGrant.create({ data: { schoolId, platformUserId: randomUUID(), reason: 'Fixture request', expiresAt: new Date(Date.now() + 3_600_000) } })
     ).id,

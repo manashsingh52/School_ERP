@@ -87,6 +87,11 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
       'audit.view',
       'billing.view',
       'ai.use',
+      'message.use',
+      'complaint.manage',
+      'meeting.view',
+      'meeting.manage',
+      'reminder.use',
     ),
   },
   principal: {
@@ -128,6 +133,11 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
       'report.export',
       'audit.view',
       'ai.use',
+      'message.use',
+      'complaint.manage',
+      'meeting.view',
+      'meeting.manage',
+      'reminder.use',
     ),
   },
   accountant: {
@@ -156,6 +166,7 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
       'report.finance',
       'report.export',
       'ai.use',
+      'reminder.use',
     ),
   },
   teacher: {
@@ -163,7 +174,7 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
     name: 'Teacher',
     description: 'Works within assigned sections and subjects.',
     grants: [
-      ...all('dashboard.view', 'academic.view', 'teacher.view', 'timetable.view', 'notice.view', 'ai.use'),
+      ...all('dashboard.view', 'academic.view', 'teacher.view', 'timetable.view', 'notice.view', 'ai.use', 'reminder.use'),
       ...scoped(
         'ASSIGNED',
         'student.view',
@@ -179,6 +190,9 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
         'results.view',
         'document.view',
         'report.academic',
+        'message.use',
+        'meeting.view',
+        'meeting.manage',
       ),
       ['staff_attendance.view', 'SELF'],
     ],
@@ -188,7 +202,7 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
     name: 'Parent',
     description: "Sees their own children's information.",
     grants: [
-      ...all('dashboard.view', 'notice.view', 'ai.use'),
+      ...all('dashboard.view', 'notice.view', 'ai.use', 'reminder.use'),
       ...scoped(
         'OWN_CHILDREN',
         'student.view',
@@ -204,6 +218,8 @@ export const ROLE_TEMPLATES: Record<SystemRoleKey, RoleTemplate> = {
         'payment.view',
         'payment.pay_online',
         'document.view',
+        'message.use',
+        'meeting.view',
       ),
       ['guardian.view', 'SELF'],
     ],

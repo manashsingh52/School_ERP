@@ -1,5 +1,19 @@
 import type { ZodType } from 'zod';
 import {
+  cancelMeetingSchema,
+  contactsQuerySchema,
+  createMeetingSchema,
+  createReminderSchema,
+  listConversationsQuerySchema,
+  listMeetingsQuerySchema,
+  listRemindersQuerySchema,
+  sendMessageSchema,
+  startConversationSchema,
+  updateConversationSchema,
+  updateMeetingSchema,
+  updateReminderSchema,
+} from './communication.js';
+import {
   changePasswordRequestSchema,
   loginRequestSchema,
   otpSendRequestSchema,
@@ -315,6 +329,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/exams/:id/report-cards/bundle': { summary: "A section's report cards as one PDF", tag: 'Exams', access: 'permission:report_card.generate', query: resultsQuerySchema },
   'GET /v1/exams/:id/report-cards/:studentId': { summary: "Download link for a student's latest report card", tag: 'Exams', access: 'permission:results.view' },
   'GET /v1/students/:id/results': { summary: "A student's published results this year", tag: 'Exams', access: 'permission:results.view' },
+  'GET /v1/students/:id/performance': { summary: "A student's marks by subject and exam, for the results charts", tag: 'Exams', access: 'permission:results.view' },
   'POST /v1/exams/:id/subjects/:examSubjectId/unlock': { summary: 'Unlock marks for a subject', tag: 'Exams', access: 'permission:marks.edit_locked' },
 
   'GET /v1/fee-heads': { summary: 'Fee heads', tag: 'Fees', access: 'permission:fee.view' },
@@ -424,4 +439,22 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/exam-terms/:id/unpublish': { summary: 'Take term results back', tag: 'Exams', access: 'permission:results.publish' },
   'GET /v1/exam-terms/:id/report-cards/:studentId': { summary: "Download link for a student's term report card", tag: 'Exams', access: 'permission:results.view' },
   'GET /v1/students/:id/term-results': { summary: "A child's published term results", tag: 'Exams', access: 'permission:results.view' },
+  // Parent–teacher communication
+  'GET /v1/conversations': { summary: 'My message threads (staff with school-wide access can see all)', tag: 'Messages', access: 'permission:message.use', query: listConversationsQuerySchema },
+  'POST /v1/conversations': { summary: 'Start a thread about a child (query, complaint, feedback …)', tag: 'Messages', access: 'permission:message.use', body: startConversationSchema },
+  'GET /v1/conversations/contacts': { summary: 'Who I can write to about this child', tag: 'Messages', access: 'permission:message.use', query: contactsQuerySchema },
+  'GET /v1/conversations/unread': { summary: 'Threads with something new for me', tag: 'Messages', access: 'permission:message.use' },
+  'GET /v1/conversations/:id': { summary: 'A thread with its messages (marks it read)', tag: 'Messages', access: 'permission:message.use' },
+  'POST /v1/conversations/:id/messages': { summary: 'Reply', tag: 'Messages', access: 'permission:message.use', body: sendMessageSchema },
+  'PATCH /v1/conversations/:id': { summary: 'Change the status (open, in progress, resolved)', tag: 'Messages', access: 'permission:message.use', body: updateConversationSchema },
+  'GET /v1/meetings': { summary: 'Parent–teacher video meetings', tag: 'Meetings', access: 'permission:meeting.view', query: listMeetingsQuerySchema },
+  'POST /v1/meetings': { summary: "Schedule a video meeting with a child's parents", tag: 'Meetings', access: 'permission:meeting.manage', body: createMeetingSchema },
+  'GET /v1/meetings/:id': { summary: 'One meeting with its join link', tag: 'Meetings', access: 'permission:meeting.view' },
+  'PATCH /v1/meetings/:id': { summary: 'Edit or reschedule (parents are told)', tag: 'Meetings', access: 'permission:meeting.manage', body: updateMeetingSchema },
+  'POST /v1/meetings/:id/cancel': { summary: 'Cancel (parents are told)', tag: 'Meetings', access: 'permission:meeting.manage', body: cancelMeetingSchema },
+  'POST /v1/meetings/:id/complete': { summary: 'Mark as held', tag: 'Meetings', access: 'permission:meeting.manage' },
+  'GET /v1/reminders': { summary: 'My reminders', tag: 'Reminders', access: 'permission:reminder.use', query: listRemindersQuerySchema },
+  'POST /v1/reminders': { summary: 'Set a reminder (alarm at a date and time, optionally repeating)', tag: 'Reminders', access: 'permission:reminder.use', body: createReminderSchema },
+  'PATCH /v1/reminders/:id': { summary: 'Edit, reschedule, complete or reopen', tag: 'Reminders', access: 'permission:reminder.use', body: updateReminderSchema },
+  'DELETE /v1/reminders/:id': { summary: 'Delete a reminder', tag: 'Reminders', access: 'permission:reminder.use' },
 };

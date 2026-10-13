@@ -296,6 +296,57 @@ export interface StudentResultItem {
   coScholastic?: CoScholasticItem[];
 }
 
+// ---------------------------------------------------------------- performance (charts)
+
+/** One test or exam on a student's progress line. */
+export interface PerformanceExam {
+  examId: string;
+  name: string;
+  term: string | null;
+  startDate: string | null;
+  percentage: number;
+  grade: string | null;
+  rankInSection: number | null;
+  /** The section's average in that exam, to compare against. */
+  sectionAveragePct: number | null;
+}
+
+/** A subject in one exam — what opens when a subject is tapped (unit tests, half-yearly …). */
+export interface PerformanceSubjectExam {
+  examId: string;
+  examName: string;
+  marks: number | null;
+  maxMarks: number;
+  percent: number | null;
+  grade: string | null;
+  absent: boolean;
+  exempt: boolean;
+  passed: boolean | null;
+  sectionAveragePct: number | null;
+}
+
+export interface PerformanceSubject {
+  subject: { id: string; name: string };
+  /** Marks obtained ÷ maximum over every exam that had this subject (absent = 0, exempt left out). */
+  averagePct: number | null;
+  sectionAveragePct: number | null;
+  /** Latest exam against the one before it (±2 points counts as steady). */
+  trend: 'up' | 'down' | 'steady' | null;
+  exams: PerformanceSubjectExam[];
+}
+
+/**
+ * Everything the results charts draw, worked out on the server so web and app agree. Parents see
+ * published results only; staff also see computed results that aren't published yet.
+ */
+export interface StudentPerformance {
+  studentId: string;
+  overallPct: number | null;
+  /** Oldest first. */
+  exams: PerformanceExam[];
+  subjects: PerformanceSubject[];
+}
+
 // ---------------------------------------------------------------- report cards
 
 export const generateReportCardsSchema = z.object({

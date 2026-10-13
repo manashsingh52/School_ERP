@@ -37,6 +37,11 @@ import { ConsoleOtpSender, OtpSender } from './modules/auth/otp-sender.js';
 import { SessionService } from './modules/auth/session.service.js';
 import { FilesController, LocalStorageController } from './modules/files/files.controller.js';
 import { FilesService } from './modules/files/files.service.js';
+import { ConversationsController, MeetingsController, RemindersController } from './modules/communication/communication.controller.js';
+import { ConversationsService } from './modules/communication/conversations.service.js';
+import { MeetingsService } from './modules/communication/meetings.service.js';
+import { CommunicationPeople } from './modules/communication/people.js';
+import { RemindersService } from './modules/communication/reminders.service.js';
 import { HomeworkController } from './modules/homework/homework.controller.js';
 import { HomeworkService } from './modules/homework/homework.service.js';
 import { BellSchedulesController, TimetablesController } from './modules/timetable/timetable.controller.js';
@@ -77,6 +82,7 @@ import { DocumentsController } from './modules/documents/documents.controller.js
 import { StudentTermsController, TermsController } from './modules/exams/terms.controller.js';
 import { TermsService } from './modules/exams/terms.service.js';
 import { MarksImportService } from './modules/exams/marks-import.service.js';
+import { PerformanceService } from './modules/exams/performance.service.js';
 import { CoScholasticService } from './modules/exams/co-scholastic.service.js';
 import { AppConfigController, DevicesController, OpenApiController } from './modules/mobile/mobile.controller.js';
 import { DocumentsService } from './modules/documents/documents.service.js';
@@ -205,7 +211,7 @@ export class DashboardModule {}
 @Module({
   imports: [NotificationsModule, FilesModule],
   controllers: [GradingScalesController, ExamsController, ReportCardsController, StudentResultsController, TermsController, StudentTermsController],
-  providers: [ExamsService, MarksService, ResultsService, ReportCardsService, TermsService, MarksImportService, CoScholasticService],
+  providers: [ExamsService, MarksService, ResultsService, ReportCardsService, TermsService, MarksImportService, CoScholasticService, PerformanceService],
   exports: [ExamsService, MarksService, ResultsService],
 })
 export class ExamsModule {}
@@ -235,6 +241,13 @@ export class ReportsModule {}
 
 @Module({ imports: [ReportsModule], controllers: [AiController], providers: [AiService, AiTools] })
 export class AiModule {}
+
+@Module({
+  imports: [NotificationsModule],
+  controllers: [ConversationsController, MeetingsController, RemindersController],
+  providers: [CommunicationPeople, ConversationsService, MeetingsService, RemindersService],
+})
+export class CommunicationModule {}
 
 @Module({})
 export class AppModule {
@@ -267,6 +280,7 @@ export class AppModule {
         DocumentsModule,
         ReportsModule,
         AiModule,
+        CommunicationModule,
       ],
     };
   }

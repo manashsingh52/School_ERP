@@ -75,6 +75,18 @@ export interface AttendanceOverview {
 
 export const historyQuerySchema = z.object({ from: dateOnly.optional(), to: dateOnly.optional() });
 
+/** What parents read: days the register was taken, days the child was there, days missed. */
+export interface AttendanceTally {
+  /** Days a register was submitted for the child (leave included). */
+  conducted: number;
+  /** Present, late or half day. */
+  attended: number;
+  /** Absent. */
+  missed: number;
+  onLeave: number;
+  percentPresent: number | null;
+}
+
 export interface StudentAttendanceHistory {
   studentId: string;
   from: string;
@@ -82,6 +94,9 @@ export interface StudentAttendanceHistory {
   counts: AttendanceCounts;
   /** PRESENT/LATE count as present, HALF_DAY as half (docs/12). */
   percentPresent: number | null;
+  summary: AttendanceTally;
+  /** One row per month in the range, oldest first (months with no registers left out). */
+  months: (AttendanceTally & { month: string })[];
   days: { date: string; status: AttendanceStatus; remark: string | null }[];
 }
 
@@ -103,6 +118,16 @@ export interface StaffAttendanceDay {
   date: string;
   teachers: { teacherId: string; name: string; employeeId: string; status: AttendanceStatus | null; remark: string | null }[];
   counts: AttendanceCounts;
+}
+
+export function attendanceTally(c: Pick<AttendanceCounts, 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'LEAVE'>): AttendanceTally {
+  return {
+    conducted: c.PRESENT + c.ABSENT + c.LATE + c.HALF_DAY + c.LEAVE,
+    attended: c.PRESENT + c.LATE + c.HALF_DAY,
+    missed: c.ABSENT,
+    onLeave: c.LEAVE,
+    percentPresent: percentPresent(c),
+  };
 }
 
 /** Present-equivalent share: LATE counts as present, HALF_DAY as half; LEAVE excluded from the base. */

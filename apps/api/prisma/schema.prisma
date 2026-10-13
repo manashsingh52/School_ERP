@@ -497,6 +497,10 @@ model School {
   importJobs             ImportJob[]
   importRows             ImportRow[]
   reportRuns             ReportRun[]
+  conversations          Conversation[]
+  conversationMessages   ConversationMessage[]
+  meetings               Meeting[]
+  reminders              Reminder[]
 
   @@map("schools")
 }
@@ -735,6 +739,11 @@ model Membership {
   guardian      Guardian?
   notifications Notification[]
   noticeReads   NoticeRead[]
+  parentConversations Conversation[]        @relation("ConversationParent")
+  staffConversations  Conversation[]        @relation("ConversationStaff")
+  messagesSent        ConversationMessage[]
+  meetingsOrganized   Meeting[]
+  reminders           Reminder[]
 
   @@unique([schoolId, userId])
   @@index([userId])
@@ -967,6 +976,9 @@ model Student {
   payments            Payment[]
   gatewayOrders       GatewayOrder[]
   credits             StudentCredit[]
+  conversations       Conversation[]
+  meetings            Meeting[]
+  reminders           Reminder[]
 
   @@unique([schoolId, admissionNo])
   @@index([schoolId, status])
@@ -2279,4 +2291,138 @@ model CoScholasticGrade {
   @@unique([examId, studentId, subjectId])
   @@index([schoolId, examId])
   @@map("co_scholastic_grades")
+}
+
+// ============================================================================
+// Parent–teacher communication: messages & complaints, video meetings, reminders
+// ============================================================================
+
+enum ConversationCategory {
+  GENERAL
+  ACADEMIC
+  ATTENDANCE
+  HOMEWORK
+  BEHAVIOUR
+  COMPLAINT
+  SUGGESTION
+  OTHER
+}
+
+enum ConversationStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+/// A thread between one parent and one teacher (or the school office) about one child.
+model Conversation {
+  id                String               @id @default(uuid(7)) @db.Uuid
+  schoolId          String               @map("school_id") @db.Uuid
+  studentId         String               @map("student_id") @db.Uuid
+  parentMemberId    String               @map("parent_member_id") @db.Uuid
+  /// null = the school office (admins and the principal answer)
+  staffMemberId     String?              @map("staff_member_id") @db.Uuid
+  category          ConversationCategory @default(GENERAL)
+  subject           String
+  status            ConversationStatus   @default(OPEN)
+  startedByMemberId String               @map("started_by_member_id") @db.Uuid
+  lastMessageAt     DateTime             @default(now()) @map("last_message_at")
+  parentReadAt      DateTime?            @map("parent_read_at")
+  staffReadAt       DateTime?            @map("staff_read_at")
+  resolvedAt        DateTime?            @map("resolved_at")
+  createdAt         DateTime             @default(now()) @map("created_at")
+
+  school       School                @relation(fields: [schoolId], references: [id])
+  student      Student               @relation(fields: [studentId], references: [id])
+  parentMember Membership            @relation("ConversationParent", fields: [parentMemberId], references: [id])
+  staffMember  Membership?           @relation("ConversationStaff", fields: [staffMemberId], references: [id])
+  messages     ConversationMessage[]
+
+  @@index([schoolId, parentMemberId, lastMessageAt(sort: Desc)])
+  @@index([schoolId, staffMemberId, lastMessageAt(sort: Desc)])
+  @@index([schoolId, status, category])
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  schoolId       String   @map("school_id") @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  senderMemberId String   @map("sender_member_id") @db.Uuid
+  body           String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  school       School       @relation(fields: [schoolId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       Membership   @relation(fields: [senderMemberId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@map("conversation_messages")
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+/// A live video meeting between a teacher and a student's parents (Jitsi room; no paid service).
+model Meeting {
+  id                String               @id @default(uuid(7)) @db.Uuid
+  schoolId          String               @map("school_id") @db.Uuid
+  studentId         String               @map("student_id") @db.Uuid
+  organizerMemberId String               @map("organizer_member_id") @db.Uuid
+  title             String
+  agenda            String?
+  category          ConversationCategory @default(GENERAL)
+  scheduledAt       DateTime             @map("scheduled_at")
+  durationMinutes   Int                  @default(30) @map("duration_minutes")
+  status            MeetingStatus        @default(SCHEDULED)
+  /// Unguessable room name; the join link is built from it.
+  roomCode          String               @unique @map("room_code")
+  cancelReason      String?              @map("cancel_reason")
+  remindedAt        DateTime?            @map("reminded_at")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+
+  school    School     @relation(fields: [schoolId], references: [id])
+  student   Student    @relation(fields: [studentId], references: [id])
+  organizer Membership @relation(fields: [organizerMemberId], references: [id])
+
+  @@index([schoolId, studentId, scheduledAt])
+  @@index([schoolId, organizerMemberId, scheduledAt])
+  @@index([status, scheduledAt])
+  @@map("meetings")
+}
+
+enum ReminderRepeat {
+  NONE
+  DAILY
+  WEEKDAYS
+  WEEKLY
+}
+
+/// A parent's own alarm (pick-up time, a meeting, an event). Only its owner ever sees it.
+model Reminder {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  schoolId    String         @map("school_id") @db.Uuid
+  memberId    String         @map("member_id") @db.Uuid
+  studentId   String?        @map("student_id") @db.Uuid
+  title       String
+  notes       String?
+  /// The next time it goes off (moved forward after each alarm when it repeats).
+  remindAt    DateTime       @map("remind_at")
+  repeat      ReminderRepeat @default(NONE)
+  completedAt DateTime?      @map("completed_at")
+  lastFiredAt DateTime?      @map("last_fired_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  school  School     @relation(fields: [schoolId], references: [id])
+  member  Membership @relation(fields: [memberId], references: [id])
+  student Student?   @relation(fields: [studentId], references: [id])
+
+  @@index([schoolId, memberId, remindAt])
+  @@index([remindAt])
+  @@map("reminders")
 }

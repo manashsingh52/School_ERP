@@ -62,6 +62,11 @@ export const PERMISSIONS = {
   'notice.create': s('Communication', 'Create notices', 'ALL', 'ASSIGNED'),
   'notice.publish_school': s('Communication', 'Publish to whole-school audiences'),
   'notification.settings.manage': s('Communication', 'Manage notification settings'),
+  'message.use': s('Communication', 'Message parents and teachers', 'ALL', 'ASSIGNED', 'OWN_CHILDREN'),
+  'complaint.manage': s('Communication', 'Manage every conversation and complaint status'),
+  'meeting.view': s('Communication', 'View parent–teacher meetings', 'ALL', 'ASSIGNED', 'OWN_CHILDREN'),
+  'meeting.manage': s('Communication', 'Schedule parent–teacher meetings', 'ALL', 'ASSIGNED'),
+  'reminder.use': s('Communication', 'Set personal reminders'),
 
   // Exams
   'exam.view': s('Exams', 'View exams', 'ALL', 'ASSIGNED', 'OWN_CHILDREN'),

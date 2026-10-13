@@ -2,6 +2,7 @@ import { Injectable, type OnModuleInit } from '@nestjs/common';
 import type { z } from 'zod';
 import {
   attendanceSettingsSchema,
+  attendanceTally,
   percentPresent,
   type AttendanceCounts,
   type AttendanceOverview,
@@ -29,6 +30,7 @@ type In<T extends z.ZodType> = z.output<T>;
 const emptyCounts = (): AttendanceCounts => ({ PRESENT: 0, ABSENT: 0, LATE: 0, HALF_DAY: 0, LEAVE: 0, unmarked: 0 });
 const daysBetween = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000);
 const weekday = (date: string) => new Date(`${date}T00:00:00Z`).getUTCDay();
+const ARRIVAL_WORD = { PRESENT: 'present', LATE: 'late', HALF_DAY: 'half day' } as const;
 const short = (className: string, section: string) => `${className.replace(/^Class\s+/i, '')}-${section}`;
 const prettyDate = (date: string) =>
   new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
@@ -273,6 +275,7 @@ export class AttendanceService implements OnModuleInit {
     });
     if (!session || session.status !== 'SUBMITTED') return;
     const date = fromDate(session.date)!;
+    await this.notifyArrivals(session.id, date);
     for (const status of ['ABSENT', 'LATE'] as const) {
       const records = session.records.filter((r) => r.status === status);
       const guardians = await this.notifications.guardiansOf(records.map((r) => r.studentId));
@@ -290,6 +293,41 @@ export class AttendanceService implements OnModuleInit {
         dedupeKey: (_m, i) => `${status}:${guardians[i]!.studentId}:${date}`,
       });
     }
+  }
+
+  /**
+   * "Arrived at school": only for today's register, only from a real mark (present, late or half
+   * day), once per student per day — a later correction (e.g. absent → late) still sends one.
+   */
+  private async notifyArrivals(sessionId: string, date: string): Promise<void> {
+    const school = await this.prisma.db.school.findUnique({ where: { id: RequestContextStore.school().schoolId }, select: { timezone: true } });
+    if (date !== todayIn(school?.timezone)) return;
+    const records = await this.prisma.db.attendanceRecord.findMany({
+      where: { sessionId, status: { in: ['PRESENT', 'LATE', 'HALF_DAY'] } },
+      include: { student: { select: { firstName: true } }, session: { select: { section: { select: { name: true, class: { select: { name: true } } } } } } },
+    });
+    if (!records.length) return;
+    const byStudent = new Map(records.map((r) => [r.studentId, r]));
+    const guardians = await this.notifications.guardiansOf(records.map((r) => r.studentId));
+    const time = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: school?.timezone ?? 'Asia/Kolkata' });
+    await this.notifications.notify({
+      event: 'attendance.arrived',
+      recipients: guardians.map((g) => {
+        const r = byStudent.get(g.studentId)!;
+        return {
+          membershipId: g.membershipId,
+          vars: {
+            student: r.student.firstName,
+            class: short(r.session.section.class.name, r.session.section.name),
+            status: ARRIVAL_WORD[r.status as 'PRESENT' | 'LATE' | 'HALF_DAY'],
+            time: time.format(r.updatedAt).toUpperCase(),
+            date: prettyDate(date),
+          },
+          data: { route: '/attendance', studentId: g.studentId, date, status: r.status, recordedAt: r.updatedAt.toISOString() },
+        };
+      }),
+      dedupeKey: (_m, i) => `arrived:${guardians[i]!.studentId}:${date}`,
+    });
   }
 
   // ---------------------------------------------------------------- views
@@ -359,13 +397,21 @@ export class AttendanceService implements OnModuleInit {
       select: { date: true, status: true, remark: true },
     });
     const counts = emptyCounts();
-    for (const r of records) counts[r.status]++;
+    const byMonth = new Map<string, AttendanceCounts>();
+    for (const r of records) {
+      counts[r.status]++;
+      const month = fromDate(r.date)!.slice(0, 7);
+      if (!byMonth.has(month)) byMonth.set(month, emptyCounts());
+      byMonth.get(month)![r.status]++;
+    }
     return {
       studentId,
       from: start,
       to: end,
       counts,
       percentPresent: percentPresent(counts),
+      summary: attendanceTally(counts),
+      months: [...byMonth].map(([month, c]) => ({ month, ...attendanceTally(c) })),
       days: records.map((r) => ({ date: fromDate(r.date)!, status: r.status, remark: r.remark })),
     };
   }
