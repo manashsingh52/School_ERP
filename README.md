@@ -5,6 +5,8 @@ Design and decisions live in [`docs/`](docs/README.md) (start there).
 
 > "SchoolOS" / `schoolos.in` is a placeholder name.
 
+> Picking this project up? Read [`HANDOFF.md`](HANDOFF.md) first.
+
 ## Repository
 
 ```
