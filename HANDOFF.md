@@ -38,7 +38,9 @@ gateway is Razorpay, SMS is MSG91 (needs DLT registration), and data stays in In
   - Flutter: 22 passed
   - contracts and permissions package tests: passed
   - lint, typecheck and OpenAPI drift check: clean
-- **Not confirmed**: whether GitHub Actions CI is green for `c3b31f3`. No `gh` CLI was available to check.
+- **CI**: the `check` job was failing on GitHub, while `e2e`, `mobile` and `docker` passed. On a fresh checkout, the
+  OpenAPI step built `contracts` before its dependency `@schoolos/permissions`. It's fixed on the `handoff` branch
+  (`.github/workflows/ci.yml` builds contracts' dependencies first). `main` keeps failing until `handoff` is merged.
 
 ---
 
@@ -392,10 +394,12 @@ feature in §5 is complete with tests. The following were started but stopped at
 
 ## 7. Pending (priority order)
 
-1. **Confirm CI is green on GitHub** for `main`.
-   - Go to the Actions tab of `manashsingh52/School_ERP`, or run `gh run list` with `gh` authenticated.
+1. **Get CI green**: merge the `handoff` pull request, which contains the CI fix, then confirm all jobs pass
+   on `main`.
+   - Check the Actions tab of `manashsingh52/School_ERP`, or run `gh run list` with `gh` authenticated.
    - Jobs: `check`, `e2e`, `mobile`, `docker`.
-   - If something fails, reproduce it locally with the commands in §3.
+   - To reproduce a failure exactly, clone the repo into a fresh folder and run the CI steps there.
+     Your working copy has old `dist/` folders that can hide missing build steps.
 2. **Push notifications (FCM)**. This is the biggest functional gap: reminders, "arrived at school",
    meeting alerts and messages all go only to the in-app inbox today.
    - Needs the owner's Firebase project (SETUP-LATER #12).
@@ -570,6 +574,11 @@ running before the existence check returns 422 instead of 404.
   the room. A self-hosted Jitsi or JaaS removes that (`MEETING_BASE_URL`, SETUP-LATER #20).
 - Development-only modes are refused in production on purpose: the mock payment gateway, the mock AI,
   the console OTP and local storage.
+
+**CI**
+- **Fresh checkouts have no `dist/` folders.** Workspace packages (`permissions`, then `contracts`) must be
+  built before anything imports them (`ui` is source-only). `turbo run build` handles the order; a bare
+  `pnpm --filter X build` does not. This is what broke the CI `check` job.
 
 **Repo conventions**
 - Commit messages and docs must **not mention AI tools or assistants**: no `Co-Authored-By` trailers or
