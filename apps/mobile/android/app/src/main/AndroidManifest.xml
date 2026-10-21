@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Release builds need this too (debug/profile add it for the Flutter tools). -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Android 13+: push notifications need the person's OK (asked after sign-in). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="SchoolOS"
         android:name="${applicationName}"

@@ -60,8 +60,10 @@ inside is `app-release.aab`. A yellow warning about a debug key means the secret
   for 14 days first. An organisation account (once the company is registered) skips that.
 - **Each new upload** needs a higher version code. The workflow uses the run number, so every
   build counts up by itself.
-- **The real app**: build without `--dart-define=DEMO_MODE=true` and with
-  `--dart-define=API_URL=https://api.<domain>`, under the same package name. Then update the data
-  safety form and privacy policy, because the real app does handle school data.
+- **The real app**: set the repository variable `API_URL` (Settings → Secrets and variables →
+  Actions → Variables, e.g. `https://api.<domain>`), then **Run workflow** with variant **real**.
+  Same package name, so it replaces the demo for your testers. Push needs the `FIREBASE_*`
+  variables too (SETUP-LATER #12). Update the data safety form and privacy policy first: the real
+  app handles school data.
 - **New demo data** after app changes: start the local API with the seeded demo school and run
   `node apps/mobile/tool/record_demo.mjs` (see `apps/mobile/README.md`).

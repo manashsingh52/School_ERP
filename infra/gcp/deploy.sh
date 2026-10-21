@@ -30,6 +30,9 @@ else
   EMAIL_PROVIDER=$(has_secret resend-api-key && echo resend || echo console)
 fi
 
+# Push (SETUP-LATER #12): on once the Firebase service account is stored as a secret.
+PUSH_PROVIDER=$(has_secret fcm-service-account && echo fcm || echo none)
+
 build() {
   say "Building images $TAG in Cloud Build"
   gcloud builds submit --region="$REGION" --config=infra/gcp/cloudbuild.yaml --service-account="projects/$PROJECT_ID/serviceAccounts/$SA_DEPLOY" \
@@ -63,7 +66,8 @@ deploy() {
   { [ "$OTP_PROVIDER" = msg91 ] || [ "$SMS_PROVIDER" = msg91 ]; } && secrets="$secrets,MSG91_AUTH_KEY=msg91-auth-key:latest"
   [ "$OTP_PROVIDER" = msg91 ] && secrets="$secrets,MSG91_OTP_TEMPLATE_ID=msg91-otp-template-id:latest"
   [ "$SMS_PROVIDER" = msg91 ] && secrets="$secrets,MSG91_SMS_TEMPLATE_ID=msg91-sms-template-id:latest"
-  local env="NODE_ENV=$NODE_ENV_VALUE,LOG_LEVEL=info,RUN_WORKERS=true,DB_POOL_SIZE=5,STORAGE_DRIVER=gcs,GCS_PROJECT_ID=$PROJECT_ID,GCS_PRIVATE_BUCKET=$BUCKET_PRIVATE,GCS_PUBLIC_BUCKET=$BUCKET_PUBLIC,APP_BASE_DOMAIN=$DOMAIN,PUBLIC_API_URL=https://api.$DOMAIN,OTP_PROVIDER=$OTP_PROVIDER,SMS_PROVIDER=$SMS_PROVIDER,EMAIL_PROVIDER=$EMAIL_PROVIDER,PUSH_PROVIDER=none,PAYMENTS_GATEWAY=$PAYMENTS_GATEWAY,AI_PROVIDER=$AI_PROVIDER"
+  [ "$PUSH_PROVIDER" = fcm ] && secrets="$secrets,FCM_SERVICE_ACCOUNT_JSON=fcm-service-account:latest"
+  local env="NODE_ENV=$NODE_ENV_VALUE,LOG_LEVEL=info,RUN_WORKERS=true,DB_POOL_SIZE=5,STORAGE_DRIVER=gcs,GCS_PROJECT_ID=$PROJECT_ID,GCS_PRIVATE_BUCKET=$BUCKET_PRIVATE,GCS_PUBLIC_BUCKET=$BUCKET_PUBLIC,APP_BASE_DOMAIN=$DOMAIN,PUBLIC_API_URL=https://api.$DOMAIN,OTP_PROVIDER=$OTP_PROVIDER,SMS_PROVIDER=$SMS_PROVIDER,EMAIL_PROVIDER=$EMAIL_PROVIDER,PUSH_PROVIDER=$PUSH_PROVIDER,FCM_PROJECT_ID=${FCM_PROJECT_ID:-$PROJECT_ID},PAYMENTS_GATEWAY=$PAYMENTS_GATEWAY,AI_PROVIDER=$AI_PROVIDER"
   local throttle=--cpu-throttling
   [ "$API_CPU_ALWAYS" = true ] && throttle=--no-cpu-throttling
 

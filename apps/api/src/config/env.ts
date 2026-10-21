@@ -32,6 +32,11 @@ const envSchema = z.object({
 
   // Notification channels (docs/01 §3 notifications). console = print to the log (development).
   PUSH_PROVIDER: z.enum(['none', 'console', 'fcm']).default('none'),
+  // ⏸ Firebase project for push (SETUP-LATER #12). Credentials: the service account JSON, or the
+  // Cloud Run service account when it isn't set.
+  FCM_PROJECT_ID: optional(z.string()),
+  FCM_SERVICE_ACCOUNT_JSON: optional(z.string()),
+  FCM_BASE_URL: z.url().default('https://fcm.googleapis.com'),
   // Mobile app (docs/01 §7): versions below MIN must update before they can be used.
   MOBILE_MIN_VERSION: z.string().regex(/^\d+\.\d+\.\d+$/).default('1.0.0'),
   MOBILE_LATEST_VERSION: z.string().regex(/^\d+\.\d+\.\d+$/).default('1.0.0'),
@@ -110,6 +115,7 @@ function checkProviders(env: Env): string[] {
   if (env.OTP_PROVIDER === 'msg91' && (!env.MSG91_AUTH_KEY || !env.MSG91_OTP_TEMPLATE_ID)) {
     problems.push('OTP_PROVIDER=msg91 needs MSG91_AUTH_KEY and MSG91_OTP_TEMPLATE_ID');
   }
+  if (env.PUSH_PROVIDER === 'fcm' && !env.FCM_PROJECT_ID) problems.push('PUSH_PROVIDER=fcm needs FCM_PROJECT_ID');
   if (env.SMS_PROVIDER === 'msg91' && (!env.MSG91_AUTH_KEY || !env.MSG91_SMS_TEMPLATE_ID)) {
     problems.push('SMS_PROVIDER=msg91 needs MSG91_AUTH_KEY and MSG91_SMS_TEMPLATE_ID');
   }

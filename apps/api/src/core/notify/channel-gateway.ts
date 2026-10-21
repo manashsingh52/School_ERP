@@ -5,6 +5,7 @@ import { RequestContextStore } from '../context/request-context.js';
 import { EntitlementsService } from '../entitlements/entitlements.service.js';
 import { LOGGER } from '../logger/logger.js';
 import { PlatformPrismaService } from '../prisma/prisma.service.js';
+import { FcmClient } from './fcm.js';
 
 export interface OutboundMessage {
   channel: 'PUSH' | 'SMS' | 'EMAIL';
@@ -34,12 +35,16 @@ const mask = (s: string) => (s.includes('@') ? s.replace(/^(.).*(@.*)$/, '$1***$
  */
 @Injectable()
 export class ChannelGateway {
+  private readonly fcm: FcmClient;
+
   constructor(
     @Inject(ENV) private readonly env: Env,
     @Inject(LOGGER) private readonly logger: Logger,
     private readonly platform: PlatformPrismaService,
     private readonly entitlements: EntitlementsService,
-  ) {}
+  ) {
+    this.fcm = new FcmClient(env);
+  }
 
   async send(msg: OutboundMessage): Promise<SendResult> {
     const schoolId = RequestContextStore.get()?.schoolId;
@@ -61,7 +66,19 @@ export class ChannelGateway {
       this.logger.info({ channel: 'PUSH', userId: msg.userId, devices: tokens }, `[dev push] ${msg.title}`);
       return { status: 'SENT', provider };
     }
-    return { status: 'SKIPPED', provider, reason: 'FCM not connected yet' };
+    // Every phone the person is signed in on; dead tokens (app removed) are forgotten.
+    const devices = await this.platform.deviceToken.findMany({ where: { userId: msg.userId }, select: { token: true } });
+    let sent = 0;
+    let retry = 0;
+    for (const { token } of devices) {
+      const result = await this.fcm.send(token, msg.title, msg.body, msg.data);
+      if (result === 'sent') sent++;
+      else if (result === 'gone') await this.platform.deviceToken.deleteMany({ where: { token } });
+      else retry++;
+    }
+    if (sent) return { status: 'SENT', provider };
+    if (retry) throw new Error('FCM is unavailable right now'); // retried by the queue
+    return { status: 'SKIPPED', provider, reason: 'No working app installs' };
   }
 
   private async sms(msg: OutboundMessage): Promise<SendResult> {

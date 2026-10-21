@@ -47,6 +47,9 @@ API is deployed.
 - `lib/core/` — `ApiClient` (dio; Bearer token, one shared refresh on 401, `{ data }` unwrapping, `ApiException`), `TokenStore` (refresh token in Keychain/Keystore via `flutter_secure_storage`, access token in memory only), `SessionController` (sign in with password or one-time code → school → `/me`), models mirroring `packages/contracts`, theme from the design tokens (light/dark, school accent), `AttendanceQueue`.
 - **Offline attendance** — the class list is kept on the phone; a submitted register is sent at once or queued with a `clientMutationId` (the API ignores replays), and sent when the app opens or returns to the front, or on "Sync now". A register the school refuses (e.g. edit window closed) stays visible with the reason until the teacher discards it.
 - **Payments** — `GET /v1/app/config` says which checkout: the sandbox sheet (development) or Razorpay Checkout (`razorpay_flutter`) with the school's own key; the API verifies the signature either way.
+- **Push** — `lib/core/push.dart` (Firebase Messaging), on only when the build carries the
+  `FIREBASE_*` dart-defines (the Android workflow passes them for the real app). After sign-in it
+  asks permission, registers the token, and a tapped notification opens the screen in its `route`.
 - **Forced update** — the app compares its version with `minVersion` from `/v1/app/config`.
 - **API drift** — `apps/api/test/mobile-routes.test.ts` fails if the app calls a route the API doesn't have; `test/models_test.dart` parses real response shapes.
 
