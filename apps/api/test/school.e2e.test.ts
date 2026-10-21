@@ -99,6 +99,10 @@ describe('year-end promotion', () => {
     const s3 = await t.platform.student.findUniqueOrThrow({ where: { id: A.students.s3 } });
     expect(s3.status).toBe('ALUMNI');
 
+    // Listing by section works for any year, not only the current one (the keep-back picker).
+    const nineA = (await api().get(`/v1/students?sectionId=${nine.id}`)).body.data as { id: string }[];
+    expect(nineA.map((s) => s.id)).toEqual([A.students.s1]);
+
     // Running again (new key) skips everyone already moved
     const again = await api().post('/v1/promotions/commit', body).set('idempotency-key', 'promo-2027-0002');
     expect(again.body.data).toEqual({ promoted: 0, detained: 0, graduated: 0, skipped: 0 });
