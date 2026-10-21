@@ -486,7 +486,7 @@ and each slot is marked `⏸` in the code (`git grep ⏸`).
 | Postgres in Docker | `embedded-postgres` (real PG 17 from npm) | No Docker; CI needs no service container |
 | Redis/Upstash for BullMQ | **BullMQ on PostgreSQL** | One less service, ~$10–20/month saved; `QUEUE_BACKEND=redis` switches back |
 | RLS SQL inside migrations | `scripts/apply-sql.mjs`, run after every migrate; it **discovers** every `school_id` table and fails if one is uncovered | A new table can't be forgotten |
-| Session revocation / rate limits in Redis | DB session check (30 s cache) / in-memory store behind an interface | No Redis; fine for one instance — revisit when scaling out |
+| Session revocation / rate limits in Redis | DB session check (30 s cache) / rate limits in memory locally and in PostgreSQL in the cloud (`RATE_LIMIT_STORE=postgres`, shared by all instances) | No Redis; a revoked session can live up to 30 s per instance |
 | Generated Dart API client | Hand-written client + models, guarded by `mobile-routes.test.ts` and model-parsing tests | Response types are TS interfaces only; the generator also needs Java |
 | Drift/SQLite offline queue | `shared_preferences` | Queue holds a few registers; works on web |
 | Google HTTPS load balancer | Cloudflare Worker + edge secret | ~$18/month saved on credits |

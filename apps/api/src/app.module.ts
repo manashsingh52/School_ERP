@@ -28,7 +28,7 @@ import { EntitlementsService } from './core/entitlements/entitlements.service.js
 import { SchoolSettingsService } from './core/settings/school-settings.service.js';
 import { QueueService } from './core/queue/queue.service.js';
 import { SchedulerService } from './core/queue/scheduler.service.js';
-import { MemoryRateLimitStore, RateLimitGuard } from './core/rate-limit/rate-limit.js';
+import { MemoryRateLimitStore, PostgresRateLimitStore, RateLimitGuard, RateLimitStore } from './core/rate-limit/rate-limit.js';
 import { AcademicsModule } from './modules/academics/academics.module.js';
 import { AttendanceModule } from './modules/attendance/attendance.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
@@ -123,6 +123,8 @@ export class CoreModule {
       AuditService,
       ErrorReporter,
       MemoryRateLimitStore,
+      PostgresRateLimitStore,
+      { provide: RateLimitStore, useExisting: env.RATE_LIMIT_STORE === 'postgres' ? PostgresRateLimitStore : MemoryRateLimitStore },
       RateLimitGuard,
       RequestContextMiddleware,
       RouteAccessCheck,

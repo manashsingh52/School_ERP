@@ -19,6 +19,8 @@ const envSchema = z.object({
   JWT_ISSUER: z.string().default('schoolos'),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().default(15 * 60),
 
+  /** postgres = counters shared by every API instance (production runs up to 3). */
+  RATE_LIMIT_STORE: z.enum(['memory', 'postgres']).default('memory'),
   /** ⏸ Error monitoring (SETUP-LATER #10): unexpected errors go to Sentry when set. */
   SENTRY_DSN: optional(z.url()),
   /** Build or revision name, sent with error reports (Cloud Run sets K_REVISION). */
