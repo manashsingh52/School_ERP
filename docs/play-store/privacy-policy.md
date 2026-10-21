@@ -40,4 +40,4 @@ school.
 
 ## Contact
 
-Questions: **<your contact email>**
+Questions: **manashsanskrityayan@gmail.com**

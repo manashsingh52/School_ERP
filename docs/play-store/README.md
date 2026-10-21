@@ -10,7 +10,7 @@ Play Store like any app, with no review wait.
 | App name on the phone | SchoolOS |
 | Build | GitHub Actions → **Android** workflow → artifact `schoolos-demo-<n>` (`app-release.aab`) |
 | Listing text and graphics | [listing.md](listing.md), `icon-512.png`, `feature-graphic.png`, `screenshots/` |
-| Privacy policy | [privacy-policy.md](privacy-policy.md) (fill in the contact email first) |
+| Privacy policy | [privacy-policy.md](privacy-policy.md) |
 
 ## 1. One-time setup
 
