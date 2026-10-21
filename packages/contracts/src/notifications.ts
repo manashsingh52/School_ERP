@@ -23,16 +23,6 @@ export interface NotificationEventDef {
  * only this catalog + the engine decide who hears about it and how.
  */
 export const NOTIFICATION_EVENTS = {
-  'report.ready': {
-    label: 'Scheduled report ready',
-    description: 'When a weekly or monthly report someone saved has been made.',
-    audience: 'Whoever saved it',
-    channels: ['IN_APP', 'EMAIL'],
-    defaultChannels: ['IN_APP'],
-    defaultEnabled: true,
-    title: '{{name}} is ready',
-    body: 'Your {{schedule}} report "{{name}}" ({{period}}) is ready to download in Reports.',
-  },
   'attendance.absent': {
     label: 'Absent today',
     description: 'When a student is marked absent.',
@@ -223,6 +213,16 @@ export const NOTIFICATION_EVENTS = {
     defaultEnabled: true,
     title: 'SchoolOS support is asking for access',
     body: '{{requester}} wants read-only access for {{hours}} hours: "{{reason}}". Approve or decline in Settings → Support access.',
+  },
+  'report.ready': {
+    label: 'Scheduled report ready',
+    description: 'When a weekly or monthly report someone saved has been made.',
+    audience: 'Whoever saved it',
+    channels: ['IN_APP', 'EMAIL'],
+    defaultChannels: ['IN_APP'],
+    defaultEnabled: true,
+    title: '{{name}} is ready',
+    body: 'Your {{schedule}} report "{{name}}" ({{period}}) is ready to download in Reports.',
   },
 } as const satisfies Record<string, NotificationEventDef>;
 

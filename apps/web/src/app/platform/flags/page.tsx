@@ -22,7 +22,7 @@ export default function FlagsPage() {
       />
       <Card>
         {!flags.data ? (
-          <TableSkeleton columns={4} />
+          <Table><tbody><TableSkeleton columns={4} /></tbody></Table>
         ) : !flags.data.length ? (
           <EmptyState icon={<Flag />} title="No flags yet" />
         ) : (

@@ -191,7 +191,7 @@ function SignInCode({ member }: { member: MemberItem }) {
   const make = async () => {
     setBusy(true);
     try {
-      setIssued(await apiPost<SchoolSignInCode>(`/members/${member.id}/sign-in-code`));
+      setIssued((await apiPost<{ data: SchoolSignInCode }>(`/members/${member.id}/sign-in-code`)).data);
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : "Couldn't make a code. Try again.");
     } finally {

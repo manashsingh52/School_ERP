@@ -39,7 +39,7 @@ export default function SchoolsPage() {
           </Select>
         </div>
         {!list.data ? (
-          <TableSkeleton columns={6} />
+          <Table><tbody><TableSkeleton columns={6} /></tbody></Table>
         ) : !list.data.length ? (
           <EmptyState icon={<Building2 />} title={query || status ? 'No schools match' : 'No schools yet'} />
         ) : (

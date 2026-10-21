@@ -26,7 +26,7 @@ export default function SupportPage() {
       {superAdmin && <Tabs value={scope} onChange={setScope} items={[{ value: 'mine', label: 'My requests' }, { value: 'all', label: 'Everyone' }]} />}
       <Card>
         {!grants.data ? (
-          <TableSkeleton columns={5} />
+          <Table><tbody><TableSkeleton columns={5} /></tbody></Table>
         ) : !grants.data.length ? (
           <EmptyState icon={<LifeBuoy />} title="No requests yet" description="Open a school and choose “Ask for access”." />
         ) : (

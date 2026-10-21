@@ -5541,7 +5541,6 @@
                         "event": {
                           "type": "string",
                           "enum": [
-                            "report.ready",
                             "attendance.absent",
                             "attendance.arrived",
                             "attendance.late",
@@ -5560,7 +5559,8 @@
                             "fee.overdue",
                             "refund.processed",
                             "notice.published",
-                            "support.access_requested"
+                            "support.access_requested",
+                            "report.ready"
                           ]
                         },
                         "enabled": {
