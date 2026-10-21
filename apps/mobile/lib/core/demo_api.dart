@@ -65,7 +65,8 @@ class DemoApi extends ApiClient {
       case '/auth/otp/send':
         return {'challengeId': 'demo'};
       case '/auth/otp/verify':
-        return _signIn('parent');
+      case '/auth/code/redeem':
+        return _signIn('${b['identifier']}'.toLowerCase().contains('teacher') ? 'teacher' : 'parent');
       case '/auth/select-school':
         return {'accessToken': 'demo'};
       case '/auth/logout':

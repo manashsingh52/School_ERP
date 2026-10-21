@@ -17,6 +17,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _otp = false;
+  bool _schoolCode = false;
   bool _busy = false;
   bool _showPassword = false;
   String? _error;
@@ -25,6 +26,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _password = TextEditingController();
   final _phone = TextEditingController();
   final _code = TextEditingController();
+  final _officeCode = TextEditingController();
+  final _newPassword = TextEditingController();
 
   @override
   void initState() {
@@ -34,7 +37,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
-    for (final c in [_id, _password, _phone, _code]) {
+    for (final c in [_id, _password, _phone, _code, _officeCode, _newPassword]) {
       c.dispose();
     }
     super.dispose();
@@ -57,6 +60,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final session = ref.read(sessionProvider.notifier);
+    // Without SMS the school office hands out sign-in codes instead.
+    final otpLogin = ref.watch(appConfigProvider).value?.otpLogin ?? true;
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
@@ -86,7 +91,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   FilledButton.icon(onPressed: _busy ? null : () => _run(() => session.signInWithPassword('parent@demo.school', 'demo')), icon: const Icon(Icons.family_restroom), label: const Text('Explore as a parent')),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(onPressed: _busy ? null : () => _run(() => session.signInWithPassword('teacher@demo.school', 'demo')), icon: const Icon(Icons.school_outlined), label: const Text('Explore as a teacher')),
+                ] else if (_schoolCode) ...[
+                  Text('Sign in with a school code', style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
+                  const SizedBox(height: 4),
+                  Text('The school office gives you a one-time code. Use it once to choose your password.', style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  TextField(controller: _id, keyboardType: TextInputType.emailAddress, autofillHints: const [AutofillHints.username], decoration: const InputDecoration(labelText: 'Mobile number or email')),
+                  const SizedBox(height: 12),
+                  TextField(controller: _officeCode, textCapitalization: TextCapitalization.characters, maxLength: 9, decoration: const InputDecoration(labelText: 'Code from your school', hintText: 'ABCD-EFGH', counterText: '')),
+                  const SizedBox(height: 12),
+                  TextField(controller: _newPassword, obscureText: true, autofillHints: const [AutofillHints.newPassword], decoration: const InputDecoration(labelText: 'Choose a password', helperText: 'At least 8 characters')),
+                  const SizedBox(height: 20),
+                  FilledButton(onPressed: _busy ? null : () => _run(() => session.redeemSchoolCode(_id.text, _officeCode.text, _newPassword.text)), child: _busy ? const _Spinner() : const Text('Set password and sign in')),
+                  TextButton(onPressed: _busy ? null : () => setState(() => _schoolCode = false), child: const Text('Back to sign in')),
                 ] else ...[
+                if (otpLogin) ...[
                 SegmentedButton<bool>(
                   segments: const [ButtonSegment(value: false, label: Text('Password')), ButtonSegment(value: true, label: Text('One-time code'))],
                   selected: {_otp},
@@ -96,7 +115,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   }),
                 ),
                 const SizedBox(height: 20),
-                if (!_otp) ...[
+                ],
+                if (!_otp || !otpLogin) ...[
                   TextField(controller: _id, keyboardType: TextInputType.emailAddress, autofillHints: const [AutofillHints.username], decoration: const InputDecoration(labelText: 'Mobile number or email')),
                   const SizedBox(height: 12),
                   TextField(
@@ -129,6 +149,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   FilledButton(onPressed: _busy ? null : () => _run(() => session.verifyCode(_challengeId!, _code.text)), child: _busy ? const _Spinner() : const Text('Sign in')),
                   TextButton(onPressed: _busy ? null : () => setState(() => _challengeId = null), child: const Text('Use a different number')),
                 ],
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _busy ? null : () => setState(() {
+                    _schoolCode = true;
+                    _error = null;
+                  }),
+                  child: const Text('First time here, or forgot your password? Use a code from your school', textAlign: TextAlign.center),
+                ),
                 ],
                 if (_error != null) ...[
                   const SizedBox(height: 16),

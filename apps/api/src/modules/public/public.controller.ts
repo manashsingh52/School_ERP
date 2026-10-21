@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Inject, Param } from '@nestjs/common';
 import type { PublicSchoolBranding } from '@schoolos/contracts';
+import { ENV, type Env } from '../../config/env.js';
 import { Public } from '../../core/auth/decorators.js';
 import { AppError } from '../../core/errors/app-error.js';
 import { PlatformPrismaService } from '../../core/prisma/prisma.service.js';
@@ -11,6 +12,7 @@ export class PublicController {
   constructor(
     private readonly platform: PlatformPrismaService,
     private readonly storage: StorageDriver,
+    @Inject(ENV) private readonly env: Env,
   ) {}
 
   @Get('schools/:slug')
@@ -28,6 +30,6 @@ export class PublicController {
     const logoUrl = logo
       ? await this.storage.downloadUrl({ key: logo.objectKey, fileName: logo.originalName, contentType: logo.mimeType, expiresInSec: 24 * 3600, inline: true })
       : null;
-    return { data: { ...rest, logoUrl } };
+    return { data: { ...rest, logoUrl, otpLogin: this.env.OTP_PROVIDER !== 'none' } };
   }
 }

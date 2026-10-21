@@ -108,6 +108,12 @@ class SessionController extends Notifier<SessionState> {
     await _afterAuth(auth);
   }
 
+  /// A code from the school office (no SMS): first sign-in or a forgotten password.
+  Future<void> redeemSchoolCode(String identifier, String code, String newPassword) async {
+    final auth = await _api.post<Json>('/auth/code/redeem', {'identifier': identifier.trim(), 'code': code.trim(), 'newPassword': newPassword, ..._device});
+    await _afterAuth(auth);
+  }
+
   Future<void> selectSchool(String membershipId) async {
     final res = await _api.post<Json>('/auth/select-school', {'membershipId': membershipId});
     _tokens.accessToken = res['accessToken'] as String;

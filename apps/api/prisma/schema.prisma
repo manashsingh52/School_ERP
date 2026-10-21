@@ -75,6 +75,7 @@ enum OtpPurpose {
 enum ContactChannel {
   SMS
   EMAIL
+  OFFICE // a code the school office hands over (no SMS)
 }
 
 enum AcademicYearStatus {

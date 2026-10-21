@@ -39,6 +39,7 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'DELETE /v1/guardians/:id/children/:studentId': (b) => b.guardianId,
   'POST /v1/guardians/:id/invite': (b) => b.guardianId,
   'PATCH /v1/members/:id': (b) => b.adminMembershipId,
+  'POST /v1/members/:id/sign-in-code': (b) => b.adminMembershipId,
   'PATCH /v1/roles/:id': (b) => b.teacherRoleId,
   'PUT /v1/roles/:id/permissions': (b) => ({ id: b.teacherRoleId, body: { permissions: [] } }),
   'DELETE /v1/roles/:id': (b) => b.teacherRoleId,
@@ -316,6 +317,7 @@ describe('route access rules', () => {
         // Authorised by the HMAC signature against the account the opaque id names (tested in payments-online)
         'POST /v1/webhooks/razorpay/:publicId',
         'POST /v1/auth/login',
+        'POST /v1/auth/code/redeem', // a code the school office handed over (rate-limited, 5 tries)
         'POST /v1/auth/otp/send',
         'POST /v1/auth/otp/verify',
         'POST /v1/auth/password/reset',

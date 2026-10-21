@@ -22,6 +22,7 @@ import {
   passwordResetRequestSchema,
   registerDeviceSchema,
   refreshRequestSchema,
+  schoolCodeRedeemSchema,
   selectSchoolRequestSchema,
 } from './auth.js';
 import {
@@ -161,6 +162,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/auth/otp/send': { summary: 'Send a one-time code', tag: 'Auth', access: 'public', body: otpSendRequestSchema },
   'POST /v1/auth/otp/verify': { summary: 'Sign in with a one-time code', tag: 'Auth', access: 'public', body: otpVerifyRequestSchema },
   'POST /v1/auth/password/reset': { summary: 'Set a new password with a one-time code', tag: 'Auth', access: 'public', body: passwordResetRequestSchema },
+  'POST /v1/auth/code/redeem': { summary: 'Sign in with a code from the school office and set a password', tag: 'Auth', access: 'public', body: schoolCodeRedeemSchema },
   'POST /v1/auth/refresh': { summary: 'Rotate the refresh token', tag: 'Auth', access: 'public', body: refreshRequestSchema },
   'POST /v1/auth/select-school': { summary: 'Scope the session to one school', tag: 'Auth', access: 'authenticated', body: selectSchoolRequestSchema },
   'POST /v1/auth/logout': { summary: 'Sign out this device', tag: 'Auth', access: 'authenticated' },
@@ -222,6 +224,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/members': { summary: 'People with access to this school', tag: 'Users', access: 'permission:user.view', query: listMembersQuerySchema },
   'POST /v1/members': { summary: 'Invite someone', tag: 'Users', access: 'permission:user.manage', body: inviteMemberSchema },
   'PATCH /v1/members/:id': { summary: 'Change roles or suspend', tag: 'Users', access: 'permission:user.manage', body: updateMemberSchema },
+  'POST /v1/members/:id/sign-in-code': { summary: 'One-time sign-in code to hand over (no SMS needed)', tag: 'Users', access: 'permission:user.manage' },
   'GET /v1/roles': { summary: 'Roles and their permissions', tag: 'Users', access: 'permission:user.view' },
   'POST /v1/roles': { summary: 'Create a custom role', tag: 'Users', access: 'permission:role.manage', body: createRoleSchema },
   'PATCH /v1/roles/:id': { summary: 'Rename a role', tag: 'Users', access: 'permission:role.manage', body: updateRoleSchema },

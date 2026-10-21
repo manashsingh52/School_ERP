@@ -33,7 +33,7 @@ import { AttendanceModule } from './modules/attendance/attendance.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AuthController } from './modules/auth/auth.controller.js';
 import { AuthService } from './modules/auth/auth.service.js';
-import { ConsoleOtpSender, OtpSender } from './modules/auth/otp-sender.js';
+import { ConsoleOtpSender, OtpSender, otpSenderProvider } from './modules/auth/otp-sender.js';
 import { SessionService } from './modules/auth/session.service.js';
 import { FilesController, LocalStorageController } from './modules/files/files.controller.js';
 import { FilesService } from './modules/files/files.service.js';
@@ -158,7 +158,7 @@ export class CoreModule {
 
 @Module({
   controllers: [AuthController, MeController],
-  providers: [AuthService, SessionService, ConsoleOtpSender, { provide: OtpSender, useExisting: ConsoleOtpSender }],
+  providers: [AuthService, SessionService, ConsoleOtpSender, otpSenderProvider],
   exports: [AuthService, SessionService, OtpSender, ConsoleOtpSender],
 })
 export class AuthModule {}
@@ -187,7 +187,7 @@ export class StudentsModule {}
 @Module({ imports: [SchoolsModule, FilesModule], controllers: [TeachersController], providers: [TeachersService], exports: [TeachersService] })
 export class TeachersModule {}
 
-@Module({ imports: [SchoolsModule], controllers: [MembersController, RolesController, PermissionsController], providers: [MembersService] })
+@Module({ imports: [SchoolsModule, AuthModule], controllers: [MembersController, RolesController, PermissionsController], providers: [MembersService] })
 export class MembersModule {}
 
 @Module({ imports: [StudentsModule, TeachersModule, GuardiansModule], controllers: [SearchController], providers: [SearchService] })

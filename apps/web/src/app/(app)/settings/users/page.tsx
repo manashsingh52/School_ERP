@@ -1,6 +1,6 @@
 'use client';
 
-import type { MemberItem, PageResponse, RoleItem } from '@schoolos/contracts';
+import type { MemberItem, PageResponse, RoleItem, SchoolSignInCode } from '@schoolos/contracts';
 import {
   Avatar,
   Badge,
@@ -22,9 +22,10 @@ import {
   TR,
   Table,
   TableSkeleton,
+  toast,
 } from '@schoolos/ui';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { Search, UserPlus, Users } from 'lucide-react';
+import { Copy, KeyRound, Search, UserPlus, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ApiError, apiFetch, apiPatch, apiPost } from '@/lib/api-client';
 import { formatDate } from '@/lib/format';
@@ -132,7 +133,7 @@ function InviteDialog({ roles, onClose }: { roles: RoleItem[]; onClose: () => vo
   });
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent title="Invite someone" description="They get access when they sign in with their mobile (one-time code) or email.">
+      <DialogContent title="Invite someone" description="They get access the first time they sign in. Open their name afterwards to make them a sign-in code.">
         <DialogBody className="flex flex-col gap-4">
           <Field label="Name" htmlFor="inv-name"><Input id="inv-name" value={name} onChange={(e) => setName(e.target.value)} /></Field>
           <Field label="Mobile number or email" htmlFor="inv-contact" error={error}><Input id="inv-contact" value={contact} onChange={(e) => setContact(e.target.value)} /></Field>
@@ -163,6 +164,7 @@ function EditMemberDialog({ member, roles, onClose }: { member: MemberItem; role
         <DialogBody className="flex flex-col gap-2">
           <span className="text-small font-medium">Roles</span>
           <RolePicker roles={roles} value={roleIds} onChange={setRoleIds} />
+          {!suspended && <SignInCode member={member} />}
         </DialogBody>
         <DialogFooter className="justify-between">
           <Button variant="ghost" className={suspended ? '' : 'text-danger'} loading={save.isPending} onClick={() => save.mutate({ status: suspended ? 'ACTIVE' : 'SUSPENDED' })}>
@@ -175,5 +177,47 @@ function EditMemberDialog({ member, roles, onClose }: { member: MemberItem; role
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** A one-time code to hand over (paper, WhatsApp): first sign-in or a forgotten password, no SMS needed. */
+function SignInCode({ member }: { member: MemberItem }) {
+  const { me } = useMe();
+  const [issued, setIssued] = useState<SchoolSignInCode | null>(null);
+  const [busy, setBusy] = useState(false);
+  const make = async () => {
+    setBusy(true);
+    try {
+      setIssued(await apiPost<SchoolSignInCode>(`/members/${member.id}/sign-in-code`));
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Couldn't make a code. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const school = me.membership?.school.name ?? 'your school';
+  const message = issued
+    ? `Hello ${member.name}, your sign-in code for ${school} on SchoolOS is ${issued.code}. Open ${window.location.origin}/login or the SchoolOS app, choose "Use a code from your school", enter ${issued.signInWith} and this code, then choose your password. The code works once, until ${formatDate(issued.expiresAt)}.`
+    : '';
+  return (
+    <div className="mt-4 rounded-md border border-border p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-small font-medium">Sign-in code</div>
+          <p className="text-small text-fg-secondary">For their first sign-in or a forgotten password. A new code replaces the old one.</p>
+        </div>
+        {!issued && <Button size="sm" variant="secondary" loading={busy} onClick={make}><KeyRound /> Make code</Button>}
+      </div>
+      {issued && (
+        <div className="mt-3 flex flex-col gap-2">
+          <div className="tabular text-center text-[22px] font-semibold tracking-[0.2em]">{issued.code}</div>
+          <p className="text-center text-small text-fg-secondary">Sign in with {issued.signInWith} · works once, until {formatDate(issued.expiresAt)}</p>
+          <div className="flex justify-center gap-2">
+            <Button size="sm" variant="secondary" onClick={() => void navigator.clipboard.writeText(message).then(() => toast.success('Message copied'))}><Copy /> Copy message</Button>
+            <Button size="sm" variant="secondary" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener')}>Send on WhatsApp</Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

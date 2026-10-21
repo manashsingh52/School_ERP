@@ -29,8 +29,8 @@ const mask = (s: string) => (s.includes('@') ? s.replace(/^(.).*(@.*)$/, '$1***$
  * The only code that talks to push/SMS/email providers. Feature modules never send directly —
  * they publish events and the notification engine routes them here (Master Prompt §39).
  *
- * ⏸ Providers still to connect (docs/SETUP-LATER.md): FCM push (Phase 7, needs Firebase),
- * MSG91 SMS (needs company + DLT registration). Email via Resend works once a key is set.
+ * Each works once its account exists (docs/SETUP-LATER.md): FCM push (Firebase), MSG91 SMS
+ * (company + DLT registration), email via Resend.
  */
 @Injectable()
 export class ChannelGateway {
@@ -72,7 +72,15 @@ export class ChannelGateway {
       this.logger.info({ channel: 'SMS', to: mask(msg.phone) }, `[dev sms] ${msg.body}`);
       return { status: 'SENT', provider };
     }
-    return { status: 'SKIPPED', provider, reason: 'MSG91 not connected yet (needs DLT registration)' };
+    // DLT only delivers registered templates: one template whose single variable carries the text.
+    const res = await fetch(new URL('/api/v5/flow', this.env.MSG91_BASE_URL), {
+      method: 'POST',
+      headers: { authkey: this.env.MSG91_AUTH_KEY!, 'content-type': 'application/json' },
+      body: JSON.stringify({ template_id: this.env.MSG91_SMS_TEMPLATE_ID, short_url: '0', recipients: [{ mobiles: msg.phone.replace(/^\+/, ''), message: msg.body.slice(0, 300) }] }),
+    });
+    const body = (await res.json().catch(() => ({}))) as { type?: string; message?: string };
+    if (!res.ok || body.type !== 'success') throw new Error(`MSG91 responded ${res.status}: ${body.message ?? 'refused'}`); // retried by the queue
+    return { status: 'SENT', provider, providerMessageId: typeof body.message === 'string' ? body.message : undefined };
   }
 
   private async email(msg: OutboundMessage): Promise<SendResult> {

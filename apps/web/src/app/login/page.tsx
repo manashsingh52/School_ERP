@@ -40,7 +40,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <AuthFrame schoolName={school.name} subtitle="Sign in to continue">
-      <LoginForm next={safeNext(next)} />
+      <LoginForm next={safeNext(next)} otpLogin={school.otpLogin} />
     </AuthFrame>
   );
 }

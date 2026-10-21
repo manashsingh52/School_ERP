@@ -6,6 +6,7 @@ import type {
   Identifier,
   MembershipSummary,
   OtpSendResponse,
+  SchoolSignInCode,
   TokenPair,
 } from '@schoolos/contracts';
 import { ENV, type Env } from '../../config/env.js';
@@ -22,6 +23,9 @@ const OTP_TTL_MS = 5 * 60_000;
 const OTP_RESEND_SECONDS = 30;
 const OTP_MAX_PER_HOUR = 5;
 const OTP_MAX_PER_DAY = 10;
+const OFFICE_CODE_TTL_MS = 7 * 24 * 3_600_000;
+/** No 0/O or 1/I: codes are read off paper and typed by hand. */
+const OFFICE_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const MAX_FAILED_LOGINS = 10;
 const LOCKOUT_MS = 15 * 60_000;
 
@@ -90,6 +94,9 @@ export class AuthService {
   // ---------------------------------------------------------------- OTP
 
   async sendOtp(phone: string, purpose: OtpPurpose, ip?: string): Promise<OtpSendResponse> {
+    if (this.env.OTP_PROVIDER === 'none') {
+      throw new AppError('OTP_UNAVAILABLE', 409, "Codes by SMS aren't available yet. Sign in with your password, or ask the school office for a sign-in code.");
+    }
     const expiresAt = new Date(Date.now() + OTP_TTL_MS);
     const user = await this.platform.user.findUnique({ where: { phone }, select: { id: true, status: true } });
 
@@ -212,6 +219,60 @@ export class AuthService {
       },
     });
     await this.sessions.revokeAllForUser(user.id, 'password_reset');
+  }
+
+  // ---------------------------------------------------------------- codes from the school office
+
+  /**
+   * A one-time code the school office hands over (on paper, by WhatsApp) when SMS isn't
+   * available: the first sign-in of an invited parent or teacher, or a forgotten password. A new
+   * code replaces any earlier one for the same person.
+   */
+  async createOfficeCode(userId: string, schoolId: string): Promise<SchoolSignInCode> {
+    const user = await this.platform.user.findUniqueOrThrow({
+      where: { id: userId },
+      include: { platformAdmin: { select: { userId: true } }, memberships: { where: { status: 'ACTIVE', schoolId: { not: schoolId } }, select: { id: true } } },
+    });
+    // One school must not be able to take over an account someone uses at another school.
+    if (user.platformAdmin || user.memberships.length) {
+      throw new AppError('CONFLICT', 409, 'This person also uses SchoolOS somewhere else, so their sign-in can only be reset by them ("Forgot password").');
+    }
+    const target = user.phone ?? user.email;
+    if (!target) throw new AppError('VALIDATION_FAILED', 422, 'Add a mobile number or email for this person first.');
+    const code = Array.from({ length: 8 }, () => OFFICE_CODE_ALPHABET[randomInt(OFFICE_CODE_ALPHABET.length)]).join('');
+    const id = randomUUID();
+    const expiresAt = new Date(Date.now() + OFFICE_CODE_TTL_MS);
+    await this.platform.$transaction([
+      this.platform.otpChallenge.updateMany({ where: { target, channel: 'OFFICE', consumedAt: null }, data: { consumedAt: new Date() } }),
+      this.platform.otpChallenge.create({ data: { id, target, channel: 'OFFICE', purpose: 'ACTIVATE_ACCOUNT', codeHash: this.hashCode(id, code), expiresAt } }),
+    ]);
+    this.logger.info({ userId, schoolId }, 'school sign-in code issued');
+    return { code: `${code.slice(0, 4)}-${code.slice(4)}`, expiresAt: expiresAt.toISOString(), signInWith: target };
+  }
+
+  /** Signs in with a code from the school office, sets the password and activates invitations. */
+  async redeemOfficeCode(identifier: Identifier, code: string, newPassword: string, schoolSlug: string | undefined, device: DeviceInfo): Promise<AuthResponse> {
+    if (this.passwords.isTooCommon(newPassword)) {
+      throw new AppError('WEAK_PASSWORD', 422, 'This password is too common. Choose another.', [{ field: 'newPassword', message: 'Too common' }]);
+    }
+    const user = await this.platform.user.findUnique({ where: identifier.kind === 'email' ? { email: identifier.value } : { phone: identifier.value } });
+    const target = user?.phone ?? user?.email;
+    const challenge = target
+      ? await this.platform.otpChallenge.findFirst({ where: { target, channel: 'OFFICE', consumedAt: null, expiresAt: { gt: new Date() } }, orderBy: { createdAt: 'desc' } })
+      : null;
+    if (!user || !challenge || user.status === 'DISABLED') throw INVALID_CODE();
+    await this.consumeOtp(challenge.id, code, ['ACTIVATE_ACCOUNT']);
+
+    const now = new Date();
+    const [activeUser] = await this.platform.$transaction([
+      this.platform.user.update({
+        where: { id: user.id },
+        data: { status: 'ACTIVE', passwordHash: await this.passwords.hash(newPassword), lastLoginAt: now, failedLogins: 0, lockedUntil: null },
+      }),
+      this.platform.membership.updateMany({ where: { userId: user.id, status: 'INVITED' }, data: { status: 'ACTIVE', joinedAt: now } }),
+    ]);
+    await this.sessions.revokeAllForUser(user.id, 'password_reset');
+    return this.startSession(activeUser, schoolSlug, device);
   }
 
   async changePassword(userId: string, currentFamilyId: string, current: string, next: string): Promise<void> {

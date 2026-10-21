@@ -37,6 +37,12 @@ export class MembersController {
   async update(@Param('id', id) memberId: string, @Body(new ZodPipe(updateMemberSchema)) body: z.output<typeof updateMemberSchema>) {
     return { data: await this.members.update(memberId, body) };
   }
+
+  @Post(':id/sign-in-code')
+  @RequirePermission('user.manage')
+  async signInCode(@Param('id', id) memberId: string) {
+    return { data: await this.members.signInCode(memberId) };
+  }
 }
 
 @Controller('roles')

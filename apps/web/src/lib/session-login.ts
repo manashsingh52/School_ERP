@@ -7,10 +7,10 @@ import { CONSOLE_HEADER, SCHOOL_SLUG_HEADER } from './tenant';
 import { clientIpFrom, upstream } from './upstream';
 
 /**
- * Shared by password and OTP sign-in: forward to the API for this school, then move the tokens
+ * Shared by password, OTP and school-code sign-in: forward to the API for this school, then move the tokens
  * into httpOnly cookies. The browser only receives the user and school.
  */
-export async function signIn(req: NextRequest, apiPath: '/v1/auth/login' | '/v1/auth/otp/verify') {
+export async function signIn(req: NextRequest, apiPath: '/v1/auth/login' | '/v1/auth/otp/verify' | '/v1/auth/code/redeem') {
   const rejected = csrfRejection(req);
   if (rejected) return rejected;
   const slug = req.headers.get(SCHOOL_SLUG_HEADER);
