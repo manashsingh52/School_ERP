@@ -6,14 +6,24 @@ const weekdayFmt = new Intl.DateTimeFormat('en-IN', { weekday: 'long', day: 'num
 
 export const formatNumber = (n: number) => number.format(n);
 
+/**
+ * Dates are assembled from their parts: Node and browsers ship different locale data and punctuate
+ * en-IN differently ("Thursday, 22 Oct" vs "Thursday 22 Oct"), which broke server-rendered pages.
+ */
+const assemble = (fmt: Intl.DateTimeFormat, d: Date, order: Intl.DateTimeFormatPartTypes[]) => {
+  const parts = Object.fromEntries(fmt.formatToParts(d).map((p) => [p.type, p.value]));
+  return order.map((t) => parts[t]).filter(Boolean).join(' ');
+};
+
 /** "2013-03-14" or ISO datetime → "14 Mar 2013" */
 export function formatDate(value: string | null | undefined): string {
   if (!value) return '—';
   const d = new Date(value.length === 10 ? `${value}T00:00:00+05:30` : value);
-  return Number.isNaN(d.getTime()) ? '—' : dateFmt.format(d);
+  return Number.isNaN(d.getTime()) ? '—' : assemble(dateFmt, d, ['day', 'month', 'year']);
 }
 
-export const today = () => weekdayFmt.format(new Date());
+/** "Thursday 22 Oct" */
+export const today = () => assemble(weekdayFmt, new Date(), ['weekday', 'day', 'month']);
 
 export function greeting(now = new Date()): string {
   const hour = Number(new Intl.DateTimeFormat('en-IN', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Asia/Kolkata' }).format(now));
