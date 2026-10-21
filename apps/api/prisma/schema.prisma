@@ -326,6 +326,7 @@ enum DocumentOwnerType {
   STUDENT
   GUARDIAN
   TEACHER
+  MEMBER // non-teaching staff (accountant, office): owner id is the membership
 }
 
 enum ActorType {

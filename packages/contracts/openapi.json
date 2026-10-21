@@ -15475,7 +15475,8 @@
                 "SCHOOL",
                 "STUDENT",
                 "GUARDIAN",
-                "TEACHER"
+                "TEACHER",
+                "MEMBER"
               ]
             }
           },
@@ -15556,7 +15557,8 @@
                       "SCHOOL",
                       "STUDENT",
                       "GUARDIAN",
-                      "TEACHER"
+                      "TEACHER",
+                      "MEMBER"
                     ]
                   },
                   "ownerId": {

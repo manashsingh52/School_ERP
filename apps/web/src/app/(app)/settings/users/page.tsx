@@ -28,6 +28,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Copy, KeyRound, Search, UserPlus, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ApiError, apiFetch, apiPatch, apiPost } from '@/lib/api-client';
+import { DocumentsPanel } from '@/components/documents/documents-panel';
 import { formatDate } from '@/lib/format';
 import { useAction, useData } from '@/lib/hooks';
 import { useMe } from '@/lib/me';
@@ -155,6 +156,7 @@ function InviteDialog({ roles, onClose }: { roles: RoleItem[]; onClose: () => vo
 }
 
 function EditMemberDialog({ member, roles, onClose }: { member: MemberItem; roles: RoleItem[]; onClose: () => void }) {
+  const { can } = useMe();
   const [roleIds, setRoleIds] = useState(new Set(member.roles.map((r) => r.id)));
   const save = useAction((body: object) => apiPatch(`/members/${member.id}`, body), { success: 'Access updated', invalidate: [['members'], ['roles']], onSuccess: onClose });
   const suspended = member.status === 'SUSPENDED';
@@ -165,6 +167,7 @@ function EditMemberDialog({ member, roles, onClose }: { member: MemberItem; role
           <span className="text-small font-medium">Roles</span>
           <RolePicker roles={roles} value={roleIds} onChange={setRoleIds} />
           {!suspended && <SignInCode member={member} />}
+          {can('document.manage') && <div className="mt-4"><DocumentsPanel ownerType="MEMBER" ownerId={member.id} title="Staff documents" /></div>}
         </DialogBody>
         <DialogFooter className="justify-between">
           <Button variant="ghost" className={suspended ? '' : 'text-danger'} loading={save.isPending} onClick={() => save.mutate({ status: suspended ? 'ACTIVE' : 'SUSPENDED' })}>

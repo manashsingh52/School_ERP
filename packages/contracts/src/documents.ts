@@ -16,7 +16,8 @@ export const DOCUMENT_CATEGORIES = {
 export type DocumentCategory = keyof typeof DOCUMENT_CATEGORIES;
 const categorySchema = z.enum(Object.keys(DOCUMENT_CATEGORIES) as [DocumentCategory, ...DocumentCategory[]]);
 
-export const documentOwnerTypeSchema = z.enum(['SCHOOL', 'STUDENT', 'GUARDIAN', 'TEACHER']);
+/** MEMBER = anyone with a login, by membership id: non-teaching staff have no teacher record. */
+export const documentOwnerTypeSchema = z.enum(['SCHOOL', 'STUDENT', 'GUARDIAN', 'TEACHER', 'MEMBER']);
 export type DocumentOwnerType = z.infer<typeof documentOwnerTypeSchema>;
 
 export const listDocumentsQuerySchema = z.object({
