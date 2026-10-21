@@ -579,6 +579,12 @@ running before the existence check returns 422 instead of 404.
 - **Fresh checkouts have no `dist/` folders.** Workspace packages (`permissions`, then `contracts`) must be
   built before anything imports them (`ui` is source-only). `turbo run build` handles the order; a bare
   `pnpm --filter X build` does not. This is what broke the CI `check` job.
+- **`embedded-postgres` swallowed the API suite's exit code.** It pulls in `async-exit-hook`, which turns
+  Node's `beforeExit` into `process.exit(0)`, so failing API tests (or a test database that never
+  started) still exited 0 and CI stayed green. `apps/api/test/global-setup.ts` now re-exits with Vitest's
+  own code. Keep that line if the setup is ever rewritten.
+- **Postgres refuses to run as root.** In a root-only container (some cloud sandboxes) the API tests
+  fail at setup; run them as a normal user.
 
 **Repo conventions**
 - Commit messages and docs must **not mention AI tools or assistants**: no `Co-Authored-By` trailers or
