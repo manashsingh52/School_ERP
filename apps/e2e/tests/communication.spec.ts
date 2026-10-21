@@ -1,4 +1,4 @@
-import { as, expect, school, test } from '../fixtures.js';
+import { as, expect, school, schoolDate, test } from '../fixtures.js';
 
 test.describe(() => {
   test.use({ who: 'parent' });
@@ -40,9 +40,7 @@ test.describe(() => {
     await page.getByRole('button', { name: 'New reminder' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('button', { name: 'Pick up from school' }).click();
-    const tomorrow = new Date(Date.now() + 86_400_000);
-    const iso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
-    await dialog.getByLabel('Date').fill(iso);
+    await dialog.getByLabel('Date').fill(schoolDate(1));
     await dialog.getByLabel('Time').fill('13:30');
     await dialog.getByLabel('Repeat').selectOption({ label: 'Monday to Saturday' });
     await dialog.getByRole('button', { name: 'Set reminder' }).click();
@@ -77,8 +75,7 @@ test.describe(() => {
     await dialog.getByPlaceholder('Student name or admission number').fill('1501');
     await dialog.getByRole('button', { name: /Rahul Kumar/ }).click();
     await dialog.getByLabel('Title').fill('Science project check-in');
-    const later = new Date(Date.now() + 2 * 86_400_000);
-    await dialog.getByLabel('Date').fill(`${later.getFullYear()}-${String(later.getMonth() + 1).padStart(2, '0')}-${String(later.getDate()).padStart(2, '0')}`);
+    await dialog.getByLabel('Date').fill(schoolDate(2));
     await dialog.getByLabel('Time').fill('16:30');
     await dialog.getByRole('button', { name: 'Book and notify parents' }).click();
     await expect(page.getByText('Meeting booked — the parents have been notified.')).toBeVisible();

@@ -8,6 +8,9 @@ export const WEB_PORT = 3100;
 export const PASSWORD = 'Test@Pass123';
 
 /** The demo school's web address, or the platform console's. */
+/** A date [days] from now in the school's timezone (the browser runs in Asia/Kolkata; CI machines in UTC). */
+export const schoolDate = (days = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date(Date.now() + days * 86_400_000));
+
 export const school = (path = '/') => `http://demo.localhost:${WEB_PORT}${path}`;
 export const consoleUrl = (path = '/') => `http://admin.localhost:${WEB_PORT}${path}`;
 
