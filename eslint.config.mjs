@@ -11,7 +11,7 @@ const ROLE_KEYS = 'school_admin|principal|accountant|teacher|parent';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/.next/**', '**/node_modules/**', '**/generated/**', '**/coverage/**', '**/next-env.d.ts'],
+    ignores: ['**/dist/**', '**/.next/**', '**/node_modules/**', '**/generated/**', '**/coverage/**', '**/next-env.d.ts', 'apps/mobile/build/**', 'apps/mobile/.dart_tool/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

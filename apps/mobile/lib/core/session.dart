@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
 import 'api_error.dart';
 import 'config.dart';
+import 'demo_api.dart';
 import 'models.dart';
 import 'token_store.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
-final apiProvider = Provider<ApiClient>((ref) => ApiClient(ref.watch(tokenStoreProvider)));
+final apiProvider = Provider<ApiClient>((ref) => demoMode ? DemoApi(ref.watch(tokenStoreProvider)) : ApiClient(ref.watch(tokenStoreProvider)));
 
 sealed class SessionState {
   const SessionState();

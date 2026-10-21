@@ -9,6 +9,9 @@ String get apiBaseUrl {
   return 'http://localhost:4000';
 }
 
+/// A build with no server: sample data from assets/demo (`--dart-define=DEMO_MODE=true`, see DemoApi).
+const demoMode = bool.fromEnvironment('DEMO_MODE');
+
 /// The version shown in stores; must match pubspec.yaml (checked by a test).
 const appVersion = '1.0.0';
 
