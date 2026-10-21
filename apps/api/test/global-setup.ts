@@ -13,6 +13,10 @@ import { applySecurity } from '../scripts/apply-sql.mjs';
  * connection URLs to the tests. Nothing is mocked: tenant isolation is tested against real RLS.
  */
 export default async function setup(project: TestProject) {
+  // embedded-postgres pulls in async-exit-hook, which turns 'beforeExit' into process.exit(0) and
+  // drops Vitest's exit code: failing tests, or a database that never started, would pass CI.
+  process.once('beforeExit', () => process.exit(process.exitCode ?? 0));
+
   const dir = mkdtempSync(join(tmpdir(), 'schoolos-test-pg-'));
   const port = 54400 + Math.floor(Math.random() * 500);
   const cluster = await startCluster({ dir, port, persistent: false, quiet: true });
