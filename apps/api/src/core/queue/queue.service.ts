@@ -4,6 +4,7 @@ import { Redis } from 'ioredis';
 import type { Logger } from 'pino';
 import { ENV, type Env } from '../../config/env.js';
 import { RequestContextStore } from '../context/request-context.js';
+import { ErrorReporter } from '../errors/error-reporter.js';
 import { LOGGER } from '../logger/logger.js';
 
 /** Queue names (docs/01 §5). Add a queue here before using it. */
@@ -48,6 +49,7 @@ export class QueueService implements OnApplicationShutdown {
   constructor(
     @Inject(ENV) private readonly env: Env,
     @Inject(LOGGER) private readonly logger: Logger,
+    private readonly reporter: ErrorReporter,
   ) {}
 
   /** Register a handler for jobs named `name` on `queue`. Call from a module's onModuleInit. */
@@ -78,9 +80,11 @@ export class QueueService implements OnApplicationShutdown {
         const run = () => handler(job.data, job);
         await (job.data.schoolId ? RequestContextStore.runAsSystem(job.data.schoolId, requestId, run) : run());
       });
-      worker.on('failed', (job, err) =>
-        this.logger.error({ queue, job: job?.name, jobId: job?.id, attempts: job?.attemptsMade, err }, 'job failed'),
-      );
+      worker.on('failed', (job, err) => {
+        this.logger.error({ queue, job: job?.name, jobId: job?.id, attempts: job?.attemptsMade, err }, 'job failed');
+        // Only once retries are used up: a failure that will be retried isn't news yet.
+        if (job && job.attemptsMade >= (job.opts.attempts ?? 1)) this.reporter.report(err, { queue, job: job.name, schoolId: job.data?.schoolId ?? undefined });
+      });
       worker.on('error', (err) => this.logger.error({ queue, err }, 'worker error'));
       this.workers.push(worker);
     }

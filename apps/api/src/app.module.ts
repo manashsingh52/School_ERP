@@ -9,6 +9,7 @@ import { PasswordService } from './core/auth/password.service.js';
 import { RouteAccessCheck } from './core/auth/route-access.check.js';
 import { TokenService } from './core/auth/token.service.js';
 import { RequestContextMiddleware } from './core/context/context.middleware.js';
+import { ErrorReporter } from './core/errors/error-reporter.js';
 import { AllExceptionsFilter } from './core/errors/error.filter.js';
 import { HealthController } from './core/health/health.controller.js';
 import { LOGGER } from './core/logger/logger.js';
@@ -120,6 +121,7 @@ export class CoreModule {
       AccessService,
       ScopeService,
       AuditService,
+      ErrorReporter,
       MemoryRateLimitStore,
       RateLimitGuard,
       RequestContextMiddleware,

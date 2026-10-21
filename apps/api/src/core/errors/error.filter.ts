@@ -8,6 +8,7 @@ import { Prisma } from '../../generated/prisma/client.js';
 import { RequestContextStore } from '../context/request-context.js';
 import { LOGGER } from '../logger/logger.js';
 import { AppError } from './app-error.js';
+import { ErrorReporter } from './error-reporter.js';
 
 /** Short code a school can read out to support, e.g. "ERR-7KQ2M9". Maps to the log line. */
 function supportRef(): string {
@@ -61,7 +62,10 @@ export function toAppError(error: unknown): AppError | null {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(@Inject(LOGGER) private readonly logger: Logger) {}
+  constructor(
+    @Inject(LOGGER) private readonly logger: Logger,
+    private readonly reporter: ErrorReporter,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const res = host.switchToHttp().getResponse<Response>();
@@ -74,11 +78,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (known) {
       status = known.status;
       body = { error: { code: known.code, message: known.message, details: known.details, requestId } };
-      if (status >= 500) this.logger.error({ err: exception, path: req.path }, known.message);
+      if (status >= 500) {
+        this.logger.error({ err: exception, path: req.path }, known.message);
+        this.reporter.report(exception, { requestId, route: req.route?.path, method: req.method });
+      }
     } else {
       status = 500;
       const ref = supportRef();
       this.logger.error({ err: exception, supportRef: ref, path: req.path, method: req.method }, 'Unhandled error');
+      // The route pattern (/v1/students/:id), never the path with ids in it.
+      this.reporter.report(exception, { supportRef: ref, requestId, route: req.route?.path, method: req.method, schoolId: RequestContextStore.get()?.schoolId });
       body = {
         error: {
           code: 'INTERNAL_ERROR',

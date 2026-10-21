@@ -19,6 +19,11 @@ const envSchema = z.object({
   JWT_ISSUER: z.string().default('schoolos'),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().default(15 * 60),
 
+  /** ⏸ Error monitoring (SETUP-LATER #10): unexpected errors go to Sentry when set. */
+  SENTRY_DSN: optional(z.url()),
+  /** Build or revision name, sent with error reports (Cloud Run sets K_REVISION). */
+  RELEASE: optional(z.string()),
+
   OTP_PEPPER: z.string().min(16),
   // none = no codes by SMS: people sign in with a password or a code from the school office.
   OTP_PROVIDER: z.enum(['console', 'msg91', 'none']).default('console'),
