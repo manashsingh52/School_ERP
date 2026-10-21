@@ -1,4 +1,5 @@
 import type { TermResultRow } from '@schoolos/contracts';
+import { DEFAULT_CARD, layoutCss, type ReportCardOptions } from './report-card.layout.js';
 
 export interface TermReportCardData {
   school: { name: string; address: string | null; contact: string | null; accent: string; logoDataUri: string | null; affiliation: string | null };
@@ -9,6 +10,8 @@ export interface TermReportCardData {
   result: TermResultRow;
   coScholastic?: { area: string; grade: string }[];
   grades: { label: string; minPercent: number; maxPercent: number }[];
+  /** Layout and what to show (Settings → Examinations). */
+  card?: ReportCardOptions;
 }
 
 const esc = (v: unknown) =>
@@ -25,6 +28,7 @@ const STATUS = { PASS: 'Passed', FAIL: 'Not passed', INCOMPLETE: 'Incomplete' } 
 /** Consolidated A4 report card: one column per exam with its weight, then the term % and grade. Every value is escaped. */
 export function termReportCardHtml(d: TermReportCardData): string {
   const accent = safeColor(d.school.accent);
+  const card = d.card ?? DEFAULT_CARD;
   const r = d.result;
   const head = d.term.components.map((c) => `<th class="num">${esc(c.name)}<br><small>${c.weight}%</small></th>`).join('');
   const rows = r.subjects
@@ -67,13 +71,14 @@ export function termReportCardHtml(d: TermReportCardData): string {
   .sign { flex: 1; text-align: center; border-top: 1px solid #1b1f24; padding-top: 4px; font-size: 9pt; color: #57606a; position: relative; }
   .sig { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); max-height: 34px; max-width: 120px; }
   .foot { margin-top: 14px; font-size: 7.5pt; color: #8c959f; text-align: center; }
+${layoutCss(card.layout, accent)}
 </style></head>
 <body>
   <div class="head">
     ${d.school.logoDataUri ? `<img src="${d.school.logoDataUri}" alt="">` : ''}
     <div class="school"><h1>${esc(d.school.name)}</h1>${d.school.affiliation ? `<p>${esc(d.school.affiliation)}</p>` : ''}${d.school.address ? `<p>${esc(d.school.address)}</p>` : ''}${d.school.contact ? `<p>${esc(d.school.contact)}</p>` : ''}</div>
   </div>
-  <div class="title"><h2>Report card · ${esc(d.term.name)}</h2><span>Academic year ${esc(d.academicYear)}</span></div>
+  <div class="title"><h2>${esc(card.title ?? 'Report card')} · ${esc(d.term.name)}</h2><span>Academic year ${esc(d.academicYear)}</span></div>
   <div class="fields">
     ${field('Student', r.name)}${field('Class', r.section.label)}${field('Admission no.', r.admissionNo)}
     ${field('Roll no.', r.rollNo === null ? null : String(r.rollNo))}${field('Date of birth', d.student.dateOfBirth)}${field('Parent / guardian', d.student.guardian)}
@@ -86,15 +91,15 @@ export function termReportCardHtml(d: TermReportCardData): string {
     <div class="stat"><span>Term percentage</span><b>${esc(pct(r.percentage))}</b></div>
     <div class="stat"><span>Grade</span><b>${esc(r.grade ?? '—')}</b></div>
     <div class="stat"><span>Result</span><b class="${r.status === 'PASS' ? 'pass' : r.status === 'FAIL' ? 'fail' : ''}">${STATUS[r.status]}</b></div>
-    ${r.rankInSection ? `<div class="stat"><span>Rank in section</span><b>${r.rankInSection}</b></div>` : ''}
+    ${card.show.rank && r.rankInSection ? `<div class="stat"><span>Rank in section</span><b>${r.rankInSection}</b></div>` : ''}
   </div>
   ${d.coScholastic?.length ? `<table><thead><tr><th>Co-scholastic area</th><th class="num">Grade</th></tr></thead><tbody>${d.coScholastic.map((c) => `<tr><td>${esc(c.area)}</td><td class="num strong">${esc(c.grade)}</td></tr>`).join('')}</tbody></table>` : ''}
   <div class="how">How the term is worked out: ${d.term.components.map((c) => `${esc(c.name)} × ${c.weight}%`).join(' + ')}. An exempt subject leaves that exam out and the other weights are scaled up.</div>
-  ${d.grades.length ? `<div class="scale">Grading: ${d.grades.map((g) => `<b>${esc(g.label)}</b> ${g.minPercent}–${Math.floor(g.maxPercent)}%`).join(' · ')}</div>` : ''}
+  ${card.show.gradingKey && d.grades.length ? `<div class="scale">Grading: ${d.grades.map((g) => `<b>${esc(g.label)}</b> ${g.minPercent}–${Math.floor(g.maxPercent)}%`).join(' · ')}</div>` : ''}
   <div class="signs">
     <div class="sign">Class teacher</div>
     <div class="sign">${d.principal.signatureDataUri ? `<img class="sig" src="${d.principal.signatureDataUri}" alt="">` : ''}Principal${d.principal.name ? ` (${esc(d.principal.name)})` : ''}</div>
-    <div class="sign">Parent / guardian</div>
+    ${card.show.parentSignature ? '<div class="sign">Parent / guardian</div>' : ''}
   </div>
   <div class="foot">This report card was generated electronically by ${esc(d.school.name)}.</div>
 </body></html>`;

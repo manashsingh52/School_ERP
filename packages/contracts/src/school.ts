@@ -142,7 +142,18 @@ export const feeSettingsSchema = z.object({
   receiptNote: note(200),
 });
 
+export const reportCardLayoutSchema = z.enum(['classic', 'modern', 'compact']);
+export type ReportCardLayout = z.infer<typeof reportCardLayoutSchema>;
+
 export const examSettingsSchema = z.object({
+  /** classic = bordered boxes; modern = coloured header band, airy; compact = smaller type, fits more. */
+  reportCardLayout: reportCardLayoutSchema.default('classic'),
+  /** Heading on the card, e.g. "Progress report". null = "Report card". */
+  reportCardTitle: note(40),
+  /** What the card shows. */
+  reportCardShow: z
+    .object({ photo: z.boolean().default(true), passMarks: z.boolean().default(true), rank: z.boolean().default(true), gradingKey: z.boolean().default(true), remarks: z.boolean().default(true), parentSignature: z.boolean().default(true) })
+    .default({ photo: true, passMarks: true, rank: true, gradingKey: true, remarks: true, parentSignature: true }),
   showAttendanceOnReportCard: z.boolean().default(true),
   reportCardNote: note(300),
   /** Grades teachers may give in co-scholastic areas (best first). */

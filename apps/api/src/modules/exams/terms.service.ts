@@ -318,7 +318,7 @@ export class TermsService implements OnModuleInit {
     if (!row) return null;
     const [item] = await this.toItems([t]);
     const school = await this.prisma.db.school.findUniqueOrThrow({ where: { id: RequestContextStore.school().schoolId } });
-    const [general, branding] = await Promise.all([this.settings.get('general'), this.settings.get('branding')]);
+    const [general, branding, examSettings] = await Promise.all([this.settings.get('general'), this.settings.get('branding'), this.settings.get('examinations')]);
     const student = await this.prisma.db.student.findFirst({ where: { id: studentId }, select: { dateOfBirth: true, guardians: { orderBy: { isPrimary: 'desc' }, take: 1, select: { guardian: { select: { name: true } } } } } });
     const year = await this.prisma.db.academicYear.findFirst({ where: { id: t.academicYearId }, select: { name: true } });
     const html = termReportCardHtml({
@@ -337,6 +337,7 @@ export class TermsService implements OnModuleInit {
       result: row,
       coScholastic: await this.coFor(t, studentId),
       grades: t.gradingScale.bands.sort((a, b) => a.order - b.order).map((b) => ({ label: b.label, minPercent: Number(b.minPercent), maxPercent: Number(b.maxPercent) })),
+      card: { layout: examSettings.reportCardLayout, title: examSettings.reportCardTitle, show: examSettings.reportCardShow },
     });
     const fileId = await this.files.storeGenerated({ purpose: 'report_card', fileName: `${row.name} - ${t.name}.pdf`, mimeType: 'application/pdf', data: await this.pdf.render(html), memberId });
     await this.prisma.tenantTx((tx) =>

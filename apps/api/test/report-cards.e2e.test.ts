@@ -116,6 +116,23 @@ describe('report card template', () => {
     },
   };
 
+  it("follows the school's layout and what it chose to show", () => {
+    const classic = reportCardHtml(data);
+    expect(classic).toContain('<th class="num">Pass</th>');
+    expect(classic).toContain('<div class="sign">Parent / guardian</div>');
+    const compact = reportCardHtml({
+      ...data,
+      card: { layout: 'compact', title: 'Progress report', show: { photo: false, passMarks: false, rank: false, gradingKey: false, remarks: false, parentSignature: false } },
+    });
+    expect(compact).toContain('Progress report · ');
+    expect(compact).toContain('margin: 10mm 10mm 12mm');
+    expect(compact).not.toContain('<th class="num">Pass</th>');
+    expect(compact).not.toContain('<div class="sign">Parent / guardian</div>');
+    expect(compact).not.toContain("Class teacher's remarks");
+    expect(compact).not.toContain('Grading:');
+    expect(reportCardHtml({ ...data, card: { layout: 'modern', title: null, show: { photo: true, passMarks: true, rank: true, gradingKey: true, remarks: true, parentSignature: true } } })).toContain('border-radius: 10px');
+  });
+
   it('escapes every user value and rejects unsafe colours', () => {
     const html = reportCardHtml(data);
     expect(html).not.toContain('<img src=x');
