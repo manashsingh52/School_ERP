@@ -76,6 +76,37 @@ export interface ReportRunItem {
   completedAt: string | null;
 }
 
+// ---------------------------------------------------------------- saved and scheduled reports
+
+export const reportScheduleSchema = z.enum(['NONE', 'WEEKLY', 'MONTHLY']);
+export type ReportSchedule = z.infer<typeof reportScheduleSchema>;
+
+/**
+ * A report saved with its filters. WEEKLY runs on Mondays for the week before, MONTHLY on the 1st
+ * for the month before (dates and months are filled in at run time); the owner is notified.
+ */
+export const saveReportSchema = z.object({
+  name: z.string().trim().min(1, 'Give it a name').max(80),
+  report: z.enum(REPORT_KEYS),
+  params: reportParamsSchema.default({}),
+  format: exportFormatSchema,
+  schedule: reportScheduleSchema.default('NONE'),
+});
+export const updateSavedReportSchema = saveReportSchema.pick({ name: true, format: true, schedule: true }).partial();
+
+export interface SavedReportItem {
+  id: string;
+  name: string;
+  report: ReportKey;
+  title: string;
+  params: ReportParams;
+  format: ExportFormat;
+  schedule: ReportSchedule;
+  nextRunAt: string | null;
+  lastRunAt: string | null;
+  createdAt: string;
+}
+
 // ---------------------------------------------------------------- school audit log
 
 export const auditQuerySchema = z.object({

@@ -12,6 +12,7 @@ import { PrismaService } from '../../core/prisma/prisma.service.js';
 import { QUEUES, QueueService } from '../../core/queue/queue.service.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { FilesService } from '../files/files.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { EXPORT_MIME, exportFileName, reportHtml, toCsv, toXlsx } from './report-export.js';
 import { ReportsService } from './reports.service.js';
 
@@ -34,6 +35,7 @@ export class ReportRunsService implements OnModuleInit {
     private readonly queues: QueueService,
     private readonly access: AccessService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
     @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
@@ -61,15 +63,35 @@ export class ReportRunsService implements OnModuleInit {
   }
 
   async create(input: In<typeof createReportRunSchema>): Promise<ReportRunItem> {
-    const ctx = RequestContextStore.tenant();
     this.reports.def(input.report); // 403 if they can't run it
+    return this.queueFor({ memberId: RequestContextStore.tenant().membershipId, ...input });
+  }
+
+  /** Queue an export for a member (themselves, or a saved report's owner on its schedule). */
+  async queueFor(input: { memberId: string; report: ReportKey; params: ReportParams; format: Row['format']; savedReport?: { id: string } }): Promise<ReportRunItem> {
     const run = await this.prisma.tenantTx(async (tx) => {
-      const r = await tx.reportRun.create({ data: { type: input.report, params: input.params, format: input.format, requestedByMemberId: ctx.membershipId } as Prisma.ReportRunUncheckedCreateInput });
-      await this.audit.record(tx, { action: 'report.export', entityType: 'ReportRun', entityId: r.id, metadata: { report: input.report, format: input.format, params: input.params } });
+      const r = await tx.reportRun.create({
+        data: { type: input.report, params: input.params, format: input.format, requestedByMemberId: input.memberId, savedReportId: input.savedReport?.id ?? null } as Prisma.ReportRunUncheckedCreateInput,
+      });
+      await this.audit.record(tx, { action: 'report.export', entityType: 'ReportRun', entityId: r.id, metadata: { report: input.report, format: input.format, params: input.params, scheduled: !!input.savedReport } });
       return r;
     });
-    await this.queues.add(QUEUES.documents, 'report-export', { schoolId: ctx.schoolId, runId: run.id }, { jobId: `report-${run.id}`, attempts: 2 });
+    await this.queues.add(QUEUES.documents, 'report-export', { schoolId: RequestContextStore.school().schoolId, runId: run.id }, { jobId: `report-${run.id}`, attempts: 2 });
     return (await this.toItems([run]))[0]!;
+  }
+
+  /** A scheduled export is done: tell its owner. */
+  private async announce(run: Row): Promise<void> {
+    if (!run.savedReportId) return;
+    const saved = await this.prisma.db.savedReport.findFirst({ where: { id: run.savedReportId } });
+    if (!saved) return;
+    const p = run.params as ReportParams;
+    const period = p.from && p.to ? `${p.from} to ${p.to}` : (p.month ?? 'latest');
+    await this.notifications.notify({
+      event: 'report.ready',
+      recipients: [{ membershipId: run.requestedByMemberId, vars: { name: saved.name, schedule: saved.schedule === 'WEEKLY' ? 'weekly' : 'monthly', period }, data: { route: '/reports', runId: run.id } }],
+      dedupeKey: () => `report-ready:${run.id}`,
+    });
   }
 
   async list(): Promise<ReportRunItem[]> {
@@ -115,6 +137,7 @@ export class ReportRunsService implements OnModuleInit {
         const data = run.format === 'CSV' ? toCsv(table) : run.format === 'XLSX' ? await toXlsx(table) : await this.pdf.render(reportHtml(table, { name: school.name, accent: school.accentColor }, who));
         const fileId = await this.files.storeGenerated({ purpose: 'report_export', fileName: exportFileName(table, run.format), mimeType: EXPORT_MIME[run.format], data, memberId: member.membershipId });
         await this.prisma.tenantTx((tx) => tx.reportRun.update({ where: { id: runId }, data: { status: 'DONE', fileId, completedAt: new Date() } }));
+        await this.announce(run);
       } catch (err) {
         if (err instanceof AppError) return fail(err.message);
         this.logger.error({ err, runId }, 'report export failed');

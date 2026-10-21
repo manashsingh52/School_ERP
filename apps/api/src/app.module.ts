@@ -91,6 +91,7 @@ import { AppConfigController, DevicesController, OpenApiController } from './mod
 import { DocumentsService } from './modules/documents/documents.service.js';
 import { PlatformController, SchoolPlanController } from './modules/platform/platform.controller.js';
 import { ReportRunsService } from './modules/reports/report-runs.service.js';
+import { SavedReportsService } from './modules/reports/saved-reports.service.js';
 import { AuditController, ReportsController } from './modules/reports/reports.controller.js';
 import { ReportsService } from './modules/reports/reports.service.js';
 import { PlatformService } from './modules/platform/platform.service.js';
@@ -242,7 +243,7 @@ export class ImportsModule {}
 @Module({ imports: [FilesModule], controllers: [DocumentsController], providers: [DocumentsService] })
 export class DocumentsModule {}
 
-@Module({ imports: [FilesModule, FinanceModule], controllers: [ReportsController, AuditController], providers: [ReportsService, ReportRunsService], exports: [ReportsService] })
+@Module({ imports: [FilesModule, FinanceModule, NotificationsModule], controllers: [ReportsController, AuditController], providers: [ReportsService, ReportRunsService, SavedReportsService], exports: [ReportsService] })
 export class ReportsModule {}
 
 @Module({ imports: [ReportsModule], controllers: [AiController], providers: [AiService, AiTools] })

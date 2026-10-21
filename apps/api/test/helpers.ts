@@ -147,6 +147,8 @@ export interface Tenant {
   /** A document on s1 (shared with parents) and a finished report export by the admin. */
   documentId: string;
   reportRunId: string;
+  /** The admin's saved report (student strength, CSV, no schedule). */
+  savedReportId: string;
   /** A consolidated term made of the fixture exam (unpublished). */
   termId: string;
   /** The parent's question to the class teacher about s1; a video meeting about s1 tomorrow; the parent's own reminder. */
@@ -351,6 +353,9 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     ).id,
     reportRunId: (
       await db.reportRun.create({ data: { schoolId, type: 'student_strength', params: {}, format: 'CSV', status: 'DONE', fileId: file.id, requestedByMemberId: adminMembership.id, completedAt: new Date() } })
+    ).id,
+    savedReportId: (
+      await db.savedReport.create({ data: { schoolId, memberId: adminMembership.id, name: 'Strength', type: 'student_strength', params: {}, format: 'CSV' } })
     ).id,
     termId: (
       await db.examTerm.create({ data: { schoolId, academicYearId: year.id, name: 'Term 1', gradingScaleId: (await db.gradingScale.findFirstOrThrow({ where: { schoolId } })).id, components: [{ examId: (await db.exam.findFirstOrThrow({ where: { schoolId } })).id, weight: 100 }] } })

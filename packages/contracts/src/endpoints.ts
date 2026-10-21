@@ -54,7 +54,7 @@ import {
 import { requestUploadSchema } from './files.js';
 import { askSchema, worksheetSchema } from './ai.js';
 import { createDocumentSchema, listDocumentsQuerySchema, updateDocumentSchema } from './documents.js';
-import { auditQuerySchema, createReportRunSchema, reportPreviewQuerySchema } from './reports.js';
+import { auditQuerySchema, createReportRunSchema, reportPreviewQuerySchema, saveReportSchema, updateSavedReportSchema } from './reports.js';
 import {
   featureFlagSchema,
   listSchoolsQuerySchema,
@@ -426,6 +426,11 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/reports/runs': { summary: 'My exports', tag: 'Reports', access: 'permission:report.export' },
   'GET /v1/reports/runs/:id': { summary: 'One export (poll until DONE)', tag: 'Reports', access: 'permission:report.export' },
   'GET /v1/reports/runs/:id/download': { summary: 'Download link for a finished export', tag: 'Reports', access: 'permission:report.export' },
+  'GET /v1/reports/saved': { summary: 'My saved reports', tag: 'Reports', access: 'permission:report.export' },
+  'POST /v1/reports/saved': { summary: 'Save a report with its filters, optionally weekly or monthly', tag: 'Reports', access: 'permission:report.export', body: saveReportSchema },
+  'PATCH /v1/reports/saved/:id': { summary: 'Rename, change the format or the schedule', tag: 'Reports', access: 'permission:report.export', body: updateSavedReportSchema },
+  'DELETE /v1/reports/saved/:id': { summary: 'Delete a saved report', tag: 'Reports', access: 'permission:report.export' },
+  'POST /v1/reports/saved/:id/run': { summary: 'Export a saved report now', tag: 'Reports', access: 'permission:report.export' },
   'GET /v1/audit': { summary: "The school's audit log", tag: 'Audit', access: 'permission:audit.view', query: auditQuerySchema },
 
   'GET /v1/ai/status': { summary: 'Is the AI assistant on for me, and how much is left this month', tag: 'AI', access: 'permission:ai.use' },
