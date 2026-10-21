@@ -21,7 +21,26 @@ flutter run --dart-define=API_URL=https://api.example.in   # any other API
 flutter test && flutter analyze
 ```
 
-iOS and Android builds need Xcode / Android Studio (docs/SETUP-LATER.md).
+iOS and Android builds need Xcode / Android Studio (docs/SETUP-LATER.md). The Play Store bundle is
+built by the **Android** GitHub Actions workflow instead ([docs/play-store](../../docs/play-store/README.md)).
+
+## Demo mode (no server)
+
+```bash
+flutter run -d chrome --dart-define=DEMO_MODE=true
+```
+
+The app answers from a sample school bundled in `assets/demo/` (`lib/core/demo_api.dart`); the
+sign-in screen offers "Explore as a parent / a teacher". This is the build on Google Play until the
+API is deployed.
+
+- **Dates** move forward by whole weeks, so "today" always has data on the right weekday.
+- **Changes** (attendance, marks, messages, meetings, reminders, a sandbox payment) stay in memory
+  until the app closes. Downloads (receipts, report cards) say they need the real app.
+- **New screens or routes**: record the data again. Run the API with the seeded demo school
+  (`pnpm db:seed`, see HANDOFF §3), then `node apps/mobile/tool/record_demo.mjs`. Add the new route
+  to that script first if the demo should show it. `test/demo_api_test.dart` parses every recorded
+  answer with the app's models.
 
 ## How it's built
 

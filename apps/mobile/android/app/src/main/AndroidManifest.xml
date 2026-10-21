@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Release builds need this too (debug/profile add it for the Flutter tools). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="schoolos"
+        android:label="SchoolOS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

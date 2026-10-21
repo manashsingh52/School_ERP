@@ -364,6 +364,14 @@ Details per phase are in `docs/12-roadmap.md` → *Progress log*.
 - Available on the web at `/calendar` and on the app's Calendar screen. On the app home it replaced the
   Documents tile; Documents stays under Profile.
 
+**Demo build for Google Play** (2026-10-21)
+- `--dart-define=DEMO_MODE=true` runs the app with no server: `lib/core/demo_api.dart` answers from
+  the demo school recorded in `apps/mobile/assets/demo` (`tool/record_demo.mjs`). Dates move forward by
+  whole weeks; changes stay in memory.
+- The sign-in screen offers "Explore as a parent / a teacher".
+- The **Android** workflow (`.github/workflows/android.yml`) builds the signed `.aab`. Store
+  material and steps are in `docs/play-store/`.
+
 **Deployment tooling**
 - Dockerfiles, built in CI.
 - GCP bootstrap and deploy scripts.
@@ -384,7 +392,7 @@ feature in §5 is complete with tests. The following were started but stopped at
 | Item | State | Where it stopped |
 |---|---|---|
 | **Push notifications (FCM)** | API side ready: device tokens `PUT/DELETE /v1/me/devices`, deliveries queued per channel. The provider is a placeholder | `apps/api/src/core/notify/channel-gateway.ts` (the `fcm` branch only counts tokens). App: no `firebase_messaging` yet, so `flutterfire configure` has never been run |
-| **Store builds (Phase 7, milestone M7)** | App works on the web. No iOS/Android release builds | `apps/mobile/android/app/build.gradle.kts` still has Flutter's TODOs (application id, release signing). Bundle id is `in.schoolos.schoolos` (rename with the product name) |
+| **Store builds (Phase 7, milestone M7)** | Android: a **demo build** (sample school, no server) is ready for Google Play internal testing: package `com.manashsingh.schoolerp`, release signing from GitHub secrets, icons, listing, privacy policy and screenshots. iOS: nothing yet | Play Console steps in `docs/play-store/README.md` (owner: developer account + secrets). The real (server) build waits for deployment |
 | **Deployment** | Fully scripted, never executed | `infra/README.md` steps 1–4. Needs a GCP project, a domain on Cloudflare, and GitHub repo variables |
 | **Live AI evaluation** | Offline evaluation passes in CI. Live run never done | `apps/api/test/ai-eval.live.test.ts` and `pnpm --filter @schoolos/api ai:eval` need `GEMINI_API_KEY`. Then switch the `ai_assistant` flag on per school |
 | **Platform console walkthrough (M6)** | API proven by tests. A full click-through in the browser was never done | `apps/web/src/app/platform/*` |

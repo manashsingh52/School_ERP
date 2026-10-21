@@ -322,9 +322,16 @@ class PillNavBar extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(border: Border(top: BorderSide(color: s.border))),
           padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
-          child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            for (var i = 0; i < items.length; i++)
-              Tooltip(
+          // Narrow phones (360 wide) get tighter pills; a long name shortens rather than overflow.
+          child: LayoutBuilder(builder: (context, box) {
+            final narrow = box.maxWidth < 400;
+            return Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+              for (var i = 0; i < items.length; i++)
+                Flexible(
+                  // Only the open page's pill (with its name) gives way; the icon-only ones keep their size.
+                  fit: FlexFit.loose,
+                  flex: i == selected ? 1 : 0,
+                  child: Tooltip(
                 message: items[i].label,
                 child: Semantics(
                   label: items[i].label,
@@ -336,7 +343,7 @@ class PillNavBar extends StatelessWidget {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
                       curve: Curves.easeOut,
-                      padding: EdgeInsets.symmetric(horizontal: i == selected ? 20 : 14, vertical: 12),
+                      padding: EdgeInsets.symmetric(horizontal: i == selected ? (narrow ? 14 : 20) : (narrow ? 10 : 14), vertical: 12),
                       decoration: BoxDecoration(color: i == selected ? s.subtle : Colors.transparent, borderRadius: BorderRadius.circular(28)),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                         Badge(
@@ -344,13 +351,18 @@ class PillNavBar extends StatelessWidget {
                           label: Text('${items[i].badge}'),
                           child: Icon(i == selected ? items[i].selectedIcon : items[i].icon, size: 27, color: i == selected ? scheme.onSurface : s.muted),
                         ),
-                        if (i == selected) ...[const SizedBox(width: 8), Text(items[i].label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15.5, color: scheme.onSurface))],
+                        if (i == selected) ...[
+                          SizedBox(width: narrow ? 6 : 8),
+                          Flexible(child: Text(items[i].label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w600, fontSize: narrow ? 14.5 : 15.5, color: scheme.onSurface))),
+                        ],
                       ]),
                     ),
                   ),
                 ),
-              ),
-          ]),
+                  ),
+                ),
+            ]);
+          }),
         ),
       ),
     );

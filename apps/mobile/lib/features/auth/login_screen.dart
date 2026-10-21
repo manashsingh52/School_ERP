@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config.dart';
 import '../../core/session.dart';
 import '../../widgets/common.dart';
 
@@ -79,6 +80,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 4),
                 Text('For parents and teachers', style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
                 const SizedBox(height: 28),
+                if (demoMode) ...[
+                  Text('Demo with a sample school. The names and numbers are made up, and nothing you change is saved.', style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(onPressed: _busy ? null : () => _run(() => session.signInWithPassword('parent@demo.school', 'demo')), icon: const Icon(Icons.family_restroom), label: const Text('Explore as a parent')),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(onPressed: _busy ? null : () => _run(() => session.signInWithPassword('teacher@demo.school', 'demo')), icon: const Icon(Icons.school_outlined), label: const Text('Explore as a teacher')),
+                ] else ...[
                 SegmentedButton<bool>(
                   segments: const [ButtonSegment(value: false, label: Text('Password')), ButtonSegment(value: true, label: Text('One-time code'))],
                   selected: {_otp},
@@ -120,6 +128,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 20),
                   FilledButton(onPressed: _busy ? null : () => _run(() => session.verifyCode(_challengeId!, _code.text)), child: _busy ? const _Spinner() : const Text('Sign in')),
                   TextButton(onPressed: _busy ? null : () => setState(() => _challengeId = null), child: const Text('Use a different number')),
+                ],
                 ],
                 if (_error != null) ...[
                   const SizedBox(height: 16),
