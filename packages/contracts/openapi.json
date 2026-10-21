@@ -13824,7 +13824,7 @@
     },
     "/v1/school/settings": {
       "get": {
-        "summary": "Settings: general, fees, examinations, branding",
+        "summary": "Settings: general, fees, examinations, branding, notifications",
         "tags": [
           "School"
         ],
@@ -13859,7 +13859,7 @@
     },
     "/v1/school/settings/{section}": {
       "put": {
-        "summary": "Save one settings section (branding needs school.branding.manage)",
+        "summary": "Save one settings section (branding needs school.branding.manage, notifications notification.settings.manage)",
         "tags": [
           "School"
         ],

@@ -7,7 +7,7 @@ import { SchoolSettingsService } from '../../core/settings/school-settings.servi
 import { ZodPipe } from '../../core/validation/zod.pipe.js';
 import { FilesService } from '../files/files.service.js';
 
-/** Settings → General, Fees, Examinations, Branding (docs/12 Phase 6). */
+/** Settings → General, Fees, Examinations, Branding, Notifications (docs/12 Phase 6). */
 @Controller('school/settings')
 export class SchoolSettingsController {
   constructor(
@@ -26,11 +26,11 @@ export class SchoolSettingsController {
     return { data: await this.view() };
   }
 
-  /** Branding needs school.branding.manage; every other section school.settings.manage. */
+  /** Branding needs school.branding.manage, notifications notification.settings.manage, the rest school.settings.manage. */
   @Put(':section')
   @SchoolMember()
   async update(@Param('section', new ZodPipe(settingsSectionSchema)) section: SettingsSection, @Body() body: unknown) {
-    const needed = section === 'branding' ? 'school.branding.manage' : 'school.settings.manage';
+    const needed = section === 'branding' ? 'school.branding.manage' : section === 'notifications' ? 'notification.settings.manage' : 'school.settings.manage';
     if (!RequestContextStore.tenant().permissions[needed]) throw AppError.forbidden();
     const input = new ZodPipe(SETTINGS_SECTIONS[section]).transform(body) as never;
     if (section === 'branding') {

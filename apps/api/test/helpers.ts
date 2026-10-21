@@ -173,6 +173,8 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     data: { schoolId, name: '2026–27', startDate: date('2026-04-01'), endDate: date('2027-03-31'), status: 'ACTIVE' },
   });
   await db.school.update({ where: { id: schoolId }, data: { currentAcademicYearId: year.id } });
+  // Deliveries go out at once whatever the time of day (quiet hours are tested on their own).
+  await db.schoolSettings.upsert({ where: { schoolId }, create: { schoolId, notifications: { quietHours: { enabled: false, start: '21:00', end: '07:00' } } }, update: { notifications: { quietHours: { enabled: false, start: '21:00', end: '07:00' } } } });
   const cls = await db.schoolClass.create({ data: { schoolId, name: 'Class 8', displayOrder: 8 } });
   const [a, b] = await Promise.all(
     ['A', 'B'].map((name) => db.section.create({ data: { schoolId, academicYearId: year.id, classId: cls.id, name } })),
