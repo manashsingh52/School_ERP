@@ -45,7 +45,7 @@ describe('onboarding', () => {
   it('computes the checklist and goes live once required steps are done', async () => {
     const state = await api().get('/v1/onboarding');
     const byKey = Object.fromEntries(state.body.data.checklist.map((c: { key: string; done: boolean }) => [c.key, c.done]));
-    expect(byKey).toMatchObject({ school: true, year: true, classes: true, sections: true, students: true, admin: true });
+    expect(byKey).toMatchObject({ school: true, year: true, classes: true, sections: true, students: true, fees: true, admin: true });
     expect(state.body.data.canGoLive).toBe(true);
 
     await api().put('/v1/onboarding/step', { step: 4 });

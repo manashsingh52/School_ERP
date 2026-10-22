@@ -6,7 +6,7 @@ import { CONSOLE_HEADER, SCHOOL_SLUG_HEADER, isConsoleHost, slugFromHost } from 
 import { fromEdge, requestHost, requestOrigin } from '@/lib/edge';
 import { clientIpFrom, upstream } from '@/lib/upstream';
 
-const PUBLIC_PAGES = ['/login'];
+const PUBLIC_PAGES = ['/login', '/privacy', '/terms'];
 
 /**
  * Runs before every page and BFF call:
@@ -14,7 +14,7 @@ const PUBLIC_PAGES = ['/login'];
  *     admin.<domain> is the super-admin console (X-SchoolOS-Console), which only serves /platform
  *  2. If the short-lived access cookie is gone but a refresh cookie exists, refresh here so the
  *     page renders with a valid token (server components can't set cookies themselves)
- *  3. Signed-out visitors go to /login
+ *  3. Signed-out visitors go to /login (the bare domain is the public website)
  */
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -38,9 +38,9 @@ export async function proxy(req: NextRequest) {
   if (consoleHost && !isApi && !isPublicPage && !isPlatformPage) return NextResponse.redirect(new URL('/platform', origin));
   if (!consoleHost && isPlatformPage) return NextResponse.redirect(new URL('/login', origin));
 
-  // The bare domain only serves "Find your school".
+  // The bare domain is the public website: the home page, privacy, terms and "Find your school".
   if (!slug && !consoleHost) {
-    if (isApi || path === '/login') return NextResponse.next({ request: { headers: requestHeaders } });
+    if (isApi || isPublicPage || path === '/') return NextResponse.next({ request: { headers: requestHeaders } });
     return NextResponse.redirect(new URL('/login', origin));
   }
 

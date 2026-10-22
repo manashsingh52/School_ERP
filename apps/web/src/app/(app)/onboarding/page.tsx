@@ -4,7 +4,7 @@ import { Gate } from '@/components/gate';
 import { BOARDS, ONBOARDING_STEPS, type OnboardingState, type SchoolProfile } from '@schoolos/contracts';
 import { Button, Card, Checkbox, EmptyState, Field, Input, Select, Skeleton, Stepper, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, BellRing, CheckCircle2, Circle, IndianRupee, PartyPopper, Plus, Upload } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BellRing, CheckCircle2, Circle, IndianRupee, ListPlus, PartyPopper, Plus, Settings2, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -44,8 +44,8 @@ function OnboardingPageContent() {
     4: <SubjectsStep onDone={next} />,
     5: <PeopleStep entity="TEACHERS" count={state.data.checklist.find((c) => c.key === 'teachers')?.detail} done={!!done('teachers')} onDone={next} />,
     6: <PeopleStep entity="STUDENTS" count={state.data.checklist.find((c) => c.key === 'students')?.detail} done={!!done('students')} onDone={next} />,
-    7: <LaterStep icon={<IndianRupee />} title="Fee structure" text="Fee heads, installments, concessions and online payments arrive with the Fees module. You can set them up then." onDone={next} />,
-    8: <LaterStep icon={<BellRing />} title="Notifications" text="Absence alerts, homework and notices to parents arrive with the Notifications module. Defaults will be sensible; you can tune them later." onDone={next} />,
+    7: <FeesStep check={state.data.checklist.find((c) => c.key === 'fees')} onDone={next} />,
+    8: <NotificationsStep onDone={next} />,
     9: <GoLiveStep state={state.data} />,
   };
 
@@ -283,11 +283,51 @@ function PeopleStep({ entity, count, done, onDone }: { entity: 'TEACHERS' | 'STU
   );
 }
 
-function LaterStep({ icon, title, text, onDone }: { icon: ReactNode; title: string; text: string; onDone: () => void }) {
+function LinkCards({ links }: { links: { href: string; icon: ReactNode; title: string; text: string }[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {links.map((l, i) => (
+        <Link key={l.href} href={l.href} className={cn('flex flex-col items-start gap-2 rounded-lg border p-4', i === 0 ? 'border-accent bg-accent-tint' : 'border-border hover:border-border-strong')}>
+          <span className={cn('[&>svg]:size-5', i === 0 ? 'text-accent-strong' : 'text-fg-secondary')}>{l.icon}</span>
+          <span className="font-medium">{l.title}</span>
+          <span className="text-small text-fg-secondary">{l.text}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function FeesStep({ check, onDone }: { check?: { done: boolean; detail: string }; onDone: () => void }) {
   return (
     <>
-      <EmptyState icon={icon} title={`${title} — coming soon`} description={text} />
-      <div className="flex justify-end"><Button onClick={onDone}>Continue</Button></div>
+      <StepHeader title="Fee structure" text="What each class pays this year, in installments. Invoices for every student are made from it." />
+      <div className="mb-5 flex items-center gap-2 text-body">
+        {check?.done ? <CheckCircle2 className="size-5 text-success" /> : <Circle className="size-5 text-fg-tertiary" />}
+        <span>{check?.detail ?? '—'}</span>
+      </div>
+      <LinkCards
+        links={[
+          { href: '/fees?tab=heads', icon: <ListPlus />, title: 'Fee heads', text: 'Start here: tuition, transport, exam fee and so on.' },
+          { href: '/fees?tab=structures', icon: <IndianRupee />, title: 'Fee structures', text: 'Amounts per class, installments and due dates.' },
+          { href: '/settings/fees', icon: <Settings2 />, title: 'Late fees and online payment', text: 'Late fee rules, receipts and your Razorpay account.' },
+        ]}
+      />
+      <div className="mt-6 flex justify-end"><Button onClick={onDone}>Continue</Button></div>
+    </>
+  );
+}
+
+function NotificationsStep({ onDone }: { onDone: () => void }) {
+  return (
+    <>
+      <StepHeader title="Notifications" text="Parents and staff hear about absences, homework, notices, fees and results. Sensible defaults are already on." />
+      <ul className="mb-5 flex flex-col gap-2 text-body">
+        {['Everyone gets every alert in their in-app inbox.', 'App pushes go to phones with the app installed.', 'Pushes wait until morning during quiet hours (9 pm to 7 am by default).', 'SMS starts once your registered sender (DLT) is connected.'].map((t) => (
+          <li key={t} className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />{t}</li>
+        ))}
+      </ul>
+      <LinkCards links={[{ href: '/settings/notifications', icon: <BellRing />, title: 'Choose what people hear about', text: 'Turn each alert on or off, pick channels and quiet hours.' }]} />
+      <div className="mt-6 flex justify-end"><Button onClick={onDone}>Continue</Button></div>
     </>
   );
 }
