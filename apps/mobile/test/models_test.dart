@@ -133,7 +133,7 @@ void main() {
     final m = Meeting.fromJson({
       'id': 'mt', 'student': {'id': 's1', 'name': 'Rahul Kumar', 'classLabel': '8-A'}, 'organizer': {'memberId': 't', 'name': 'Priya Sharma'},
       'title': 'Progress chat', 'agenda': null, 'category': 'ACADEMIC', 'scheduledAt': '2026-10-14T11:00:00.000Z', 'durationMinutes': 20,
-      'status': 'SCHEDULED', 'cancelReason': null, 'joinUrl': 'https://meet.jit.si/SchoolOS-abc', 'joinable': false, 'canManage': false, 'createdAt': '2026-10-13T08:00:00Z',
+      'status': 'SCHEDULED', 'cancelReason': null, 'joinUrl': 'https://meet.jit.si/Bastaa-abc', 'joinable': false, 'canManage': false, 'createdAt': '2026-10-13T08:00:00Z',
     });
     expect(m.joinUrl, startsWith('https://meet.jit.si/'));
     expect(m.scheduledAt.toUtc().hour, 11);

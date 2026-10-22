@@ -1,5 +1,5 @@
 /*
- * SchoolOS design tokens (docs/07-design-system.md §1).
+ * Bastaa design tokens (docs/07-design-system.md §1).
  * Components use semantic tokens only. The school accent is one variable (--accent) set per
  * school at runtime; every shade is derived from it in OKLCH so all schools get even steps.
  */

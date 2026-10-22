@@ -98,7 +98,7 @@ function OnboardDialog({ onDone }: { onDone: () => void }) {
       <form onSubmit={submit} noValidate>
         <DialogBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="School name" htmlFor="pv-name" error={e.name?.message} className="sm:col-span-2"><Input id="pv-name" autoFocus {...form.register('name')} /></Field>
-          <Field label="Web address" htmlFor="pv-slug" error={e.slug?.message} hint={slug ? `${slug}.schoolos.in` : 'e.g. stmarys'}><Input id="pv-slug" {...form.register('slug')} autoCapitalize="none" /></Field>
+          <Field label="Web address" htmlFor="pv-slug" error={e.slug?.message} hint={slug ? `${slug}.bastaa.in` : 'e.g. stmarys'}><Input id="pv-slug" {...form.register('slug')} autoCapitalize="none" /></Field>
           <Field label="Board" htmlFor="pv-board" error={e.board?.message}><Input id="pv-board" placeholder="CBSE" {...form.register('board')} /></Field>
           <Field label="Admin's name" htmlFor="pv-an" error={e.adminName?.message}><Input id="pv-an" {...form.register('adminName')} /></Field>
           <Field label="Admin's mobile" htmlFor="pv-ap" error={e.adminPhone?.message}><Input id="pv-ap" type="tel" {...form.register('adminPhone')} /></Field>

@@ -7,7 +7,7 @@ import 'core/config.dart';
 void main() {
   if (misconfiguredRelease) {
     runApp(const MaterialApp(
-      home: Scaffold(body: Center(child: Padding(padding: EdgeInsets.all(24), child: Text('This build of SchoolOS has no server address. Build it with --dart-define=API_URL=https://… (or DEMO_MODE=true for the demo).', textAlign: TextAlign.center)))),
+      home: Scaffold(body: Center(child: Padding(padding: EdgeInsets.all(24), child: Text('This build of Bastaa has no server address. Build it with --dart-define=API_URL=https://… (or DEMO_MODE=true for the demo).', textAlign: TextAlign.center)))),
     ));
     return;
   }

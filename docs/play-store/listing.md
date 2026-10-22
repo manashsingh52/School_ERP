@@ -5,7 +5,7 @@ Copy these into Play Console → **Grow users → Store presence → Main store 
 **App name** (30 characters max)
 
 ```
-SchoolOS
+Bastaa
 ```
 
 **Short description** (80 characters max)
@@ -17,7 +17,7 @@ Demo school app for parents and teachers: attendance, homework, fees, results.
 **Full description** (4,000 characters max)
 
 ```
-SchoolOS keeps parents and teachers in step with the school, in one simple app.
+Bastaa keeps parents and teachers in step with the school, in one simple app.
 
 This is a demo with a sample school. The names and numbers are made up, and nothing you change is saved. Tap "Explore as a parent" or "Explore as a teacher" to look around.
 

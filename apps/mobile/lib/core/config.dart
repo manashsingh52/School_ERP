@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-/// Where the API lives. Override with `--dart-define=API_URL=https://api.schoolos.in`.
+/// Where the API lives. Override with `--dart-define=API_URL=https://api.bastaa.in`.
 /// Locally the Android emulator reaches the Mac at 10.0.2.2; everything else uses localhost.
 String get apiBaseUrl {
   const fromEnv = String.fromEnvironment('API_URL');

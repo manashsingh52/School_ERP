@@ -87,14 +87,14 @@ export class AiService {
     const { schoolId } = RequestContextStore.school();
     if (!this.provider) throw new AppError('AI_NOT_CONFIGURED', 503, 'The assistant is not set up on this server yet.');
     if (!(await this.entitlements.enabled(FLAG, schoolId))) throw new AppError('FEATURE_DISABLED', 403, "The AI assistant isn't part of your school's plan.");
-    if (!(await this.entitlements.withinMonthly('ai_calls', schoolId))) throw new AppError('PLAN_LIMIT_AI', 422, "This month's AI allowance is used up. Ask SchoolOS to raise it.");
+    if (!(await this.entitlements.withinMonthly('ai_calls', schoolId))) throw new AppError('PLAN_LIMIT_AI', 422, "This month's AI allowance is used up. Ask Bastaa to raise it.");
     return { schoolId, provider: this.provider };
   }
 
   private async system(): Promise<string> {
     const school = await this.prisma.db.school.findFirstOrThrow({ select: { name: true } });
     return [
-      `You are the SchoolOS assistant for ${school.name}, an Indian school. Today is ${this.tools.today()}. The academic year runs April to March.`,
+      `You are the Bastaa assistant for ${school.name}, an Indian school. Today is ${this.tools.today()}. The academic year runs April to March.`,
       'Answer ONLY from the results of the tools you call. Never guess or invent numbers, names or dates. If no tool can answer, say what you can help with instead.',
       'People appear as placeholders like [P3]. Use them exactly as written — they are turned back into names for the reader. Never ask for or guess real names.',
       'Be brief: one to four sentences, or a short list. Use ₹ with Indian digit grouping and percentages with one decimal. Mention the period or exam you used.',

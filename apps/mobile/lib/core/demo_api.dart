@@ -351,7 +351,7 @@ class DemoApi extends ApiClient {
           'durationMinutes': b['durationMinutes'],
           'status': 'SCHEDULED',
           'cancelReason': null,
-          'joinUrl': 'https://meet.jit.si/SchoolOS-demo-$_seq',
+          'joinUrl': 'https://meet.jit.si/Bastaa-demo-$_seq',
           'joinable': false,
           'canManage': true,
           'createdAt': now,

@@ -68,7 +68,7 @@ export class SupportAccessService implements OnModuleInit {
     return rows.map((r) => ({
       id: r.id,
       school: r.school,
-      requestedBy: { id: r.platformUserId, name: name(r.platformUserId) ?? 'SchoolOS support' },
+      requestedBy: { id: r.platformUserId, name: name(r.platformUserId) ?? 'Bastaa support' },
       reason: r.reason,
       mode: r.mode,
       status: SupportAccessService.status(r),
@@ -93,7 +93,7 @@ export class SupportAccessService implements OnModuleInit {
     });
     await this.platformAdmin.audit('support.request', 'SupportAccessGrant', grant.id, { schoolId: input.schoolId, metadata: { reason: input.reason, hours: input.hours } });
     // The school hears about it from its own context: in-app (and email) to every admin.
-    const requester = (await this.platform.user.findUnique({ where: { id: userId }, select: { name: true } }))?.name ?? 'SchoolOS support';
+    const requester = (await this.platform.user.findUnique({ where: { id: userId }, select: { name: true } }))?.name ?? 'Bastaa support';
     await RequestContextStore.runAsSystem(input.schoolId, `support_${grant.id}`, async () => {
       const admins = await this.prisma.db.membership.findMany({ where: { status: 'ACTIVE', roles: { some: { role: { key: 'school_admin' } } } }, select: { id: true } });
       await this.notifications.notify({
@@ -135,7 +135,7 @@ export class SupportAccessService implements OnModuleInit {
       const now = Date.now();
       const expiresAt = new Date(now + (g.expiresAt.getTime() - g.createdAt.getTime()));
       const roleId = await this.supportRole(tx);
-      const membership = { status: 'ACTIVE' as const, title: 'SchoolOS support (read-only)', invitedAt: new Date(now), joinedAt: new Date(now) };
+      const membership = { status: 'ACTIVE' as const, title: 'Bastaa support (read-only)', invitedAt: new Date(now), joinedAt: new Date(now) };
       if (existing) {
         // An earlier grant's membership (ended, not deleted — notifications etc. point at it).
         await tx.membership.update({ where: { id: existing.id }, data: membership });
@@ -200,7 +200,7 @@ export class SupportAccessService implements OnModuleInit {
     if (existing) return existing.id;
     const { schoolId } = RequestContextStore.school();
     const role = await tx.role.create({
-      data: { schoolId, key: SUPPORT_ROLE_KEY, name: 'SchoolOS support (read-only)', description: 'Temporary, approved access for the SchoolOS support team. Removed automatically.', isSystem: true },
+      data: { schoolId, key: SUPPORT_ROLE_KEY, name: 'Bastaa support (read-only)', description: 'Temporary, approved access for the Bastaa support team. Removed automatically.', isSystem: true },
     });
     await tx.rolePermission.createMany({ data: SUPPORT_GRANTS.map((permission) => ({ roleId: role.id, schoolId, permission, scope: 'ALL' as const })) });
     return role.id;

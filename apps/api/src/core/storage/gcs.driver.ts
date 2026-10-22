@@ -8,7 +8,7 @@ import { StorageDriver, contentDisposition, type SignedUpload, type StoredObject
  * ⏸ Needs, at deploy time (docs/SETUP-LATER.md): GCS_PROJECT_ID, GCS_PRIVATE_BUCKET, the
  * service account granted roles/storage.objectAdmin on the bucket and
  * roles/iam.serviceAccountTokenCreator on itself (to sign URLs), and a bucket CORS rule allowing
- * PUT from https://*.schoolos.in.
+ * PUT from https://*.bastaa.in.
  */
 export class GcsStorageDriver extends StorageDriver {
   private readonly gcsBucket: Bucket;

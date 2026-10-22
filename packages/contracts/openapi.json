@@ -1,13 +1,13 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "SchoolOS API",
+    "title": "Bastaa API",
     "version": "1.0.0",
     "description": "Generated from packages/contracts. Do not edit by hand."
   },
   "servers": [
     {
-      "url": "https://api.schoolos.in"
+      "url": "https://api.bastaa.in"
     },
     {
       "url": "http://localhost:4000"
@@ -14010,7 +14010,7 @@
     },
     "/v1/school/support-access/{id}/approve": {
       "post": {
-        "summary": "Let SchoolOS support look (read-only, time-boxed)",
+        "summary": "Let Bastaa support look (read-only, time-boxed)",
         "tags": [
           "School"
         ],

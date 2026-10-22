@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { apiPost } from '@/lib/api-client';
 import { ThemeMenuItems } from '@/lib/theme';
+import { BastaaMark } from '@/components/brand/logo';
 
 export type PlatformRole = 'SUPER_ADMIN' | 'SUPPORT';
 const RoleContext = createContext<PlatformRole>('SUPPORT');
@@ -38,8 +39,8 @@ export function ConsoleShell({ user, role, children }: { user: { name: string; e
       <div className="flex min-h-dvh">
         <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-border bg-surface md:flex">
           <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-            <span className="flex size-7 items-center justify-center rounded-md bg-charcoal text-small font-semibold text-white">S</span>
-            <span className="text-body font-semibold">SchoolOS Admin</span>
+            <BastaaMark className="size-7" />
+            <span className="text-body font-semibold">Bastaa Admin</span>
           </div>
           <nav aria-label="Console" className="flex flex-1 flex-col gap-0.5 p-2">
             {items.map((n) => {

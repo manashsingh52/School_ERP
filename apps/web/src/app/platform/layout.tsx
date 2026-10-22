@@ -7,7 +7,7 @@ import { serverApi } from '@/lib/server-api';
 import { AuthFrame } from '../login/find-school';
 import { ShellError } from '../(app)/shell-error';
 
-export const metadata: Metadata = { title: { default: 'SchoolOS Admin', template: '%s · SchoolOS Admin' } };
+export const metadata: Metadata = { title: { default: 'Bastaa Admin', template: '%s · Bastaa Admin' } };
 
 /** The super-admin console (admin.<domain>): platform staff only; the API checks every call again. */
 export default async function PlatformLayout({ children }: { children: ReactNode }) {
@@ -18,8 +18,8 @@ export default async function PlatformLayout({ children }: { children: ReactNode
   }
   if (!me.data.platformRole) {
     return (
-      <AuthFrame schoolName="SchoolOS Admin" subtitle="Staff only">
-        <p className="text-body text-fg-secondary">This account isn&apos;t part of the SchoolOS team.</p>
+      <AuthFrame schoolName="Bastaa Admin" subtitle="Staff only" brand>
+        <p className="text-body text-fg-secondary">This account isn&apos;t part of the Bastaa team.</p>
       </AuthFrame>
     );
   }

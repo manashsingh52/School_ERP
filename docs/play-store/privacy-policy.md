@@ -1,12 +1,12 @@
-# SchoolOS demo app: privacy policy
+# Bastaa demo app: privacy policy
 
 _Last updated: 21 October 2026_
 
-This policy covers the **SchoolOS demo app** on Google Play (package `com.manashsingh.schoolerp`).
+This policy covers the **Bastaa demo app** on Google Play (package `com.manashsingh.schoolerp`).
 
 ## What the demo is
 
-The demo shows how SchoolOS works for parents and teachers. It uses a made-up sample school:
+The demo shows how Bastaa works for parents and teachers. It uses a made-up sample school:
 every student, teacher, parent, mark, fee and message in it is invented. Nobody signs in with a
 real account.
 
@@ -32,9 +32,9 @@ with its own privacy policy.
 
 The app is for parents and school staff, not for children.
 
-## The full SchoolOS service
+## The full Bastaa service
 
-When schools use the full SchoolOS service, a separate privacy policy will explain what school data
+When schools use the full Bastaa service, a separate privacy policy will explain what school data
 is kept, why, and for how long. This policy will be updated before the app connects to a real
 school.
 

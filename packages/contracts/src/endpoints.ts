@@ -392,7 +392,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/school/subscription': { summary: "This school's plan, limits and usage", tag: 'School', access: 'permission:billing.view' },
   'GET /v1/school/features': { summary: 'Feature flags switched on for this school', tag: 'School', access: 'school' },
   'GET /v1/school/support-access': { summary: 'Support access requests and grants', tag: 'School', access: 'permission:user.manage' },
-  'POST /v1/school/support-access/:id/approve': { summary: 'Let SchoolOS support look (read-only, time-boxed)', tag: 'School', access: 'permission:user.manage' },
+  'POST /v1/school/support-access/:id/approve': { summary: 'Let Bastaa support look (read-only, time-boxed)', tag: 'School', access: 'permission:user.manage' },
   'POST /v1/school/support-access/:id/revoke': { summary: 'Decline a request or end access now', tag: 'School', access: 'permission:user.manage' },
 
   'GET /v1/platform/dashboard': { summary: 'Platform overview', tag: 'Platform', access: 'platform:platform.dashboard.view' },

@@ -86,7 +86,7 @@ We hold children's personal data and schools' money records. Security and privac
 
 - Super Admin/Support **cannot** open school data by default.
 - Support requests access with a reason → a School Admin approves in-app → a time-boxed grant (default 2 h, `READ_ONLY` unless FULL is approved).
-- Every action during a grant is audit-logged with the grant id. A banner shows in the school ("SchoolOS support has read-only access until 4:30 pm").
+- Every action during a grant is audit-logged with the grant id. A banner shows in the school ("Bastaa support has read-only access until 4:30 pm").
 - Emergencies (e.g. a school locked out) use a **break-glass** process: two platform admins, a mandatory reason, and the school is notified.
 
 ## 6. Audit logging
@@ -105,7 +105,7 @@ Logged with actor, school, action, entity, before/after (changed fields only), I
 > **Legal review is required before production launch.** The points below are engineering guidance, not legal advice.
 
 ### Roles under the DPDP Act, 2023
-- **The school is the Data Fiduciary**; **SchoolOS is a Data Processor** acting on the school's instructions.
+- **The school is the Data Fiduciary**; **Bastaa is a Data Processor** acting on the school's instructions.
 - We sign a **Data Processing Agreement** with every school (purpose limitation, security, breach notice, sub-processors list, deletion at contract end).
 - The DPDP Rules, 2025 were notified in November 2025 with a phased rollout running into 2027. Confirm the dates and current obligations with counsel.
 
@@ -146,6 +146,6 @@ Logged with actor, school, action, entity, before/after (changed fields only), I
 
 ## Open questions
 
-1. Who will be the named **security/grievance contact** for SchoolOS?
+1. Who will be the named **security/grievance contact** for Bastaa?
 2. Is **TOTP MFA for Super Admin** in V1 OK (recommended), and MFA for School Admins in V1.1?
 3. Do you have legal counsel for the DPA, privacy policy and DPDP review? This is needed before the first school goes live with real data.

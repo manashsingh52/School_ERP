@@ -7,7 +7,7 @@ Play Store like any app, with no review wait.
 | Item | Value |
 |---|---|
 | Package name (permanent after the first upload) | `com.manashsingh.schoolerp` |
-| App name on the phone | SchoolOS |
+| App name on the phone | Bastaa |
 | Build | GitHub Actions → **Android** workflow → artifact `schoolos-demo-<n>` (`app-release.aab`) |
 | Listing text and graphics | [listing.md](listing.md), `icon-512.png`, `feature-graphic.png`, `screenshots/` |
 | Privacy policy | [privacy-policy.md](privacy-policy.md) |
@@ -31,7 +31,7 @@ inside is `app-release.aab`. A yellow warning about a debug key means the secret
 
 ## 3. Play Console
 
-1. **Create app**: name "SchoolOS", default language English (India), App, Free.
+1. **Create app**: name "Bastaa", default language English (India), App, Free.
 2. **Test and release → Testing → Internal testing → Create new release**. Accept **Play App
    Signing** (Google keeps the real signing key). Upload `app-release.aab`, release name "1.0.0
    demo", save and roll out.

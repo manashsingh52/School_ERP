@@ -11,4 +11,4 @@ if (env.RUN_WORKERS) {
   await app.get(QueueService).startWorkers();
   app.get(SchedulerService).start();
 }
-console.log(`SchoolOS API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);
+console.log(`Bastaa API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);

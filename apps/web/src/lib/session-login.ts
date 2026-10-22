@@ -46,7 +46,7 @@ export async function signIn(req: NextRequest, apiPath: '/v1/auth/login' | '/v1/
   if (console && !auth.isPlatformAdmin) {
     // A school account on the console: end the session it just started and refuse.
     await upstream({ method: 'POST', path: '/v1/auth/logout', accessToken: auth.tokens.accessToken, contentType: 'application/json', body: '{}' }).catch(() => null);
-    return NextResponse.json({ error: { code: 'NOT_PLATFORM_ADMIN', message: "This account can't use the SchoolOS admin console." } }, { status: 403 });
+    return NextResponse.json({ error: { code: 'NOT_PLATFORM_ADMIN', message: "This account can't use the Bastaa admin console." } }, { status: 403 });
   }
   const response = NextResponse.json({ data: { user: auth.user, activeMembershipId: auth.activeMembershipId } });
   setSessionCookies(response, auth.tokens);

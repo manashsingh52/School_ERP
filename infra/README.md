@@ -1,4 +1,4 @@
-# Deploying SchoolOS (Google Cloud, lean mode)
+# Deploying Bastaa (Google Cloud, lean mode)
 
 What runs where (docs/10 §0, lean mode — about $25–45/month for staging):
 

@@ -1,6 +1,6 @@
 # 05 — API Structure & Conventions
 
-One REST API (`https://api.schoolos.in/v1`) serves the web BFF and the Flutter app.
+One REST API (`https://api.bastaa.in/v1`) serves the web BFF and the Flutter app.
 
 ## 1. Basics
 

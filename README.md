@@ -1,9 +1,9 @@
-# SchoolOS
+# Bastaa
 
 Multi-tenant school management SaaS — one platform, many schools, strict isolation.
 Design and decisions live in [`docs/`](docs/README.md) (start there).
 
-> "SchoolOS" / `schoolos.in` is a placeholder name.
+> "Bastaa" / `bastaa.in` is a placeholder name.
 
 > Picking this project up? Read [`HANDOFF.md`](HANDOFF.md) first.
 

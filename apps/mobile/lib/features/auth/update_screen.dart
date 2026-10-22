@@ -19,7 +19,7 @@ class UpdateRequiredScreen extends StatelessWidget {
           child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Icon(Icons.system_update, size: 56, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
-            Text('Please update SchoolOS', style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
+            Text('Please update Bastaa', style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text('This version is no longer supported. The update takes a minute and keeps you signed in.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 24),
