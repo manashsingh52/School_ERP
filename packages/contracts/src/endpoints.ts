@@ -139,7 +139,7 @@ import {
   updateRoleSchema,
   updateTeacherSchema,
 } from './people.js';
-import { createStudentSchema, listStudentsQuerySchema, updateStudentSchema } from './students.js';
+import { createStudentSchema, idCardsQuerySchema, listStudentsQuerySchema, updateStudentSchema } from './students.js';
 
 export interface EndpointDef {
   summary: string;
@@ -179,6 +179,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/public/schools/:slug': { summary: 'School branding for the login page', tag: 'Public', access: 'public' },
 
   'GET /v1/students': { summary: 'List students', tag: 'Students', access: 'permission:student.view', query: listStudentsQuerySchema },
+  'GET /v1/students/id-cards': { summary: 'Printable ID cards (PDF) for a section or one student', tag: 'Students', access: 'permission:student.edit', query: idCardsQuerySchema },
   'GET /v1/students/:id': { summary: 'Student profile', tag: 'Students', access: 'permission:student.view' },
   'POST /v1/students': { summary: 'Add a student', tag: 'Students', access: 'permission:student.create', body: createStudentSchema, idempotent: true },
   'PATCH /v1/students/:id': { summary: 'Edit a student', tag: 'Students', access: 'permission:student.edit', body: updateStudentSchema },

@@ -106,6 +106,7 @@ import { TeachersController } from './modules/teachers/teachers.controller.js';
 import { TeachersService } from './modules/teachers/teachers.service.js';
 import { StudentsController } from './modules/students/students.controller.js';
 import { StudentsService } from './modules/students/students.service.js';
+import { IdCardsService } from './modules/students/id-cards.service.js';
 
 /** Cross-cutting services every module may use (docs/01 §3 "core"). */
 @Global()
@@ -184,7 +185,7 @@ export class GuardiansModule {}
 @Module({
   imports: [SchoolsModule, FilesModule, GuardiansModule],
   controllers: [StudentsController],
-  providers: [StudentsService],
+  providers: [StudentsService, IdCardsService],
   exports: [StudentsService],
 })
 export class StudentsModule {}
