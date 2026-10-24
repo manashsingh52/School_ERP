@@ -46,6 +46,12 @@ export const listStudentsQuerySchema = pageQuerySchema.extend({
 });
 export type ListStudentsQuery = z.input<typeof listStudentsQuerySchema>;
 
+/** Printable ID cards: a whole section, or one student. */
+export const idCardsQuerySchema = z
+  .object({ sectionId: uuidSchema.optional(), studentId: uuidSchema.optional() })
+  .refine((q) => !!q.sectionId !== !!q.studentId, { message: 'Choose a section or a student' });
+export type IdCardsQuery = z.input<typeof idCardsQuerySchema>;
+
 export interface StudentListItem {
   id: string;
   admissionNo: string;

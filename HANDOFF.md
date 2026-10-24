@@ -393,6 +393,9 @@ Details per phase are in `docs/12-roadmap.md` → *Progress log*.
 - The bare domain is now the public website: home page (`components/site/landing.tsx`), `/privacy`
   and `/terms`, all public on every host. "Find your school" stays at `/login`. The demo button
   emails `CONTACT_EMAIL` in `lib/site.ts`.
+- **Student ID cards** (Students → ID cards for a section, or ID card on a student's profile): a
+  PDF at the standard card size, nine to an A4 sheet with cut lines, in the school's colour, with
+  photo, class, admission number, blood group, parent and phone. Office only (`student.edit`).
 - The setup wizard's fee and notification steps are real now (they used to say "coming soon"), and
   the go-live checklist includes the fee structure.
 
