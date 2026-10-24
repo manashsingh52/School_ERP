@@ -20,7 +20,26 @@ import { LOGGER } from '../../core/logger/logger.js';
 import { ChannelGateway } from '../../core/notify/channel-gateway.js';
 import { PrismaService } from '../../core/prisma/prisma.service.js';
 import { QUEUES, QueueService } from '../../core/queue/queue.service.js';
+import { SchoolSettingsService } from '../../core/settings/school-settings.service.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+
+/** Local time of day in minutes, in the school's timezone. */
+function localMinutes(now: Date, timeZone: string): number {
+  const [h, m] = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now).split(':').map(Number);
+  return h! * 60 + m!;
+}
+const minutesOf = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+
+/** How long to hold a push or SMS sent at [now] so it goes out when quiet hours end (0 = send now). */
+export function quietHoursDelayMs(now: Date, timeZone: string, quiet: { enabled: boolean; start: string; end: string }): number {
+  if (!quiet.enabled || quiet.start === quiet.end) return 0;
+  const t = localMinutes(now, timeZone);
+  const start = minutesOf(quiet.start);
+  const end = minutesOf(quiet.end);
+  const inside = start < end ? t >= start && t < end : t >= start || t < end; // 21:00–07:00 wraps midnight
+  if (!inside) return 0;
+  return (((end - t + 1440) % 1440) * 60 - now.getUTCSeconds()) * 1000;
+}
 
 export interface NotifyRequest {
   event: NotificationEvent;
@@ -44,6 +63,7 @@ export class NotificationsService implements OnModuleInit {
     private readonly queues: QueueService,
     private readonly gateway: ChannelGateway,
     private readonly audit: AuditService,
+    private readonly settings: SchoolSettingsService,
     @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
@@ -93,11 +113,30 @@ export class NotificationsService implements OnModuleInit {
       if (deliveries.length) await tx.notificationDelivery.createMany({ data: deliveries });
     });
     const { schoolId } = RequestContextStore.school();
+    // Quiet hours: app pushes and SMS wait for the morning; email isn't held back.
+    const held = deliveries.some((d) => d.channel !== 'EMAIL') ? await this.quietDelay() : 0;
     for (const d of deliveries) {
-      await this.queues.add(QUEUES.notifications, 'deliver', { schoolId, deliveryId: d.id as string }, { jobId: `delivery-${d.id}` });
+      const delay = d.channel === 'EMAIL' ? 0 : held;
+      await this.queues.add(QUEUES.notifications, 'deliver', { schoolId, deliveryId: d.id as string }, { jobId: `delivery-${d.id}`, ...(delay ? { delay } : {}) });
     }
     this.logger.info({ event: req.event, recipients: notifications.length, deliveries: deliveries.length }, 'notifications created');
     return notifications.length;
+  }
+
+  private async quietDelay(): Promise<number> {
+    const [{ quietHours }, school] = await Promise.all([
+      this.settings.get('notifications'),
+      this.prisma.db.school.findUnique({ where: { id: RequestContextStore.school().schoolId }, select: { timezone: true } }),
+    ]);
+    return quietHoursDelayMs(new Date(), school?.timezone ?? 'Asia/Kolkata', quietHours);
+  }
+
+  /** SMS the school has sent today (its local day), for the daily limit. */
+  private async smsSentToday(): Promise<number> {
+    const school = await this.prisma.db.school.findUnique({ where: { id: RequestContextStore.school().schoolId }, select: { timezone: true } });
+    const now = new Date();
+    const sinceMidnight = localMinutes(now, school?.timezone ?? 'Asia/Kolkata') * 60_000 + now.getUTCSeconds() * 1000;
+    return this.prisma.db.notificationDelivery.count({ where: { channel: 'SMS', status: 'SENT', sentAt: { gte: new Date(now.getTime() - sinceMidnight) } } });
   }
 
   /** Queue processor: one channel delivery. Errors are retried by BullMQ with backoff. */
@@ -108,6 +147,13 @@ export class NotificationsService implements OnModuleInit {
     });
     if (!delivery || delivery.status !== 'QUEUED') return;
     const user = delivery.notification.membership.user;
+    if (delivery.channel === 'SMS') {
+      const { dailySmsLimit } = await this.settings.get('notifications');
+      if (dailySmsLimit !== null && (await this.smsSentToday()) >= dailySmsLimit) {
+        await this.prisma.db.notificationDelivery.update({ where: { id: deliveryId }, data: { status: 'SKIPPED', lastError: "The school's daily SMS limit is reached", attempts: { increment: 1 } } });
+        return;
+      }
+    }
     try {
       const result = await this.gateway.send({
         channel: delivery.channel as 'PUSH' | 'SMS' | 'EMAIL',

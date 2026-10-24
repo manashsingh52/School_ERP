@@ -1,4 +1,4 @@
-# HANDOFF — SchoolOS (School ERP)
+# HANDOFF — Bastaa (School ERP)
 
 Everything needed to continue this project without the original chat history.
 Last updated **2026-10-17**. Last feature commit on `main`: `c3b31f3` (school calendar).
@@ -10,7 +10,7 @@ plus everything that was decided in conversation and never written down elsewher
 
 ## 1. What the app is
 
-**SchoolOS** (placeholder name; placeholder domain `schoolos.in`) is a **multi-tenant School Management
+**Bastaa** (placeholder name; placeholder domain `bastaa.in`) is a **multi-tenant School Management
 SaaS**: one codebase and one database serving many independent schools, with strict isolation so no
 school can ever see another school's data. It's a commercial product, not a college project. The
 owner's guiding line: *"Powerful underneath, extremely simple on the surface."*
@@ -32,10 +32,10 @@ gateway is Razorpay, SMS is MSG91 (needs DLT registration), and data stays in In
   created the cloud accounts or bought a domain.
 - The mobile app runs in Chrome or as a Flutter web build. There are no store builds yet (no Xcode,
   Android Studio or Firebase).
-- Test status at last run (2026-10-14):
-  - API: 500 passed, 22 skipped (the skips are live-Gemini evaluation cases)
+- Test status at last run (2026-10-21):
+  - API: 527 passed, 23 skipped (live-Gemini evaluation cases, and the Chromium PDF test where Chrome isn't installed)
   - Browser (Playwright): 28 passed
-  - Flutter: 22 passed
+  - Flutter: 38 passed (including the demo build's data and a walkthrough of every tab)
   - contracts and permissions package tests: passed
   - lint, typecheck and OpenAPI drift check: clean
 - **CI**: the `check` job was failing on GitHub, while `e2e`, `mobile` and `docker` passed. On a fresh checkout, the
@@ -372,6 +372,33 @@ Details per phase are in `docs/12-roadmap.md` → *Progress log*.
 - The **Android** workflow (`.github/workflows/android.yml`) builds the signed `.aab`. Store
   material and steps are in `docs/play-store/`.
 
+**Production readiness** (2026-10-21)
+- Sign-in without SMS: `OTP_PROVIDER=none` (allowed in production) and one-time **sign-in codes from the
+  school office** (Settings → Users → a person → Make code) for first sign-in or a forgotten password.
+- Real MSG91 senders (OTP API and notification SMS); console SMS refused in production.
+- Push through FCM (API and app); Sentry error reports; rate limits shared by all instances
+  (`RATE_LIMIT_STORE=postgres`).
+- Module follow-ups: keep students back at promotion, optional subjects per class, documents for
+  non-teaching staff, saved and scheduled reports, quiet hours and a daily SMS limit, report-card
+  layouts.
+- A README in every API module (`apps/api/src/modules/*/README.md`).
+- Browser walkthrough of every page; fixes for hydration bugs (console tables, dashboard date).
+
+**Bastaa brand and public website** (2026-10-22)
+- The product is called **Bastaa** (it was "SchoolOS"). Internal package names (`@schoolos/*`) and
+  the Android package id stay as they are.
+- Logo: a round "b" with a saffron dot. `apps/mobile/tool/make_icons.py` draws it and writes the
+  Android and web icons, Play Store graphics and `docs/brand/` (SVG and PNG). The web copy is in
+  `components/brand/logo.tsx` and the app copy in `lib/core/brand.dart`. Keep them in step.
+- The bare domain is now the public website: home page (`components/site/landing.tsx`), `/privacy`
+  and `/terms`, all public on every host. "Find your school" stays at `/login`. The demo button
+  emails `CONTACT_EMAIL` in `lib/site.ts`.
+- **Student ID cards** (Students → ID cards for a section, or ID card on a student's profile): a
+  PDF at the standard card size, nine to an A4 sheet with cut lines, in the school's colour, with
+  photo, class, admission number, blood group, parent and phone. Office only (`student.edit`).
+- The setup wizard's fee and notification steps are real now (they used to say "coming soon"), and
+  the go-live checklist includes the fee structure.
+
 **Deployment tooling**
 - Dockerfiles, built in CI.
 - GCP bootstrap and deploy scripts.
@@ -391,63 +418,46 @@ feature in §5 is complete with tests. The following were started but stopped at
 
 | Item | State | Where it stopped |
 |---|---|---|
-| **Push notifications (FCM)** | API side ready: device tokens `PUT/DELETE /v1/me/devices`, deliveries queued per channel. The provider is a placeholder | `apps/api/src/core/notify/channel-gateway.ts` (the `fcm` branch only counts tokens). App: no `firebase_messaging` yet, so `flutterfire configure` has never been run |
+| **Push notifications (FCM)** | Built: API sender (`core/notify/fcm.ts`, HTTP v1, service account or Cloud Run identity, dead tokens removed) and the app (`lib/core/push.dart`: permission, token registration, tap opens the screen) | Needs the owner's Firebase project (SETUP-LATER #12): never tried against real Firebase |
 | **Store builds (Phase 7, milestone M7)** | Android: a **demo build** (sample school, no server) is ready for Google Play internal testing: package `com.manashsingh.schoolerp`, release signing from GitHub secrets, icons, listing, privacy policy and screenshots. iOS: nothing yet | Play Console steps in `docs/play-store/README.md` (owner: developer account + secrets). The real (server) build waits for deployment |
 | **Deployment** | Fully scripted, never executed | `infra/README.md` steps 1–4. Needs a GCP project, a domain on Cloudflare, and GitHub repo variables |
 | **Live AI evaluation** | Offline evaluation passes in CI. Live run never done | `apps/api/test/ai-eval.live.test.ts` and `pnpm --filter @schoolos/api ai:eval` need `GEMINI_API_KEY`. Then switch the `ai_assistant` flag on per school |
-| **Platform console walkthrough (M6)** | API proven by tests. A full click-through in the browser was never done | `apps/web/src/app/platform/*` |
+| **Platform console walkthrough (M6)** | Done 2026-10-21 in a browser, with every school, parent and teacher page; three hydration bugs fixed | — |
 | **Phase 0 housekeeping** | Not done | Branch protection on `main`; closing the open questions at the end of docs 01–11 |
 
 ---
 
 ## 7. Pending (priority order)
 
-1. **Get CI green**: merge the `handoff` pull request, which contains the CI fix, then confirm all jobs pass
-   on `main`.
-   - Check the Actions tab of `manashsingh52/School_ERP`, or run `gh run list` with `gh` authenticated.
-   - Jobs: `check`, `e2e`, `mobile`, `docker`.
-   - To reproduce a failure exactly, clone the repo into a fresh folder and run the CI steps there.
-     Your working copy has old `dist/` folders that can hide missing build steps.
-2. **Push notifications (FCM)**. This is the biggest functional gap: reminders, "arrived at school",
-   meeting alerts and messages all go only to the in-app inbox today.
-   - Needs the owner's Firebase project (SETUP-LATER #12).
-   - Implement the `fcm` branch in `channel-gateway.ts` with the Firebase Admin SDK or the HTTP v1 API,
-     using service-account JSON from Secret Manager, never committed.
-   - App: add `firebase_messaging`, register the token via `PUT /v1/me/devices` after sign-in (the API
-     already removes it on sign-out), and handle taps with `data.route`.
-   - Route mapping already exists: `openConnectRoute` in `apps/mobile/lib/features/connect/connect_row.dart`
-     and the notifications screen's mapper.
-3. **Deploy staging** (`infra/README.md`). Needs a GCP project with billing (the owner has a **$300 /
+The code is ready for every item below; each waits on an account, a key or a decision from the owner.
+
+1. **Deploy staging** (`infra/README.md`). Needs a GCP project with billing (the owner has a **$300 /
    3-month trial credit**; keep lean mode; budget alerts at $50/$80/$100) and a domain on Cloudflare.
    - Run `bootstrap.sh`, then `deploy.sh roles`, then `deploy.sh`.
    - Then set the GitHub repo variables so `deploy.yml` auto-deploys staging after CI.
-   - Staging scales to zero, so scheduled jobs (late fees, reminders, meeting alerts) run only while an
-     instance is awake.
+   - Staging scales to zero, so scheduled jobs (late fees, reminders, meeting alerts, saved reports) run
+     only while an instance is awake.
+2. **Firebase** (SETUP-LATER #12): service account → secret `fcm-service-account` (deploy.sh then turns
+   push on); Android app config → GitHub variables `FIREBASE_*` (the real app build passes them).
+3. **Google Play**: developer account, upload key secrets, then internal testing with the demo build
+   (`docs/play-store/README.md`). The real app: repository variable `API_URL`, workflow variant "real".
 4. **Gemini key, then the live AI evaluation**. Every case must pass before `AI_PROVIDER=gemini` is
    used for a real school (SETUP-LATER #19).
-5. **Store builds**: Xcode + CocoaPods, Android Studio, the Apple Developer and Google Play accounts
-   (these need the company registration), application id, signing, privacy labels (SETUP-LATER #16–18).
-6. **Real SMS/OTP via MSG91**. Blocked until the owner's company is registered and DLT-approved
-   (SETUP-LATER #3–4). Until then, password login works and OTPs print to the log.
-7. **Razorpay settlement (bank UTR) reconciliation**. Needs a school's live Razorpay account to see
+5. **Sentry** project → secret `sentry-dsn` (SETUP-LATER #10).
+6. **Real SMS via MSG91**: company/proprietorship + DLT registration, sender ID and two templates
+   (SETUP-LATER #4). Until then production runs with passwords and sign-in codes from the school office.
+7. **Email via Resend** (`EMAIL_PROVIDER=resend`; domain SPF/DKIM/DMARC). Code ready in `channel-gateway.ts`.
+8. **Razorpay settlement (bank UTR) reconciliation**. Needs a school's live Razorpay account to see
    real settlement data. Order and refund reconciliation already exist (`modules/finance`).
-8. **Email via Resend** (`EMAIL_PROVIDER=resend`; domain SPF/DKIM/DMARC). The code path exists in
-   `channel-gateway.ts`.
-9. **Module READMEs**: part of the Definition of Done in docs/12, never written. Each needs its
-   purpose, permissions, events emitted and jobs.
-10. **Smaller follow-ups** noted along the way:
-    - promotion wizard: UI to detain individual students (the API supports it)
-    - per-class subject editing beyond the grid
-    - documents for non-teaching staff
-    - saved/scheduled reports
-    - custom report-card layouts per school
-    - notification quiet hours and per-school send caps (planned in docs/12 Phase 3, not built)
-    - convenience fee on online payments (open question in docs/11)
-    - online subscription billing (V1.1; plans are billed manually today)
-    - Sentry (`SENTRY_DSN` at deploy time)
-11. **Before the first real school**: legal review (DPA, privacy policy, DPDP Act, docs/09 §7), a final
-    product name and domain (replace "SchoolOS" / `schoolos.in` everywhere), and DNS + Cloudflare Access
-    for `admin.<domain>`.
+9. **Owner decisions**:
+   - convenience fee on online payments (open question in docs/11)
+   - online subscription billing for schools (V1.1; plans are billed manually today)
+   - the 27 open questions at the end of docs 01–11
+10. **iOS**: Apple Developer account (needs a registered company) and Xcode.
+11. **Before the first real school**: legal review (DPA, and the privacy policy and terms now on the
+    website at `/privacy` and `/terms`; DPDP Act, docs/09 §7), buy the domain (the code assumes
+    `bastaa.in`; if it's taken, replace it everywhere), DNS + Cloudflare Access for `admin.<domain>`,
+    and branch protection on `main`.
 
 Everything that needs an account or key is tracked in [`docs/SETUP-LATER.md`](docs/SETUP-LATER.md),
 and each slot is marked `⏸` in the code (`git grep ⏸`).
@@ -472,7 +482,7 @@ and each slot is marked `⏸` in the code (`git grep ⏸`).
 | Mostly solo developer → web + API first, Flutter later | Team size |
 | No student login in V1; English UI only, i18n-ready | Scope |
 | Monolith (modular NestJS), **no microservices/Kafka/Kubernetes** | From the owner's master prompt |
-| Placeholder brand "SchoolOS"; anything without an account gets a **slot** (marked `⏸`) | Owner: "whatever you don't have, keep a place for it; I'll add it at the end" |
+| Placeholder brand "Bastaa"; anything without an account gets a **slot** (marked `⏸`) | Owner: "whatever you don't have, keep a place for it; I'll add it at the end" |
 | Docker optional — "install later, proceed with code" | Docker Desktop was never installed on the owner's Mac |
 | Video meetings must be **free** (no paid Zoom) → Jitsi | Owner's requirement |
 | App home redesigned after a reference screenshot (avatar header, colourful feature-icon grid, "Your Subjects" cards with score rings, pill bottom nav) | Owner asked for "good UI, combination of colours" |
@@ -486,7 +496,7 @@ and each slot is marked `⏸` in the code (`git grep ⏸`).
 | Postgres in Docker | `embedded-postgres` (real PG 17 from npm) | No Docker; CI needs no service container |
 | Redis/Upstash for BullMQ | **BullMQ on PostgreSQL** | One less service, ~$10–20/month saved; `QUEUE_BACKEND=redis` switches back |
 | RLS SQL inside migrations | `scripts/apply-sql.mjs`, run after every migrate; it **discovers** every `school_id` table and fails if one is uncovered | A new table can't be forgotten |
-| Session revocation / rate limits in Redis | DB session check (30 s cache) / in-memory store behind an interface | No Redis; fine for one instance — revisit when scaling out |
+| Session revocation / rate limits in Redis | DB session check (30 s cache) / rate limits in memory locally and in PostgreSQL in the cloud (`RATE_LIMIT_STORE=postgres`, shared by all instances) | No Redis; a revoked session can live up to 30 s per instance |
 | Generated Dart API client | Hand-written client + models, guarded by `mobile-routes.test.ts` and model-parsing tests | Response types are TS interfaces only; the generator also needs Java |
 | Drift/SQLite offline queue | `shared_preferences` | Queue holds a few registers; works on web |
 | Google HTTPS load balancer | Cloudflare Worker + edge secret | ~$18/month saved on credits |
@@ -628,12 +638,6 @@ No credentials for any of these are in the repo.
 1. Clone the repo and follow §3 until all three of these work: http://demo.localhost:3000 (sign in as
    `admin@demo.school`), http://admin.localhost:3000, and the Flutter app in Chrome (sign in as
    `parent@demo.school`).
-2. Run the full check suite in §3 and open the repo's **Actions** tab. Confirm that CI for the latest
-   `main` commit is green, and fix anything red first.
-3. Ask the owner which account they'll set up first:
-   - **Firebase**, for push notifications (§7 item 2)
-   - **GCP + domain**, to deploy staging (§7 item 3)
-   - **Gemini key**, for the live AI evaluation (§7 item 4)
-
-   Each one unblocks a ready-made slot. If none is available yet, start on account-free work: module
-   READMEs and the small follow-ups in §7 item 10.
+2. Run the full check suite in §3 and confirm CI for the latest `main` commit is green.
+3. Ask the owner which account is ready: GCP + domain (staging, §7 item 1), Firebase (push, item 2),
+   Play (item 3) or Gemini (item 4). Each one unblocks code that's already written.

@@ -3,7 +3,7 @@
 import type { StudentDetail } from '@schoolos/contracts';
 import { Badge, Button, Card, CardHeader, Dialog, DialogBody, DialogContent, EmptyState, ErrorState, Skeleton, Tooltip, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Pencil, Star, UserX } from 'lucide-react';
+import { ArrowLeft, IdCard, Pencil, Star, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { use, useState, type ReactNode } from 'react';
 import { DocumentsPanel } from '@/components/documents/documents-panel';
@@ -102,7 +102,12 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
             <><Skeleton className="h-7 w-56" /><Skeleton className="mt-2 h-4 w-72" /></>
           )}
         </div>
-        {s && canEdit && <Button variant="secondary" onClick={() => setEditing(true)}><Pencil /> Edit</Button>}
+        {s && canEdit && (
+          <div className="flex gap-2">
+            <Button variant="ghost" asChild><a href={`/api/v1/students/id-cards?studentId=${s.id}`} target="_blank" rel="noopener"><IdCard /> ID card</a></Button>
+            <Button variant="secondary" onClick={() => setEditing(true)}><Pencil /> Edit</Button>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border" role="tablist">

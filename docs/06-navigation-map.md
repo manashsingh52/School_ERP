@@ -4,8 +4,8 @@ Four surfaces:
 
 | Surface | Where | Users |
 |---|---|---|
-| School web app | `{slug}.schoolos.in` | School Admin, Principal, Accountant, Teacher (Parents can use it too, but mobile is primary) |
-| Super admin | `admin.schoolos.in` | Super Admin, Support |
+| School web app | `{slug}.bastaa.in` | School Admin, Principal, Accountant, Teacher (Parents can use it too, but mobile is primary) |
+| Super admin | `admin.bastaa.in` | Super Admin, Support |
 | Parent app | Flutter | Parents |
 | Teacher app | Flutter (same app, role-based) | Teachers |
 
@@ -49,7 +49,7 @@ Menu items are shown **only if the user has the permission** (04) **and the feat
 ```
 /                                   → redirect to /dashboard
 /login  /login/otp  /forgot-password  /activate
-/select-school                      (multi-membership users arriving on app.schoolos.in)
+/select-school                      (multi-membership users arriving on app.bastaa.in)
 
 /dashboard
 
@@ -173,7 +173,7 @@ Entity actions (→ or Tab on a result):
 - Respects permissions: an action you can't perform is not listed.
 - Shortcuts: `G then S` students, `G then A` attendance, `G then F` fees, `N` new (contextual), `/` focus table search.
 
-## 3. Super admin (`admin.schoolos.in`)
+## 3. Super admin (`admin.bastaa.in`)
 
 ```
 /dashboard            schools, active schools, students, teachers, active users (7d),

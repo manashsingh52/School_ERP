@@ -47,7 +47,7 @@ class SessionController extends Notifier<SessionState> {
     return const SessionLoading();
   }
 
-  Map<String, Object?> get _device => {'platform': clientPlatform, 'deviceName': 'SchoolOS app'};
+  Map<String, Object?> get _device => {'platform': clientPlatform, 'deviceName': 'Bastaa app'};
 
   /// App start: a saved refresh token → a fresh access token → straight back into the school.
   Future<void> restore() async {
@@ -105,6 +105,12 @@ class SessionController extends Notifier<SessionState> {
 
   Future<void> verifyCode(String challengeId, String code) async {
     final auth = await _api.post<Json>('/auth/otp/verify', {'challengeId': challengeId, 'code': code.trim(), ..._device});
+    await _afterAuth(auth);
+  }
+
+  /// A code from the school office (no SMS): first sign-in or a forgotten password.
+  Future<void> redeemSchoolCode(String identifier, String code, String newPassword) async {
+    final auth = await _api.post<Json>('/auth/code/redeem', {'identifier': identifier.trim(), 'code': code.trim(), 'newPassword': newPassword, ..._device});
     await _afterAuth(auth);
   }
 

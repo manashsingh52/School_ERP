@@ -9,6 +9,7 @@ import { PasswordService } from './core/auth/password.service.js';
 import { RouteAccessCheck } from './core/auth/route-access.check.js';
 import { TokenService } from './core/auth/token.service.js';
 import { RequestContextMiddleware } from './core/context/context.middleware.js';
+import { ErrorReporter } from './core/errors/error-reporter.js';
 import { AllExceptionsFilter } from './core/errors/error.filter.js';
 import { HealthController } from './core/health/health.controller.js';
 import { LOGGER } from './core/logger/logger.js';
@@ -27,13 +28,13 @@ import { EntitlementsService } from './core/entitlements/entitlements.service.js
 import { SchoolSettingsService } from './core/settings/school-settings.service.js';
 import { QueueService } from './core/queue/queue.service.js';
 import { SchedulerService } from './core/queue/scheduler.service.js';
-import { MemoryRateLimitStore, RateLimitGuard } from './core/rate-limit/rate-limit.js';
+import { MemoryRateLimitStore, PostgresRateLimitStore, RateLimitGuard, RateLimitStore } from './core/rate-limit/rate-limit.js';
 import { AcademicsModule } from './modules/academics/academics.module.js';
 import { AttendanceModule } from './modules/attendance/attendance.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AuthController } from './modules/auth/auth.controller.js';
 import { AuthService } from './modules/auth/auth.service.js';
-import { ConsoleOtpSender, OtpSender } from './modules/auth/otp-sender.js';
+import { ConsoleOtpSender, OtpSender, otpSenderProvider } from './modules/auth/otp-sender.js';
 import { SessionService } from './modules/auth/session.service.js';
 import { FilesController, LocalStorageController } from './modules/files/files.controller.js';
 import { FilesService } from './modules/files/files.service.js';
@@ -90,6 +91,7 @@ import { AppConfigController, DevicesController, OpenApiController } from './mod
 import { DocumentsService } from './modules/documents/documents.service.js';
 import { PlatformController, SchoolPlanController } from './modules/platform/platform.controller.js';
 import { ReportRunsService } from './modules/reports/report-runs.service.js';
+import { SavedReportsService } from './modules/reports/saved-reports.service.js';
 import { AuditController, ReportsController } from './modules/reports/reports.controller.js';
 import { ReportsService } from './modules/reports/reports.service.js';
 import { PlatformService } from './modules/platform/platform.service.js';
@@ -104,6 +106,7 @@ import { TeachersController } from './modules/teachers/teachers.controller.js';
 import { TeachersService } from './modules/teachers/teachers.service.js';
 import { StudentsController } from './modules/students/students.controller.js';
 import { StudentsService } from './modules/students/students.service.js';
+import { IdCardsService } from './modules/students/id-cards.service.js';
 
 /** Cross-cutting services every module may use (docs/01 §3 "core"). */
 @Global()
@@ -120,7 +123,10 @@ export class CoreModule {
       AccessService,
       ScopeService,
       AuditService,
+      ErrorReporter,
       MemoryRateLimitStore,
+      PostgresRateLimitStore,
+      { provide: RateLimitStore, useExisting: env.RATE_LIMIT_STORE === 'postgres' ? PostgresRateLimitStore : MemoryRateLimitStore },
       RateLimitGuard,
       RequestContextMiddleware,
       RouteAccessCheck,
@@ -158,7 +164,7 @@ export class CoreModule {
 
 @Module({
   controllers: [AuthController, MeController],
-  providers: [AuthService, SessionService, ConsoleOtpSender, { provide: OtpSender, useExisting: ConsoleOtpSender }],
+  providers: [AuthService, SessionService, ConsoleOtpSender, otpSenderProvider],
   exports: [AuthService, SessionService, OtpSender, ConsoleOtpSender],
 })
 export class AuthModule {}
@@ -179,7 +185,7 @@ export class GuardiansModule {}
 @Module({
   imports: [SchoolsModule, FilesModule, GuardiansModule],
   controllers: [StudentsController],
-  providers: [StudentsService],
+  providers: [StudentsService, IdCardsService],
   exports: [StudentsService],
 })
 export class StudentsModule {}
@@ -187,7 +193,7 @@ export class StudentsModule {}
 @Module({ imports: [SchoolsModule, FilesModule], controllers: [TeachersController], providers: [TeachersService], exports: [TeachersService] })
 export class TeachersModule {}
 
-@Module({ imports: [SchoolsModule], controllers: [MembersController, RolesController, PermissionsController], providers: [MembersService] })
+@Module({ imports: [SchoolsModule, AuthModule], controllers: [MembersController, RolesController, PermissionsController], providers: [MembersService] })
 export class MembersModule {}
 
 @Module({ imports: [StudentsModule, TeachersModule, GuardiansModule], controllers: [SearchController], providers: [SearchService] })
@@ -238,7 +244,7 @@ export class ImportsModule {}
 @Module({ imports: [FilesModule], controllers: [DocumentsController], providers: [DocumentsService] })
 export class DocumentsModule {}
 
-@Module({ imports: [FilesModule, FinanceModule], controllers: [ReportsController, AuditController], providers: [ReportsService, ReportRunsService], exports: [ReportsService] })
+@Module({ imports: [FilesModule, FinanceModule, NotificationsModule], controllers: [ReportsController, AuditController], providers: [ReportsService, ReportRunsService, SavedReportsService], exports: [ReportsService] })
 export class ReportsModule {}
 
 @Module({ imports: [ReportsModule], controllers: [AiController], providers: [AiService, AiTools] })

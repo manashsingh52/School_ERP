@@ -26,7 +26,7 @@ describe('app config', () => {
   it('tells the app its minimum version and checkout, without signing in', async () => {
     const res = await t.http.get('/v1/app/config');
     expect(res.status).toBe(200);
-    expect(res.body.data).toEqual({ minVersion: '1.2.0', latestVersion: '1.4.0', storeUrls: { android: null, ios: null }, paymentsDriver: 'mock' });
+    expect(res.body.data).toEqual({ minVersion: '1.2.0', latestVersion: '1.4.0', storeUrls: { android: null, ios: null }, paymentsDriver: 'mock', otpLogin: true });
   });
 });
 

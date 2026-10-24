@@ -11,7 +11,7 @@ Estimates are **focused-week ranges** for a solo developer. Treat them as planni
 - [x] Node 22 (nvm), pnpm 9, Google Cloud CLI installed on the dev Mac (2026-10-07)
 - [ ] **Docker Desktop** (needs your admin password; see the note at the end)
 - [ ] Git repo + GitHub (private), branch protection on `main`
-- [ ] Buy the domain (placeholder `schoolos.in`) and add it to Cloudflare
+- [ ] Buy the domain (placeholder `bastaa.in`) and add it to Cloudflare
 - [ ] GCP: create `schoolos-staging` and `schoolos-prod` projects, link billing/credits, set **budget alerts**
 - [ ] ⏸ **DLT registration** for SMS is blocked until the company is registered. Meanwhile OTP uses a console provider in dev, and password login works without SMS
 - [ ] Razorpay **test** account (for development)
@@ -366,7 +366,7 @@ A module is done only when **all** of these are true:
 - [ ] Unit + integration tests; critical paths in Playwright e2e (`apps/e2e`)
 - [ ] Responsive down to 375px; keyboard accessible; contrast checked
 - [ ] Docs: module README (purpose, permissions, events emitted, jobs), API docs generated
-- [ ] Demo seed data updated so the module looks alive in `demo.schoolos.in`
+- [ ] Demo seed data updated so the module looks alive in `demo.bastaa.in`
 
 ## What's deliberately not in V1
 

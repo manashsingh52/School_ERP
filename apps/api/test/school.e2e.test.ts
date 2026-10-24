@@ -45,7 +45,7 @@ describe('onboarding', () => {
   it('computes the checklist and goes live once required steps are done', async () => {
     const state = await api().get('/v1/onboarding');
     const byKey = Object.fromEntries(state.body.data.checklist.map((c: { key: string; done: boolean }) => [c.key, c.done]));
-    expect(byKey).toMatchObject({ school: true, year: true, classes: true, sections: true, students: true, admin: true });
+    expect(byKey).toMatchObject({ school: true, year: true, classes: true, sections: true, students: true, fees: true, admin: true });
     expect(state.body.data.canGoLive).toBe(true);
 
     await api().put('/v1/onboarding/step', { step: 4 });
@@ -98,6 +98,10 @@ describe('year-end promotion', () => {
     expect(s1.map((e) => e.status)).toEqual(['PROMOTED', 'ENROLLED']); // history kept
     const s3 = await t.platform.student.findUniqueOrThrow({ where: { id: A.students.s3 } });
     expect(s3.status).toBe('ALUMNI');
+
+    // Listing by section works for any year, not only the current one (the keep-back picker).
+    const nineA = (await api().get(`/v1/students?sectionId=${nine.id}`)).body.data as { id: string }[];
+    expect(nineA.map((s) => s.id)).toEqual([A.students.s1]);
 
     // Running again (new key) skips everyone already moved
     const again = await api().post('/v1/promotions/commit', body).set('idempotency-key', 'promo-2027-0002');

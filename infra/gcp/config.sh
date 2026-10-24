@@ -8,7 +8,7 @@ case "$ENV" in staging|production) ;; *) echo "ENV must be staging or production
 
 PROJECT_ID="${PROJECT_ID:-schoolos-$ENV}"
 REGION="${REGION:-asia-south1}"                 # Mumbai (docs/10)
-DOMAIN="${DOMAIN:-schoolos.in}"                 # ⏸ product name / domain (SETUP-LATER #5, #14)
+DOMAIN="${DOMAIN:-bastaa.in}"                 # ⏸ product name / domain (SETUP-LATER #5, #14)
 GITHUB_REPO="${GITHUB_REPO:-}"                  # owner/name, for keyless deploys from GitHub Actions
 
 REPO="schoolos"                                  # Artifact Registry repository

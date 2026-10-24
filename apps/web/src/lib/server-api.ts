@@ -30,7 +30,7 @@ export async function serverApi<T>(path: string): Promise<ServerResult<T>> {
     return {
       ok: false,
       status: 503,
-      error: { code: 'SERVICE_UNAVAILABLE', message: "We can't reach SchoolOS right now. Please try again in a moment." },
+      error: { code: 'SERVICE_UNAVAILABLE', message: "We can't reach Bastaa right now. Please try again in a moment." },
     };
   }
 }

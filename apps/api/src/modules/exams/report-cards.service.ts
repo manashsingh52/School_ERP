@@ -103,6 +103,7 @@ export class ReportCardsService implements OnModuleInit {
         classTeacher: section.classTeacher ? fullName(section.classTeacher.firstName, section.classTeacher.lastName) : null,
         result,
         grades,
+        card: { layout: examSettings.reportCardLayout, title: examSettings.reportCardTitle, show: examSettings.reportCardShow },
       });
       const data = await this.pdf.render(html);
       const fileId = await this.files.storeGenerated({

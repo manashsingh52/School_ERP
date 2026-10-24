@@ -22,6 +22,7 @@ import {
   passwordResetRequestSchema,
   registerDeviceSchema,
   refreshRequestSchema,
+  schoolCodeRedeemSchema,
   selectSchoolRequestSchema,
 } from './auth.js';
 import {
@@ -53,7 +54,7 @@ import {
 import { requestUploadSchema } from './files.js';
 import { askSchema, worksheetSchema } from './ai.js';
 import { createDocumentSchema, listDocumentsQuerySchema, updateDocumentSchema } from './documents.js';
-import { auditQuerySchema, createReportRunSchema, reportPreviewQuerySchema } from './reports.js';
+import { auditQuerySchema, createReportRunSchema, reportPreviewQuerySchema, saveReportSchema, updateSavedReportSchema } from './reports.js';
 import {
   featureFlagSchema,
   listSchoolsQuerySchema,
@@ -138,7 +139,7 @@ import {
   updateRoleSchema,
   updateTeacherSchema,
 } from './people.js';
-import { createStudentSchema, listStudentsQuerySchema, updateStudentSchema } from './students.js';
+import { createStudentSchema, idCardsQuerySchema, listStudentsQuerySchema, updateStudentSchema } from './students.js';
 
 export interface EndpointDef {
   summary: string;
@@ -161,6 +162,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/auth/otp/send': { summary: 'Send a one-time code', tag: 'Auth', access: 'public', body: otpSendRequestSchema },
   'POST /v1/auth/otp/verify': { summary: 'Sign in with a one-time code', tag: 'Auth', access: 'public', body: otpVerifyRequestSchema },
   'POST /v1/auth/password/reset': { summary: 'Set a new password with a one-time code', tag: 'Auth', access: 'public', body: passwordResetRequestSchema },
+  'POST /v1/auth/code/redeem': { summary: 'Sign in with a code from the school office and set a password', tag: 'Auth', access: 'public', body: schoolCodeRedeemSchema },
   'POST /v1/auth/refresh': { summary: 'Rotate the refresh token', tag: 'Auth', access: 'public', body: refreshRequestSchema },
   'POST /v1/auth/select-school': { summary: 'Scope the session to one school', tag: 'Auth', access: 'authenticated', body: selectSchoolRequestSchema },
   'POST /v1/auth/logout': { summary: 'Sign out this device', tag: 'Auth', access: 'authenticated' },
@@ -177,6 +179,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/public/schools/:slug': { summary: 'School branding for the login page', tag: 'Public', access: 'public' },
 
   'GET /v1/students': { summary: 'List students', tag: 'Students', access: 'permission:student.view', query: listStudentsQuerySchema },
+  'GET /v1/students/id-cards': { summary: 'Printable ID cards (PDF) for a section or one student', tag: 'Students', access: 'permission:student.edit', query: idCardsQuerySchema },
   'GET /v1/students/:id': { summary: 'Student profile', tag: 'Students', access: 'permission:student.view' },
   'POST /v1/students': { summary: 'Add a student', tag: 'Students', access: 'permission:student.create', body: createStudentSchema, idempotent: true },
   'PATCH /v1/students/:id': { summary: 'Edit a student', tag: 'Students', access: 'permission:student.edit', body: updateStudentSchema },
@@ -222,6 +225,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/members': { summary: 'People with access to this school', tag: 'Users', access: 'permission:user.view', query: listMembersQuerySchema },
   'POST /v1/members': { summary: 'Invite someone', tag: 'Users', access: 'permission:user.manage', body: inviteMemberSchema },
   'PATCH /v1/members/:id': { summary: 'Change roles or suspend', tag: 'Users', access: 'permission:user.manage', body: updateMemberSchema },
+  'POST /v1/members/:id/sign-in-code': { summary: 'One-time sign-in code to hand over (no SMS needed)', tag: 'Users', access: 'permission:user.manage' },
   'GET /v1/roles': { summary: 'Roles and their permissions', tag: 'Users', access: 'permission:user.view' },
   'POST /v1/roles': { summary: 'Create a custom role', tag: 'Users', access: 'permission:role.manage', body: createRoleSchema },
   'PATCH /v1/roles/:id': { summary: 'Rename a role', tag: 'Users', access: 'permission:role.manage', body: updateRoleSchema },
@@ -384,12 +388,12 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/files/:id/download-url': { summary: 'Get a short-lived download link', tag: 'Files', access: 'school' },
   'PUT /v1/files/local/:token': { summary: 'Development storage upload (signed token)', tag: 'Files', access: 'public' },
   'GET /v1/files/local/:token': { summary: 'Development storage download (signed token)', tag: 'Files', access: 'public' },
-  'GET /v1/school/settings': { summary: 'Settings: general, fees, examinations, branding', tag: 'School', access: 'permission:school.settings.view' },
-  'PUT /v1/school/settings/:section': { summary: 'Save one settings section (branding needs school.branding.manage)', tag: 'School', access: 'school' },
+  'GET /v1/school/settings': { summary: 'Settings: general, fees, examinations, branding, notifications', tag: 'School', access: 'permission:school.settings.view' },
+  'PUT /v1/school/settings/:section': { summary: 'Save one settings section (branding needs school.branding.manage, notifications notification.settings.manage)', tag: 'School', access: 'school' },
   'GET /v1/school/subscription': { summary: "This school's plan, limits and usage", tag: 'School', access: 'permission:billing.view' },
   'GET /v1/school/features': { summary: 'Feature flags switched on for this school', tag: 'School', access: 'school' },
   'GET /v1/school/support-access': { summary: 'Support access requests and grants', tag: 'School', access: 'permission:user.manage' },
-  'POST /v1/school/support-access/:id/approve': { summary: 'Let SchoolOS support look (read-only, time-boxed)', tag: 'School', access: 'permission:user.manage' },
+  'POST /v1/school/support-access/:id/approve': { summary: 'Let Bastaa support look (read-only, time-boxed)', tag: 'School', access: 'permission:user.manage' },
   'POST /v1/school/support-access/:id/revoke': { summary: 'Decline a request or end access now', tag: 'School', access: 'permission:user.manage' },
 
   'GET /v1/platform/dashboard': { summary: 'Platform overview', tag: 'Platform', access: 'platform:platform.dashboard.view' },
@@ -423,6 +427,11 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/reports/runs': { summary: 'My exports', tag: 'Reports', access: 'permission:report.export' },
   'GET /v1/reports/runs/:id': { summary: 'One export (poll until DONE)', tag: 'Reports', access: 'permission:report.export' },
   'GET /v1/reports/runs/:id/download': { summary: 'Download link for a finished export', tag: 'Reports', access: 'permission:report.export' },
+  'GET /v1/reports/saved': { summary: 'My saved reports', tag: 'Reports', access: 'permission:report.export' },
+  'POST /v1/reports/saved': { summary: 'Save a report with its filters, optionally weekly or monthly', tag: 'Reports', access: 'permission:report.export', body: saveReportSchema },
+  'PATCH /v1/reports/saved/:id': { summary: 'Rename, change the format or the schedule', tag: 'Reports', access: 'permission:report.export', body: updateSavedReportSchema },
+  'DELETE /v1/reports/saved/:id': { summary: 'Delete a saved report', tag: 'Reports', access: 'permission:report.export' },
+  'POST /v1/reports/saved/:id/run': { summary: 'Export a saved report now', tag: 'Reports', access: 'permission:report.export' },
   'GET /v1/audit': { summary: "The school's audit log", tag: 'Audit', access: 'permission:audit.view', query: auditQuerySchema },
 
   'GET /v1/ai/status': { summary: 'Is the AI assistant on for me, and how much is left this month', tag: 'AI', access: 'permission:ai.use' },

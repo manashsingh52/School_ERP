@@ -205,5 +205,5 @@ Content (table or form or grid)
 
 ## Open questions
 
-1. Any brand colour or logo direction for SchoolOS itself (used on login, super admin, marketing)? Default: neutral charcoal with a blue accent.
+1. Any brand colour or logo direction for Bastaa itself (used on login, super admin, marketing)? Default: neutral charcoal with a blue accent.
 2. OK to ship **light mode only** until Phase 6?

@@ -15,12 +15,12 @@ function Meter({ label, used, limit, fmt = formatNumber }: { label: string; used
     <div>
       <div className="flex justify-between text-body"><span>{label}</span><span className="tabular text-fg-secondary">{fmt(used)} of {limit === null ? 'unlimited' : fmt(limit)}</span></div>
       <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-subtle"><div className={cn('h-full rounded-full', pct >= 100 ? 'bg-danger' : pct >= 85 ? 'bg-warning' : 'bg-accent')} style={{ width: `${pct}%` }} /></div>
-      {limit !== null && pct >= 85 && <p className={cn('mt-1 text-small', pct >= 100 ? 'text-danger' : 'text-warning')}>{pct >= 100 ? 'Limit reached — contact SchoolOS to upgrade.' : 'Nearly at your limit.'}</p>}
+      {limit !== null && pct >= 85 && <p className={cn('mt-1 text-small', pct >= 100 ? 'text-danger' : 'text-warning')}>{pct >= 100 ? 'Limit reached — contact Bastaa to upgrade.' : 'Nearly at your limit.'}</p>}
     </div>
   );
 }
 
-/** Plan and usage (docs/12 Phase 6). Billing is handled by SchoolOS directly for now. */
+/** Plan and usage (docs/12 Phase 6). Billing is handled by Bastaa directly for now. */
 export default function BillingPage() {
   return (
     <Gate any={['billing.view']}>
@@ -37,7 +37,7 @@ function Billing() {
     <Card>
       <CardHeader
         title={x.plan ? `${x.plan.name} plan` : 'No plan'}
-        description="To change plan or pay, contact SchoolOS — online billing comes later."
+        description="To change plan or pay, contact Bastaa — online billing comes later."
         action={x.status && <Badge tone={STATUS[x.status][1]}>{STATUS[x.status][0]}</Badge>}
       />
       <div className="flex flex-col gap-5 p-5">

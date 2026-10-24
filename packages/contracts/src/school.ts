@@ -142,7 +142,18 @@ export const feeSettingsSchema = z.object({
   receiptNote: note(200),
 });
 
+export const reportCardLayoutSchema = z.enum(['classic', 'modern', 'compact']);
+export type ReportCardLayout = z.infer<typeof reportCardLayoutSchema>;
+
 export const examSettingsSchema = z.object({
+  /** classic = bordered boxes; modern = coloured header band, airy; compact = smaller type, fits more. */
+  reportCardLayout: reportCardLayoutSchema.default('classic'),
+  /** Heading on the card, e.g. "Progress report". null = "Report card". */
+  reportCardTitle: note(40),
+  /** What the card shows. */
+  reportCardShow: z
+    .object({ photo: z.boolean().default(true), passMarks: z.boolean().default(true), rank: z.boolean().default(true), gradingKey: z.boolean().default(true), remarks: z.boolean().default(true), parentSignature: z.boolean().default(true) })
+    .default({ photo: true, passMarks: true, rank: true, gradingKey: true, remarks: true, parentSignature: true }),
   showAttendanceOnReportCard: z.boolean().default(true),
   reportCardNote: note(300),
   /** Grades teachers may give in co-scholastic areas (best first). */
@@ -155,13 +166,25 @@ export const brandingSettingsSchema = z.object({
   showLogoOnReceipts: z.boolean().default(true),
 });
 
-export const SETTINGS_SECTIONS = { general: generalSettingsSchema, fees: feeSettingsSchema, examinations: examSettingsSchema, branding: brandingSettingsSchema } as const;
+const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use a time like 21:00');
+
+export const notificationSettingsSchema = z.object({
+  /** App pushes and SMS wait until the morning. The in-app inbox and email are never held back. */
+  quietHours: z
+    .object({ enabled: z.boolean().default(true), start: clock.default('21:00'), end: clock.default('07:00') })
+    .default({ enabled: true, start: '21:00', end: '07:00' }),
+  /** Most SMS the school sends in one day, within the plan's monthly allowance. null = no daily limit. */
+  dailySmsLimit: z.number().int().min(1).max(100_000).nullable().default(null),
+});
+
+export const SETTINGS_SECTIONS = { general: generalSettingsSchema, fees: feeSettingsSchema, examinations: examSettingsSchema, branding: brandingSettingsSchema, notifications: notificationSettingsSchema } as const;
 export type SettingsSection = keyof typeof SETTINGS_SECTIONS;
-export const settingsSectionSchema = z.enum(['general', 'fees', 'examinations', 'branding']);
+export const settingsSectionSchema = z.enum(['general', 'fees', 'examinations', 'branding', 'notifications']);
 
 export interface SchoolSettingsView {
   general: z.output<typeof generalSettingsSchema>;
   fees: z.output<typeof feeSettingsSchema>;
   examinations: z.output<typeof examSettingsSchema>;
   branding: z.output<typeof brandingSettingsSchema> & { signatureUrl: string | null };
+  notifications: z.output<typeof notificationSettingsSchema>;
 }

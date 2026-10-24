@@ -25,7 +25,7 @@ pilot (month 4–5). So:
 | Env | Where | Data | Purpose |
 |---|---|---|---|
 | **local** | Your Mac, Docker Compose | Seeded fake data | Daily development |
-| **staging** | GCP project `schoolos-staging` | Seeded demo data only, **never** real school data | Pre-release testing, sales demo (`demo.schoolos.in` lives in prod, see below) |
+| **staging** | GCP project `schoolos-staging` | Seeded demo data only, **never** real school data | Pre-release testing, sales demo (`demo.bastaa.in` lives in prod, see below) |
 | **production** | GCP project `schoolos-prod` | Real schools | Live |
 
 - Separate **GCP projects** per environment means separate IAM, secrets, databases and billing visibility.
@@ -48,9 +48,9 @@ Local hostnames: `*.localhost` resolves to 127.0.0.1 in browsers, so `stmarys.lo
 ```mermaid
 flowchart LR
   U[Browsers / Apps] --> CF[Cloudflare DNS + proxy<br/>WAF, DDoS, cache for static]
-  CF --> LB[Global external HTTPS LB<br/>Certificate Manager: *.schoolos.in, schoolos.in]
-  LB -- "api.schoolos.in" --> API[Cloud Run: api]
-  LB -- "*.schoolos.in" --> WEB[Cloud Run: web]
+  CF --> LB[Global external HTTPS LB<br/>Certificate Manager: *.bastaa.in, bastaa.in]
+  LB -- "api.bastaa.in" --> API[Cloud Run: api]
+  LB -- "*.bastaa.in" --> WEB[Cloud Run: web]
   WEB --> API
   API --> SQL[(Cloud SQL Postgres 17<br/>private IP)]
   WRK[Cloud Run: worker<br/>always-on, 1 instance] --> SQL
@@ -85,7 +85,7 @@ flowchart LR
 
 ## 3. Wildcard subdomains: the decision
 
-Cloud Run domain mapping can't serve `*.schoolos.in`. Options:
+Cloud Run domain mapping can't serve `*.bastaa.in`. Options:
 
 | Option | Cost | Pros | Cons |
 |---|---|---|---|
@@ -101,7 +101,7 @@ Cloud Run domain mapping can't serve `*.schoolos.in`. Options:
 | Service | Use | Action needed early |
 |---|---|---|
 | **MSG91** (or similar DLT-compliant gateway) | OTP + transactional SMS | ⚠️ **DLT registration takes 1–3 weeks:** register your company as the principal entity, a sender ID header (e.g. `SCHLOS`), and every SMS template. Start in Phase 1 |
-| **Resend** or **Brevo** | Transactional email | Verify domain `mail.schoolos.in` (SPF, DKIM, DMARC). From name = school name |
+| **Resend** or **Brevo** | Transactional email | Verify domain `mail.bastaa.in` (SPF, DKIM, DMARC). From name = school name |
 | **Firebase Cloud Messaging** | Push | Firebase project + APNs key (needs an Apple Developer account, $99/yr, at Phase 7) |
 | **Razorpay** | Each school's own account | A test-mode account for us (development) |
 | **Sentry** | Errors + performance | Free/Team plan; data region per Sentry offering (only scrubbed, non-PII events) |

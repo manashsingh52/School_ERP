@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-/// Where the API lives. Override with `--dart-define=API_URL=https://api.schoolos.in`.
+/// Where the API lives. Override with `--dart-define=API_URL=https://api.bastaa.in`.
 /// Locally the Android emulator reaches the Mac at 10.0.2.2; everything else uses localhost.
 String get apiBaseUrl {
   const fromEnv = String.fromEnvironment('API_URL');
@@ -8,6 +8,9 @@ String get apiBaseUrl {
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:4000';
   return 'http://localhost:4000';
 }
+
+/// Release builds must name their server (or be the demo); otherwise they'd look for a developer's computer.
+bool get misconfiguredRelease => kReleaseMode && !demoMode && const String.fromEnvironment('API_URL').isEmpty;
 
 /// A build with no server: sample data from assets/demo (`--dart-define=DEMO_MODE=true`, see DemoApi).
 const demoMode = bool.fromEnvironment('DEMO_MODE');

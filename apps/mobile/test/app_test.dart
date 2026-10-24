@@ -50,7 +50,7 @@ void main() {
     });
     await tester.pumpWidget(_app(api, tokens));
     await tester.pumpAndSettle();
-    expect(find.text('Welcome to SchoolOS'), findsOneWidget);
+    expect(find.text('Welcome to Bastaa'), findsOneWidget);
 
     await tester.enterText(find.widgetWithText(TextField, 'Mobile number or email'), 'teacher@demo.school');
     await tester.enterText(find.widgetWithText(TextField, 'Password'), 'not-a-real-password');
@@ -69,7 +69,7 @@ void main() {
     final api = FakeApi({'GET /app/config': (_) => {...config, 'minVersion': '9.0.0'}});
     await tester.pumpWidget(_app(api, MemoryTokenStore()));
     await tester.pumpAndSettle();
-    expect(find.text('Please update SchoolOS'), findsOneWidget);
+    expect(find.text('Please update Bastaa'), findsOneWidget);
   });
 
   testWidgets('saved session with several schools → school picker', (tester) async {
@@ -89,5 +89,41 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Choose a school'), findsOneWidget);
     expect(find.text('Sunrise School'), findsOneWidget);
+  });
+
+  testWidgets('no SMS codes: password only, plus a code from the school office', (tester) async {
+    final tokens = MemoryTokenStore();
+    final api = FakeApi({
+      'GET /app/config': (_) => {...config, 'otpLogin': false},
+      'POST /auth/code/redeem': (_) => {
+            'user': {'id': 'u1', 'name': 'Priya', 'phone': null, 'email': null},
+            'memberships': [{'membershipId': 'm1', 'school': {'id': 's1', 'slug': 'demo', 'name': 'Demo Public School', 'logoUrl': null, 'accentColor': '#2F6FEB'}, 'roles': [{'key': 'teacher', 'name': 'Teacher'}]}],
+            'activeMembershipId': 'm1',
+            'isPlatformAdmin': false,
+            'tokens': {'accessToken': 'a', 'accessTokenExpiresAt': '', 'refreshToken': 'r' * 40, 'refreshTokenExpiresAt': ''},
+          },
+      'GET /me': (_) => _me([{'key': 'teacher', 'name': 'Teacher'}], teacherId: 't1'),
+      'GET /dashboard': (_) => {'date': '2026-10-09', 'isWeeklyOff': false, 'kpis': {}, 'attention': [], 'myRegisters': <dynamic>[], 'today': null},
+      'GET /exams/marks/mine': (_) => <dynamic>[],
+      'GET /notifications/unread-count': (_) => {'count': 0},
+      'GET /attendance/overview': (_) => {'date': '2026-10-09', 'isWeeklyOff': false, 'totals': {}, 'sections': <dynamic>[]},
+    });
+    await tester.pumpWidget(_app(api, tokens));
+    await tester.pumpAndSettle();
+    expect(find.text('One-time code'), findsNothing);
+
+    await tester.tap(find.textContaining('Use a code from your school'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'Mobile number or email'), '98765 43210');
+    await tester.enterText(find.widgetWithText(TextField, 'Code from your school'), 'abcd-efgh');
+    await tester.enterText(find.widgetWithText(TextField, 'Choose a password'), 'Fresh-start-42');
+    await tester.tap(find.widgetWithText(FilledButton, 'Set password and sign in'));
+    await tester.pumpAndSettle();
+
+    final call = api.calls.firstWhere((c) => c.$2 == '/auth/code/redeem').$3 as Map;
+    expect(call['code'], 'abcd-efgh');
+    expect(call['newPassword'], 'Fresh-start-42');
+    expect(tokens.refresh, 'r' * 40);
+    expect(find.byTooltip('Classes'), findsOneWidget);
   });
 }

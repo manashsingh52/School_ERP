@@ -42,7 +42,7 @@ async function record(identifier) {
     return json?.data ?? json;
   };
 
-  const auth = await call('POST', '/auth/login', { body: { identifier, password: PASSWORD, platform: 'ANDROID', deviceName: 'SchoolOS app' } });
+  const auth = await call('POST', '/auth/login', { body: { identifier, password: PASSWORD, platform: 'ANDROID', deviceName: 'Bastaa app' } });
   token = auth.tokens.accessToken;
   if (!auth.activeMembershipId) token = (await call('POST', '/auth/select-school', { body: { membershipId: auth.memberships[0].id } })).accessToken;
   responses.login = { ...auth, tokens: { accessToken: 'demo', refreshToken: 'demo' } };

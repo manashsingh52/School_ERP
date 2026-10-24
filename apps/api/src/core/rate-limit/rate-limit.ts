@@ -10,17 +10,17 @@ import { Reflector } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { RequestContextStore } from '../context/request-context.js';
 import { AppError } from '../errors/app-error.js';
+import { PlatformPrismaService } from '../prisma/prisma.service.js';
 
 /**
- * Fixed-window rate limiter (docs/05 §5).
- * V1 keeps counters in memory (one API instance). When we run several instances, swap the
- * store for Redis — the RateLimitStore interface is the only thing that changes.
+ * Fixed-window rate limiter (docs/05 §5). Counters live in memory (development, tests, a single
+ * instance) or in PostgreSQL (RATE_LIMIT_STORE=postgres), shared by every API instance.
  */
-export interface RateLimitStore {
-  hit(key: string, windowSeconds: number): Promise<{ count: number; resetInSeconds: number }>;
+export abstract class RateLimitStore {
+  abstract hit(key: string, windowSeconds: number): Promise<{ count: number; resetInSeconds: number }>;
 }
 
-export class MemoryRateLimitStore implements RateLimitStore {
+export class MemoryRateLimitStore extends RateLimitStore {
   private readonly windows = new Map<string, { count: number; resetAt: number }>();
 
   async hit(key: string, windowSeconds: number) {
@@ -44,6 +44,28 @@ export class MemoryRateLimitStore implements RateLimitStore {
   }
 }
 
+@Injectable()
+export class PostgresRateLimitStore extends RateLimitStore {
+  private hits = 0;
+
+  constructor(private readonly platform: PlatformPrismaService) {
+    super();
+  }
+
+  /** One atomic statement: start a new window when the old one is over, otherwise count. */
+  async hit(key: string, windowSeconds: number) {
+    const [row] = await this.platform.$queryRaw<{ count: number; reset_at: Date }[]>`
+      INSERT INTO rate_limits (key, count, reset_at)
+      VALUES (${key}, 1, (now() AT TIME ZONE 'UTC') + make_interval(secs => ${windowSeconds}::double precision))
+      ON CONFLICT (key) DO UPDATE SET
+        count = CASE WHEN rate_limits.reset_at <= (now() AT TIME ZONE 'UTC') THEN 1 ELSE rate_limits.count + 1 END,
+        reset_at = CASE WHEN rate_limits.reset_at <= (now() AT TIME ZONE 'UTC') THEN EXCLUDED.reset_at ELSE rate_limits.reset_at END
+      RETURNING count, reset_at`;
+    if (++this.hits % 500 === 0) void this.platform.rateLimitCounter.deleteMany({ where: { resetAt: { lt: new Date() } } }).catch(() => undefined);
+    return { count: row!.count, resetInSeconds: Math.max(1, Math.ceil((row!.reset_at.getTime() - Date.now()) / 1000)) };
+  }
+}
+
 export interface RateLimitRule {
   name: string;
   limit: number;
@@ -58,7 +80,7 @@ const RATE_LIMIT_RULES = 'rate-limit:rules';
 export class RateLimitGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly store: MemoryRateLimitStore,
+    private readonly store: RateLimitStore,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

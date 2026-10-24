@@ -47,6 +47,34 @@ export const passwordResetRequestSchema = z.object({
 });
 export type PasswordResetRequest = z.input<typeof passwordResetRequestSchema>;
 
+/** Codes from the school office: 8 letters/digits, typed with or without the dash. */
+export const schoolCodeSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.toUpperCase().replace(/[\s-]/g, ''))
+  .pipe(z.string().regex(/^[A-Z0-9]{8}$/, 'Enter the 8-character code from your school'));
+
+/**
+ * Sign in with a code the school office handed over (no SMS needed): first sign-in for an
+ * invited parent or teacher, or a forgotten password. Sets the password and opens a session.
+ */
+export const schoolCodeRedeemSchema = z.object({
+  identifier: identifierSchema,
+  code: schoolCodeSchema,
+  newPassword: passwordSchema,
+  schoolSlug: z.string().trim().toLowerCase().max(40).optional(),
+  ...deviceFields,
+});
+export type SchoolCodeRedeemRequest = z.input<typeof schoolCodeRedeemSchema>;
+
+export interface SchoolSignInCode {
+  /** Shown once, formatted "ABCD-EFGH". */
+  code: string;
+  expiresAt: string;
+  /** The phone or email to sign in with. */
+  signInWith: string;
+}
+
 export const refreshRequestSchema = z.object({
   refreshToken: z.string().min(20).max(200),
 });
@@ -128,6 +156,8 @@ export interface PublicSchoolBranding {
   logoUrl: string | null;
   accentColor: string;
   status: 'ONBOARDING' | 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
+  /** False when codes by SMS aren't set up: the login page offers only password and school codes. */
+  otpLogin: boolean;
 }
 
 // ---------------------------------------------------------------- mobile app (docs/01 §7)
@@ -139,6 +169,8 @@ export interface AppConfig {
   storeUrls: { android: string | null; ios: string | null };
   /** For "pay online": which checkout to show (mock = sandbox screen in the app). */
   paymentsDriver: 'razorpay' | 'mock';
+  /** False when codes by SMS aren't set up: sign in with a password or a code from the school. */
+  otpLogin: boolean;
 }
 
 export const registerDeviceSchema = z.object({

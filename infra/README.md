@@ -1,4 +1,4 @@
-# Deploying SchoolOS (Google Cloud, lean mode)
+# Deploying Bastaa (Google Cloud, lean mode)
 
 What runs where (docs/10 §0, lean mode — about $25–45/month for staging):
 
@@ -48,9 +48,9 @@ Run one step with `./infra/gcp/deploy.sh <step>`; deploy an existing image with 
 
 ## Production needs first (SETUP-LATER)
 
-`deploy.sh` refuses to deploy production without these, because the API refuses sandbox providers there:
+Production uses real providers only (the API refuses the sandbox ones there):
 
-- SMS one-time codes: secrets `msg91-auth-key`, `msg91-otp-template-id` (needs DLT registration, #4)
+- SMS (optional; needs DLT registration, SETUP-LATER #4): secrets `msg91-auth-key` plus `msg91-otp-template-id` (sign-in codes) and/or `msg91-sms-template-id` (notifications). Without them production runs with passwords and codes from the school office.
 - Razorpay: each school connects its own keys in Settings (no platform secret)
 - Optional: `gemini-api-key` (AI assistant, #19), `resend-api-key` (email, #9)
 

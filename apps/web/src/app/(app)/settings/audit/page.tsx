@@ -5,7 +5,7 @@ import { useDeferredValue, useState } from 'react';
 import { Gate } from '@/components/gate';
 import { AuditList } from '@/components/platform/audit-list';
 
-/** The school's audit log (docs/09 §6): who changed what and when — including SchoolOS support. */
+/** The school's audit log (docs/09 §6): who changed what and when — including Bastaa support. */
 export default function AuditPage() {
   const [action, setAction] = useState('');
   const [from, setFrom] = useState('');

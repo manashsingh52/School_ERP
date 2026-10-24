@@ -14,7 +14,7 @@ export default function PlatformAuditPage() {
   const params = new URLSearchParams({ ...(schoolId ? { schoolId } : {}), ...(a ? { action: a } : {}) }).toString();
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Audit log" description="Every change across SchoolOS — console actions and each school's own." />
+      <PageHeader title="Audit log" description="Every change across Bastaa — console actions and each school's own." />
       <Card>
         <div className="flex flex-wrap gap-2 border-b border-border p-3">
           <Select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} aria-label="School" className="w-64">

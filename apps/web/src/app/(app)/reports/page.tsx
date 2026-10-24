@@ -1,13 +1,13 @@
 'use client';
 
-import type { DownloadLink, ExamItem, ExportFormat, ReportDef, ReportRunItem, ReportTable } from '@schoolos/contracts';
-import { Badge, Button, Card, CardHeader, EmptyState, Input, PageHeader, Select, Skeleton, Table, TD, TH, THead, TR, cn, toast } from '@schoolos/ui';
+import type { DownloadLink, ExamItem, ExportFormat, ReportDef, ReportRunItem, ReportSchedule, ReportTable, SavedReportItem } from '@schoolos/contracts';
+import { Badge, Button, Card, CardHeader, Dialog, DialogBody, DialogContent, DialogFooter, EmptyState, Field, Input, PageHeader, Select, Skeleton, Table, TD, TH, THead, TR, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { BarChart3, Download, FileSpreadsheet, FileText, Sheet } from 'lucide-react';
+import { BarChart3, Bookmark, Download, FileSpreadsheet, FileText, Play, Sheet, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Gate } from '@/components/gate';
 import { useClasses } from '@/lib/academics';
-import { ApiError, apiFetch, apiPost } from '@/lib/api-client';
+import { ApiError, apiDelete, apiFetch, apiPatch, apiPost } from '@/lib/api-client';
 import { formatDate, formatNumber, timeAgo, todayISO } from '@/lib/format';
 import { useData } from '@/lib/hooks';
 import { useMe } from '@/lib/me';
@@ -74,7 +74,8 @@ function Reports() {
         </nav>
         <div className="flex min-w-0 flex-col gap-4">
           <Filters def={def} p={p} set={(x) => setP((v) => ({ ...v, ...x }))} />
-          {ready ? <Preview reportKey={def.key} params={params} canExport={can('report.export')} /> : <Card><EmptyState icon={<BarChart3 />} title="Choose an exam" /></Card>}
+          {ready ? <Preview reportKey={def.key} title={def.title} params={params} canExport={can('report.export')} /> : <Card><EmptyState icon={<BarChart3 />} title="Choose an exam" /></Card>}
+          {can('report.export') && <SavedReports />}
           {can('report.export') && <History />}
         </div>
       </div>
@@ -116,11 +117,12 @@ function Filters({ def, p, set }: { def: ReportDef; p: Params; set: (x: Partial<
   );
 }
 
-function Preview({ reportKey, params, canExport }: { reportKey: string; params: Record<string, string>; canExport: boolean }) {
+function Preview({ reportKey, title, params, canExport }: { reportKey: string; title: string; params: Record<string, string>; canExport: boolean }) {
   const qc = useQueryClient();
   const qs = new URLSearchParams({ report: reportKey, ...params }).toString();
   const report = useData<ReportTable & { totalRows: number }>(['reports', 'preview', qs], `/reports/preview?${qs}`);
   const [busy, setBusy] = useState<ExportFormat | null>(null);
+  const [saving, setSaving] = useState(false);
   async function exportAs(format: ExportFormat) {
     setBusy(format);
     try {
@@ -144,9 +146,11 @@ function Preview({ reportKey, params, canExport }: { reportKey: string; params: 
         action={canExport && (
           <div className="flex gap-1">
             {FORMATS.map((f) => <Button key={f.value} size="sm" variant="secondary" onClick={() => void exportAs(f.value)} loading={busy === f.value} disabled={!r.totalRows}><f.icon /> {f.label}</Button>)}
+            <Button size="sm" variant="ghost" onClick={() => setSaving(true)}><Bookmark /> Save</Button>
           </div>
         )}
       />
+      {saving && <SaveDialog reportKey={reportKey} title={title} params={params} onClose={() => setSaving(false)} />}
       <p className="px-5 pt-1 text-small text-fg-tertiary">{r.description}</p>
       {!r.rows.length ? (
         <EmptyState icon={<BarChart3 />} title="Nothing to show for these filters" />
@@ -167,6 +171,93 @@ function Preview({ reportKey, params, canExport }: { reportKey: string; params: 
           </Table>
         </div>
       )}
+    </Card>
+  );
+}
+
+const SCHEDULES: { value: ReportSchedule; label: string }[] = [
+  { value: 'NONE', label: 'Only when I run it' },
+  { value: 'WEEKLY', label: 'Every Monday, for the week before' },
+  { value: 'MONTHLY', label: 'On the 1st, for the month before' },
+];
+
+/** Save the report with these filters; weekly or monthly ones are made on their own. */
+function SaveDialog({ reportKey, title, params, onClose }: { reportKey: string; title: string; params: Record<string, string>; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [name, setName] = useState(title);
+  const [format, setFormat] = useState<ExportFormat>('PDF');
+  const [schedule, setSchedule] = useState<ReportSchedule>('NONE');
+  const [busy, setBusy] = useState(false);
+  async function save() {
+    setBusy(true);
+    try {
+      await apiPost('/reports/saved', { name, report: reportKey, params, format, schedule });
+      toast.success(schedule === 'NONE' ? 'Saved' : 'Saved — you’ll get a notification each time it’s made');
+      void qc.invalidateQueries({ queryKey: ['reports', 'saved'] });
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? (err.details?.[0]?.message ?? err.message) : 'That didn’t work.');
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent title="Save this report" description="Keeps the report and its filters. Scheduled reports use the period before each run (dates you picked are replaced).">
+        <DialogBody className="flex flex-col gap-4">
+          <Field label="Name" htmlFor="saved-name"><Input id="saved-name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></Field>
+          <Field label="File" htmlFor="saved-format">
+            <Select id="saved-format" value={format} onChange={(e) => setFormat(e.target.value as ExportFormat)}>
+              {FORMATS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+            </Select>
+          </Field>
+          <Field label="Make it" htmlFor="saved-schedule">
+            <Select id="saved-schedule" value={schedule} onChange={(e) => setSchedule(e.target.value as ReportSchedule)}>
+              {SCHEDULES.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}
+            </Select>
+          </Field>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button disabled={!name.trim()} loading={busy} onClick={() => void save()}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SavedReports() {
+  const saved = useData<SavedReportItem[]>(['reports', 'saved'], '/reports/saved');
+  const qc = useQueryClient();
+  const refresh = () => void qc.invalidateQueries({ queryKey: ['reports'] });
+  async function act(run: () => Promise<unknown>, done: string) {
+    try {
+      await run();
+      toast.success(done);
+      refresh();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'That didn’t work.');
+    }
+  }
+  if (!saved.data?.length) return null;
+  return (
+    <Card>
+      <CardHeader title="Saved reports" description="Run them again in one click. Scheduled ones arrive under Exports, with a notification." />
+      <ul className="mt-3 border-t border-border">
+        {saved.data.map((s) => (
+          <li key={s.id} className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-2.5 last:border-b-0">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">{s.name} <span className="font-normal text-fg-tertiary">· {s.title} · {s.format === 'XLSX' ? 'Excel' : s.format}</span></div>
+              <div className="text-small text-fg-tertiary">{s.nextRunAt ? `Next: ${formatDate(s.nextRunAt)}` : 'Not scheduled'}</div>
+            </div>
+            <Select aria-label={`Schedule for ${s.name}`} value={s.schedule} onChange={(e) => void act(() => apiPatch(`/reports/saved/${s.id}`, { schedule: e.target.value }), 'Schedule changed')} className="h-8 w-56">
+              {SCHEDULES.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}
+            </Select>
+            <Button size="sm" variant="ghost" onClick={() => void act(() => apiPost(`/reports/saved/${s.id}/run`), 'Making your file — it appears under Exports in a moment.')}><Play /> Run now</Button>
+            <Button size="sm" variant="ghost" aria-label={`Delete ${s.name}`} onClick={() => window.confirm(`Delete “${s.name}”?`) && void act(() => apiDelete(`/reports/saved/${s.id}`), 'Deleted')}><Trash2 /></Button>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

@@ -9,6 +9,7 @@ import {
 } from '@schoolos/permissions';
 import type {
   MemberItem,
+  SchoolSignInCode,
   PageResponse,
   RoleItem,
   createRoleSchema,
@@ -20,9 +21,11 @@ import type {
 } from '@schoolos/contracts';
 import { AccessService } from '../../core/auth/access.service.js';
 import { AuditService } from '../../core/audit/audit.service.js';
+import { RequestContextStore } from '../../core/context/request-context.js';
 import { AppError } from '../../core/errors/app-error.js';
 import { PrismaService } from '../../core/prisma/prisma.service.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+import { AuthService } from '../auth/auth.service.js';
 import { IdentityService } from '../schools/identity.service.js';
 
 type In<T extends z.ZodType> = z.output<T>;
@@ -43,6 +46,7 @@ export class MembersService {
     private readonly identity: IdentityService,
     private readonly access: AccessService,
     private readonly audit: AuditService,
+    private readonly auth: AuthService,
   ) {}
 
   // ---------------------------------------------------------------- members
@@ -112,6 +116,16 @@ export class MembersService {
       }),
     );
     return after;
+  }
+
+  /** A one-time code for the office to hand over when SMS isn't available (see AuthService). */
+  async signInCode(id: string): Promise<SchoolSignInCode> {
+    const m = await this.prisma.db.membership.findUnique({ where: { id }, select: { id: true, userId: true, status: true } });
+    if (!m || m.status === 'REMOVED') throw AppError.notFound('member');
+    if (m.status === 'SUSPENDED') throw new AppError('CONFLICT', 409, 'This person is suspended. Reactivate them first.');
+    const issued = await this.auth.createOfficeCode(m.userId, RequestContextStore.school().schoolId);
+    await this.prisma.tenantTx((tx) => this.audit.record(tx, { action: 'member.sign_in_code', entityType: 'Membership', entityId: id, after: { expiresAt: issued.expiresAt } }));
+    return issued;
   }
 
   // ---------------------------------------------------------------- roles

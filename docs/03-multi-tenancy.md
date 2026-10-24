@@ -17,9 +17,9 @@ If any one layer has a bug, the other two still block the leak.
 
 | Client | How school is known | Notes |
 |---|---|---|
-| Web on `stmarys.schoolos.in` | `Host` → slug `stmarys` → BFF sends `X-School-Slug: stmarys` with the user's token | Cookies are **host-only** (no `Domain=` attribute), so a session on `stmarys.` is never sent to `dps.` |
+| Web on `stmarys.bastaa.in` | `Host` → slug `stmarys` → BFF sends `X-School-Slug: stmarys` with the user's token | Cookies are **host-only** (no `Domain=` attribute), so a session on `stmarys.` is never sent to `dps.` |
 | Flutter app | User picks a school after login → token is issued **for that membership** | Switching school = new token |
-| Super admin on `admin.schoolos.in` | Platform token (`typ: platform`), no school | Entering a school requires a `SupportAccessGrant` (09 §5) |
+| Super admin on `admin.bastaa.in` | Platform token (`typ: platform`), no school | Entering a school requires a `SupportAccessGrant` (09 §5) |
 | Razorpay webhook | URL contains the gateway account's opaque `publicId` → school | Signature verified with **that school's** webhook secret |
 | Background job | `schoolId` in job payload, written by trusted server code | Never from user input |
 
@@ -131,7 +131,7 @@ CREATE POLICY tenant_isolation ON students
 
 - Slug rules: `^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$`, unique, chosen at onboarding.
 - Reserved: `www, app, api, admin, status, docs, help, support, mail, static, cdn, assets, demo, staging, dev, test`.
-- `demo.schoolos.in` = the sales demo school (seeded data, resets nightly).
+- `demo.bastaa.in` = the sales demo school (seeded data, resets nightly).
 - Changing a slug is a super-admin action. The old slug redirects for 90 days.
 - Custom domains (`erp.stmarys.edu.in`) are V2: an extra `school_domains` table plus a certificate per domain.
 

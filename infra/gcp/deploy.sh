@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build, migrate and deploy SchoolOS to Cloud Run (docs/10, lean mode).
+# Build, migrate and deploy Bastaa to Cloud Run (docs/10, lean mode).
 #   ENV=staging ./infra/gcp/deploy.sh            # build → migrate → deploy → smoke test
 #   ENV=staging ./infra/gcp/deploy.sh roles      # once, after bootstrap: create the database roles
 #   ENV=staging ./infra/gcp/deploy.sh build|migrate|deploy|smoke
@@ -16,8 +16,12 @@ say() { printf '\n▶ %s\n' "$*"; }
 has_secret() { gcloud secrets describe "$1" >/dev/null 2>&1; }
 
 # Providers: staging may use the sandbox/console ones; production refuses them (env.ts).
+# Until MSG91 is set up (DLT, SETUP-LATER #4) production runs without SMS: people sign in with a
+# password or a code from the school office.
 if [ "$ENV" = production ]; then
-  OTP_PROVIDER=msg91; PAYMENTS_GATEWAY=razorpay; SMS_PROVIDER=msg91
+  PAYMENTS_GATEWAY=razorpay
+  OTP_PROVIDER=$(has_secret msg91-auth-key && has_secret msg91-otp-template-id && echo msg91 || echo none)
+  SMS_PROVIDER=$(has_secret msg91-auth-key && has_secret msg91-sms-template-id && echo msg91 || echo none)
   AI_PROVIDER=$(has_secret gemini-api-key && echo gemini || echo none)
   EMAIL_PROVIDER=$(has_secret resend-api-key && echo resend || echo none)
 else
@@ -25,6 +29,9 @@ else
   AI_PROVIDER=$(has_secret gemini-api-key && echo gemini || echo mock)
   EMAIL_PROVIDER=$(has_secret resend-api-key && echo resend || echo console)
 fi
+
+# Push (SETUP-LATER #12): on once the Firebase service account is stored as a secret.
+PUSH_PROVIDER=$(has_secret fcm-service-account && echo fcm || echo none)
 
 build() {
   say "Building images $TAG in Cloud Build"
@@ -52,16 +59,16 @@ migrate() {
 }
 
 deploy() {
-  if [ "$ENV" = production ]; then
-    for s in msg91-auth-key msg91-otp-template-id; do
-      has_secret "$s" || { echo "Production needs secret $s (SMS one-time codes, SETUP-LATER #4). Stopping." >&2; exit 1; }
-    done
-  fi
+  [ "$OTP_PROVIDER" = none ] && echo "No MSG91 secrets: SMS sign-in codes are off (passwords and school codes only)."
   local secrets="APP_DATABASE_URL=database-url-app:latest,PLATFORM_DATABASE_URL=database-url-platform:latest,JWT_PRIVATE_KEY=jwt-private-key:latest,JWT_PUBLIC_KEY=jwt-public-key:latest,OTP_PEPPER=otp-pepper:latest,PAYMENT_SECRETS_KEY=payment-secrets-key:latest,BFF_SHARED_SECRET=bff-shared-secret:latest,EDGE_SHARED_SECRET=edge-shared-secret:latest"
   [ "$AI_PROVIDER" = gemini ] && secrets="$secrets,GEMINI_API_KEY=gemini-api-key:latest"
   [ "$EMAIL_PROVIDER" = resend ] && secrets="$secrets,RESEND_API_KEY=resend-api-key:latest"
-  [ "$OTP_PROVIDER" = msg91 ] && secrets="$secrets,MSG91_AUTH_KEY=msg91-auth-key:latest,MSG91_OTP_TEMPLATE_ID=msg91-otp-template-id:latest"
-  local env="NODE_ENV=$NODE_ENV_VALUE,LOG_LEVEL=info,RUN_WORKERS=true,DB_POOL_SIZE=5,STORAGE_DRIVER=gcs,GCS_PROJECT_ID=$PROJECT_ID,GCS_PRIVATE_BUCKET=$BUCKET_PRIVATE,GCS_PUBLIC_BUCKET=$BUCKET_PUBLIC,APP_BASE_DOMAIN=$DOMAIN,PUBLIC_API_URL=https://api.$DOMAIN,OTP_PROVIDER=$OTP_PROVIDER,SMS_PROVIDER=$SMS_PROVIDER,EMAIL_PROVIDER=$EMAIL_PROVIDER,PUSH_PROVIDER=none,PAYMENTS_GATEWAY=$PAYMENTS_GATEWAY,AI_PROVIDER=$AI_PROVIDER"
+  { [ "$OTP_PROVIDER" = msg91 ] || [ "$SMS_PROVIDER" = msg91 ]; } && secrets="$secrets,MSG91_AUTH_KEY=msg91-auth-key:latest"
+  [ "$OTP_PROVIDER" = msg91 ] && secrets="$secrets,MSG91_OTP_TEMPLATE_ID=msg91-otp-template-id:latest"
+  [ "$SMS_PROVIDER" = msg91 ] && secrets="$secrets,MSG91_SMS_TEMPLATE_ID=msg91-sms-template-id:latest"
+  [ "$PUSH_PROVIDER" = fcm ] && secrets="$secrets,FCM_SERVICE_ACCOUNT_JSON=fcm-service-account:latest"
+  has_secret sentry-dsn && secrets="$secrets,SENTRY_DSN=sentry-dsn:latest"
+  local env="NODE_ENV=$NODE_ENV_VALUE,LOG_LEVEL=info,RUN_WORKERS=true,DB_POOL_SIZE=5,RATE_LIMIT_STORE=postgres,STORAGE_DRIVER=gcs,GCS_PROJECT_ID=$PROJECT_ID,GCS_PRIVATE_BUCKET=$BUCKET_PRIVATE,GCS_PUBLIC_BUCKET=$BUCKET_PUBLIC,APP_BASE_DOMAIN=$DOMAIN,PUBLIC_API_URL=https://api.$DOMAIN,OTP_PROVIDER=$OTP_PROVIDER,SMS_PROVIDER=$SMS_PROVIDER,EMAIL_PROVIDER=$EMAIL_PROVIDER,RELEASE=$TAG,PUSH_PROVIDER=$PUSH_PROVIDER,FCM_PROJECT_ID=${FCM_PROJECT_ID:-$PROJECT_ID},PAYMENTS_GATEWAY=$PAYMENTS_GATEWAY,AI_PROVIDER=$AI_PROVIDER"
   local throttle=--cpu-throttling
   [ "$API_CPU_ALWAYS" = true ] && throttle=--no-cpu-throttling
 

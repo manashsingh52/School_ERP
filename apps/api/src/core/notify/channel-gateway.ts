@@ -5,6 +5,7 @@ import { RequestContextStore } from '../context/request-context.js';
 import { EntitlementsService } from '../entitlements/entitlements.service.js';
 import { LOGGER } from '../logger/logger.js';
 import { PlatformPrismaService } from '../prisma/prisma.service.js';
+import { FcmClient } from './fcm.js';
 
 export interface OutboundMessage {
   channel: 'PUSH' | 'SMS' | 'EMAIL';
@@ -29,17 +30,21 @@ const mask = (s: string) => (s.includes('@') ? s.replace(/^(.).*(@.*)$/, '$1***$
  * The only code that talks to push/SMS/email providers. Feature modules never send directly —
  * they publish events and the notification engine routes them here (Master Prompt §39).
  *
- * ⏸ Providers still to connect (docs/SETUP-LATER.md): FCM push (Phase 7, needs Firebase),
- * MSG91 SMS (needs company + DLT registration). Email via Resend works once a key is set.
+ * Each works once its account exists (docs/SETUP-LATER.md): FCM push (Firebase), MSG91 SMS
+ * (company + DLT registration), email via Resend.
  */
 @Injectable()
 export class ChannelGateway {
+  private readonly fcm: FcmClient;
+
   constructor(
     @Inject(ENV) private readonly env: Env,
     @Inject(LOGGER) private readonly logger: Logger,
     private readonly platform: PlatformPrismaService,
     private readonly entitlements: EntitlementsService,
-  ) {}
+  ) {
+    this.fcm = new FcmClient(env);
+  }
 
   async send(msg: OutboundMessage): Promise<SendResult> {
     const schoolId = RequestContextStore.get()?.schoolId;
@@ -61,7 +66,19 @@ export class ChannelGateway {
       this.logger.info({ channel: 'PUSH', userId: msg.userId, devices: tokens }, `[dev push] ${msg.title}`);
       return { status: 'SENT', provider };
     }
-    return { status: 'SKIPPED', provider, reason: 'FCM not connected yet' };
+    // Every phone the person is signed in on; dead tokens (app removed) are forgotten.
+    const devices = await this.platform.deviceToken.findMany({ where: { userId: msg.userId }, select: { token: true } });
+    let sent = 0;
+    let retry = 0;
+    for (const { token } of devices) {
+      const result = await this.fcm.send(token, msg.title, msg.body, msg.data);
+      if (result === 'sent') sent++;
+      else if (result === 'gone') await this.platform.deviceToken.deleteMany({ where: { token } });
+      else retry++;
+    }
+    if (sent) return { status: 'SENT', provider };
+    if (retry) throw new Error('FCM is unavailable right now'); // retried by the queue
+    return { status: 'SKIPPED', provider, reason: 'No working app installs' };
   }
 
   private async sms(msg: OutboundMessage): Promise<SendResult> {
@@ -72,7 +89,15 @@ export class ChannelGateway {
       this.logger.info({ channel: 'SMS', to: mask(msg.phone) }, `[dev sms] ${msg.body}`);
       return { status: 'SENT', provider };
     }
-    return { status: 'SKIPPED', provider, reason: 'MSG91 not connected yet (needs DLT registration)' };
+    // DLT only delivers registered templates: one template whose single variable carries the text.
+    const res = await fetch(new URL('/api/v5/flow', this.env.MSG91_BASE_URL), {
+      method: 'POST',
+      headers: { authkey: this.env.MSG91_AUTH_KEY!, 'content-type': 'application/json' },
+      body: JSON.stringify({ template_id: this.env.MSG91_SMS_TEMPLATE_ID, short_url: '0', recipients: [{ mobiles: msg.phone.replace(/^\+/, ''), message: msg.body.slice(0, 300) }] }),
+    });
+    const body = (await res.json().catch(() => ({}))) as { type?: string; message?: string };
+    if (!res.ok || body.type !== 'success') throw new Error(`MSG91 responded ${res.status}: ${body.message ?? 'refused'}`); // retried by the queue
+    return { status: 'SENT', provider, providerMessageId: typeof body.message === 'string' ? body.message : undefined };
   }
 
   private async email(msg: OutboundMessage): Promise<SendResult> {

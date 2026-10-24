@@ -1,15 +1,16 @@
 'use client';
 
 import { Gate } from '@/components/gate';
-import type { PromotionPlan, PromotionResult } from '@schoolos/contracts';
-import { Button, Card, EmptyState, Field, PageHeader, Select, Skeleton, Stepper, TD, TH, THead, TR, Table, toast } from '@schoolos/ui';
+import type { PromotionPlan, PromotionResult, StudentListItem } from '@schoolos/contracts';
+import { Button, Card, Checkbox, Dialog, DialogBody, DialogContent, DialogFooter, EmptyState, Field, PageHeader, Select, Skeleton, Stepper, TD, TH, THead, TR, Table, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, CalendarRange, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ApiError, apiFetch, apiPost, idempotencyKey } from '@/lib/api-client';
 import { useYears } from '@/lib/academics';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, fullName } from '@/lib/format';
+import { useData } from '@/lib/hooks';
 
 const GRADUATE = 'graduate';
 
@@ -24,6 +25,9 @@ function PromotionPageContent() {
   const [toId, setToId] = useState('');
   const [plan, setPlan] = useState<PromotionPlan | null>(null);
   const [targets, setTargets] = useState<Record<string, string>>({});
+  /** Students who repeat their class, by section. */
+  const [kept, setKept] = useState<Record<string, string[]>>({});
+  const [keeping, setKeeping] = useState<{ id: string; label: string } | null>(null);
   const [result, setResult] = useState<PromotionResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState(idempotencyKey);
@@ -42,6 +46,7 @@ function PromotionPageContent() {
       const res = await apiPost<{ data: PromotionPlan }>('/promotions/preview', { fromYearId: fromId, toYearId: toId });
       setPlan(res.data);
       setTargets(Object.fromEntries(res.data.rows.map((r) => [r.fromSection.id, r.suggestedToSectionId ?? GRADUATE])));
+      setKept({});
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Something went wrong.');
     } finally {
@@ -60,6 +65,7 @@ function PromotionPageContent() {
           fromYearId: plan.from.id,
           toYearId: plan.to.id,
           moves: plan.rows.filter((r) => r.fromSection.studentCount > 0).map((r) => ({ fromSectionId: r.fromSection.id, toSectionId: targets[r.fromSection.id] === GRADUATE ? null : targets[r.fromSection.id] })),
+          detainedStudentIds: Object.values(kept).flat(),
         }),
       });
       setResult(res.data);
@@ -75,6 +81,7 @@ function PromotionPageContent() {
   const later = (years.data ?? []).filter((y) => fromId && y.id !== fromId && y.status !== 'CLOSED');
   const step = result ? 2 : plan ? 1 : 0;
   const total = plan?.rows.reduce((n, r) => n + r.fromSection.studentCount, 0) ?? 0;
+  const keptCount = Object.values(kept).flat().length;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -117,7 +124,7 @@ function PromotionPageContent() {
       ) : (
         <Card className="overflow-hidden">
           <Table>
-            <THead><tr><TH>{plan.from.name}</TH><TH className="text-right">Students</TH><TH className="w-72">Moves to in {plan.to.name}</TH></tr></THead>
+            <THead><tr><TH>{plan.from.name}</TH><TH className="text-right">Students</TH><TH className="w-72">Moves to in {plan.to.name}</TH><TH className="w-40">Same class again</TH></tr></THead>
             <tbody>
               {plan.rows.map((r) => (
                 <TR key={r.fromSection.id}>
@@ -132,17 +139,63 @@ function PromotionPageContent() {
                       {plan.toSections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
                     </Select>
                   </TD>
+                  <TD>
+                    <Button size="sm" variant="ghost" disabled={!r.fromSection.studentCount} onClick={() => setKeeping({ id: r.fromSection.id, label: r.fromSection.label })}>
+                      {kept[r.fromSection.id]?.length ? `${kept[r.fromSection.id]!.length} kept back` : 'Keep back…'}
+                    </Button>
+                  </TD>
                 </TR>
               ))}
             </tbody>
           </Table>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4">
             <Button variant="ghost" onClick={() => setPlan(null)}><ArrowLeft /> Back</Button>
-            <Button disabled={!total} loading={busy} onClick={() => void commit()}>Promote {formatNumber(total)} students</Button>
+            <Button disabled={!total} loading={busy} onClick={() => void commit()}>
+              Promote {formatNumber(total - keptCount)} students{keptCount ? ` · keep ${formatNumber(keptCount)} back` : ''}
+            </Button>
           </div>
         </Card>
       )}
+      {keeping && (
+        <KeepBackDialog
+          section={keeping}
+          selected={kept[keeping.id] ?? []}
+          onClose={() => setKeeping(null)}
+          onSave={(ids) => {
+            setKept({ ...kept, [keeping.id]: ids });
+            setKeeping(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+/** Pick the students of one section who repeat the class next year. */
+function KeepBackDialog({ section, selected, onClose, onSave }: { section: { id: string; label: string }; selected: string[]; onClose: () => void; onSave: (ids: string[]) => void }) {
+  // Sections hold well under 100 students (the list's page limit).
+  const rows = useData<StudentListItem[]>(['students', { sectionId: section.id, pageSize: 100 }], `/students?sectionId=${section.id}&pageSize=100`);
+  const [picked, setPicked] = useState(new Set(selected));
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent title={`Keep back from ${section.label}`} description="These students stay in the same class next year. Everyone else moves up.">
+        <DialogBody className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
+          {rows.isPending ? <Skeleton className="h-40" /> : rows.data?.map((s) => (
+            <Checkbox
+              key={s.id}
+              label={`${s.rollNo ? `${s.rollNo}. ` : ''}${fullName(s.firstName, s.lastName)}`}
+              description={`Adm. ${s.admissionNo}`}
+              checked={picked.has(s.id)}
+              onChange={(e) => { const n = new Set(picked); if (e.target.checked) n.add(s.id); else n.delete(s.id); setPicked(n); }}
+            />
+          ))}
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => onSave([...picked])}>{picked.size ? `Keep ${picked.size} back` : 'Keep nobody back'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

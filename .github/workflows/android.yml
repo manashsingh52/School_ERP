@@ -1,11 +1,17 @@
 name: Android
 
-# Builds the Play Store bundle (.aab) of the demo app: no server needed, sample school data
-# (DEMO_MODE, see apps/mobile/README.md). Download it from the run's "Artifacts" and upload it in
-# Play Console. Signed with the upload key from the repository secrets (docs/play-store/README.md);
+# Builds the Play Store bundle (.aab): the demo app (sample school, no server; DEMO_MODE, see
+# apps/mobile/README.md) on every push, or the real app on demand (Run workflow → variant: real).
+# Download it from the run's "Artifacts" and upload it in Play Console. Signed with the upload key from the repository secrets (docs/play-store/README.md);
 # without them the bundle is signed with a debug key, which proves the build but Play refuses.
 on:
   workflow_dispatch:
+    inputs:
+      variant:
+        description: 'demo = sample school, no server · real = your API (repository variable API_URL)'
+        type: choice
+        options: [demo, real]
+        default: demo
   push:
     paths: ['apps/mobile/**', '.github/workflows/android.yml']
 
@@ -43,13 +49,29 @@ jobs:
             echo "::warning::No upload key in the repository secrets. This bundle is signed with a debug key: Google Play will refuse it."
           fi
       # Every upload to Play needs a higher version code: the run number always grows.
-      - run: flutter build appbundle --release --dart-define=DEMO_MODE=true --build-number=${{ github.run_number }}
+      # The real app talks to API_URL; push works when the FIREBASE_* repository variables are set
+      # (Firebase console → Project settings → Android app; these values aren't secret).
+      - name: Build
         env:
+          VARIANT: ${{ inputs.variant || 'demo' }}
+          API_URL: ${{ vars.API_URL }}
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
+          FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+          FIREBASE_SENDER_ID: ${{ vars.FIREBASE_SENDER_ID }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ "$VARIANT" = real ]; then
+            [ -n "$API_URL" ] || { echo "::error::Set the repository variable API_URL (e.g. https://api.yourdomain.in) to build the real app."; exit 1; }
+            defines=(--dart-define=API_URL="$API_URL" --dart-define=FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID" --dart-define=FIREBASE_APP_ID="$FIREBASE_APP_ID" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" --dart-define=FIREBASE_SENDER_ID="$FIREBASE_SENDER_ID")
+          else
+            defines=(--dart-define=DEMO_MODE=true)
+          fi
+          flutter build appbundle --release "${defines[@]}" --build-number=${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
-          name: schoolos-demo-${{ github.run_number }}
+          name: schoolos-${{ inputs.variant || 'demo' }}-${{ github.run_number }}
           path: apps/mobile/build/app/outputs/bundle/release/app-release.aab
           retention-days: 30

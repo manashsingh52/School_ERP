@@ -22,6 +22,7 @@ export class AppConfigController {
         latestVersion: this.env.MOBILE_LATEST_VERSION,
         storeUrls: { android: this.env.MOBILE_ANDROID_URL ?? null, ios: this.env.MOBILE_IOS_URL ?? null },
         paymentsDriver: this.env.PAYMENTS_GATEWAY === 'razorpay' ? 'razorpay' : 'mock',
+        otpLogin: this.env.OTP_PROVIDER !== 'none',
       },
     };
   }

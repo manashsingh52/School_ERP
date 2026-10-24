@@ -147,6 +147,8 @@ export interface Tenant {
   /** A document on s1 (shared with parents) and a finished report export by the admin. */
   documentId: string;
   reportRunId: string;
+  /** The admin's saved report (student strength, CSV, no schedule). */
+  savedReportId: string;
   /** A consolidated term made of the fixture exam (unpublished). */
   termId: string;
   /** The parent's question to the class teacher about s1; a video meeting about s1 tomorrow; the parent's own reminder. */
@@ -173,6 +175,8 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     data: { schoolId, name: '2026–27', startDate: date('2026-04-01'), endDate: date('2027-03-31'), status: 'ACTIVE' },
   });
   await db.school.update({ where: { id: schoolId }, data: { currentAcademicYearId: year.id } });
+  // Deliveries go out at once whatever the time of day (quiet hours are tested on their own).
+  await db.schoolSettings.upsert({ where: { schoolId }, create: { schoolId, notifications: { quietHours: { enabled: false, start: '21:00', end: '07:00' } } }, update: { notifications: { quietHours: { enabled: false, start: '21:00', end: '07:00' } } } });
   const cls = await db.schoolClass.create({ data: { schoolId, name: 'Class 8', displayOrder: 8 } });
   const [a, b] = await Promise.all(
     ['A', 'B'].map((name) => db.section.create({ data: { schoolId, academicYearId: year.id, classId: cls.id, name } })),
@@ -349,6 +353,9 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
     ).id,
     reportRunId: (
       await db.reportRun.create({ data: { schoolId, type: 'student_strength', params: {}, format: 'CSV', status: 'DONE', fileId: file.id, requestedByMemberId: adminMembership.id, completedAt: new Date() } })
+    ).id,
+    savedReportId: (
+      await db.savedReport.create({ data: { schoolId, memberId: adminMembership.id, name: 'Strength', type: 'student_strength', params: {}, format: 'CSV' } })
     ).id,
     termId: (
       await db.examTerm.create({ data: { schoolId, academicYearId: year.id, name: 'Term 1', gradingScaleId: (await db.gradingScale.findFirstOrThrow({ where: { schoolId } })).id, components: [{ examId: (await db.exam.findFirstOrThrow({ where: { schoolId } })).id, weight: 100 }] } })

@@ -7,6 +7,7 @@ import {
   otpVerifyRequestSchema,
   passwordResetRequestSchema,
   refreshRequestSchema,
+  schoolCodeRedeemSchema,
   selectSchoolRequestSchema,
 } from '@schoolos/contracts';
 import { Authenticated, Public } from '../../core/auth/decorators.js';
@@ -55,6 +56,17 @@ export class AuthController {
     @Body(new ZodPipe(otpVerifyRequestSchema)) body: z.output<typeof otpVerifyRequestSchema>,
   ) {
     return this.auth.loginWithOtp(body.challengeId, body.code, body.schoolSlug, device(req, body));
+  }
+
+  @Post('code/redeem')
+  @HttpCode(200)
+  @Public()
+  @RateLimit(
+    { name: 'code-redeem-id', limit: 5, windowSeconds: 300, by: 'ip+body.identifier' },
+    { name: 'code-redeem-ip', limit: 20, windowSeconds: 60, by: 'ip' },
+  )
+  redeemCode(@Req() req: Request, @Body(new ZodPipe(schoolCodeRedeemSchema)) body: z.output<typeof schoolCodeRedeemSchema>) {
+    return this.auth.redeemOfficeCode(body.identifier, body.code, body.newPassword, body.schoolSlug, device(req, body));
   }
 
   @Post('password/reset')

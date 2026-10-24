@@ -19,15 +19,31 @@ const envSchema = z.object({
   JWT_ISSUER: z.string().default('schoolos'),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().default(15 * 60),
 
+  /** postgres = counters shared by every API instance (production runs up to 3). */
+  RATE_LIMIT_STORE: z.enum(['memory', 'postgres']).default('memory'),
+  /** ⏸ Error monitoring (SETUP-LATER #10): unexpected errors go to Sentry when set. */
+  SENTRY_DSN: optional(z.url()),
+  /** Build or revision name, sent with error reports (Cloud Run sets K_REVISION). */
+  RELEASE: optional(z.string()),
+
   OTP_PEPPER: z.string().min(16),
-  OTP_PROVIDER: z.enum(['console', 'msg91']).default('console'),
+  // none = no codes by SMS: people sign in with a password or a code from the school office.
+  OTP_PROVIDER: z.enum(['console', 'msg91', 'none']).default('console'),
   // ⏸ SMS — fill in once the company is DLT-registered (docs/SETUP-LATER.md)
   MSG91_AUTH_KEY: optional(z.string()),
   MSG91_SENDER_ID: optional(z.string()),
   MSG91_OTP_TEMPLATE_ID: optional(z.string()),
+  /** DLT template for notification SMS, with one variable for the message (SMS_PROVIDER=msg91). */
+  MSG91_SMS_TEMPLATE_ID: optional(z.string()),
+  MSG91_BASE_URL: z.url().default('https://control.msg91.com'),
 
   // Notification channels (docs/01 §3 notifications). console = print to the log (development).
   PUSH_PROVIDER: z.enum(['none', 'console', 'fcm']).default('none'),
+  // ⏸ Firebase project for push (SETUP-LATER #12). Credentials: the service account JSON, or the
+  // Cloud Run service account when it isn't set.
+  FCM_PROJECT_ID: optional(z.string()),
+  FCM_SERVICE_ACCOUNT_JSON: optional(z.string()),
+  FCM_BASE_URL: z.url().default('https://fcm.googleapis.com'),
   // Mobile app (docs/01 §7): versions below MIN must update before they can be used.
   MOBILE_MIN_VERSION: z.string().regex(/^\d+\.\d+\.\d+$/).default('1.0.0'),
   MOBILE_LATEST_VERSION: z.string().regex(/^\d+\.\d+\.\d+$/).default('1.0.0'),
@@ -106,6 +122,10 @@ function checkProviders(env: Env): string[] {
   if (env.OTP_PROVIDER === 'msg91' && (!env.MSG91_AUTH_KEY || !env.MSG91_OTP_TEMPLATE_ID)) {
     problems.push('OTP_PROVIDER=msg91 needs MSG91_AUTH_KEY and MSG91_OTP_TEMPLATE_ID');
   }
+  if (env.PUSH_PROVIDER === 'fcm' && !env.FCM_PROJECT_ID) problems.push('PUSH_PROVIDER=fcm needs FCM_PROJECT_ID');
+  if (env.SMS_PROVIDER === 'msg91' && (!env.MSG91_AUTH_KEY || !env.MSG91_SMS_TEMPLATE_ID)) {
+    problems.push('SMS_PROVIDER=msg91 needs MSG91_AUTH_KEY and MSG91_SMS_TEMPLATE_ID');
+  }
   return problems;
 }
 
@@ -125,7 +145,10 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     throw new Error('PAYMENTS_GATEWAY=mock is not allowed in production');
   }
   if (parsed.data.NODE_ENV === 'production' && parsed.data.OTP_PROVIDER === 'console') {
-    throw new Error('OTP_PROVIDER=console is not allowed in production');
+    throw new Error('OTP_PROVIDER=console is not allowed in production (use msg91, or none for password and school codes only)');
+  }
+  if (parsed.data.NODE_ENV === 'production' && parsed.data.SMS_PROVIDER === 'console') {
+    throw new Error('SMS_PROVIDER=console is not allowed in production: it writes messages to the log (use msg91 or none)');
   }
   if (parsed.data.NODE_ENV === 'production' && parsed.data.STORAGE_DRIVER === 'local') {
     throw new Error('STORAGE_DRIVER=local is not allowed in production');

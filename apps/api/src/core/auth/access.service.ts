@@ -83,7 +83,7 @@ export class AccessService {
     });
   }
 
-  /** SchoolOS staff role of a user (cached briefly), or null. */
+  /** Bastaa staff role of a user (cached briefly), or null. */
   platformRole(userId: string): Promise<'SUPER_ADMIN' | 'SUPPORT' | null> {
     return this.platformRoles.getOrLoad(userId, async () => (await this.platform.platformAdmin.findUnique({ where: { userId }, select: { role: true } }))?.role ?? null);
   }

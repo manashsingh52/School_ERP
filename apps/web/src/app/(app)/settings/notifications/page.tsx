@@ -1,11 +1,12 @@
 'use client';
 
-import type { NotificationChannel, NotificationRuleItem } from '@schoolos/contracts';
-import { Badge, Button, Card, CardHeader, Checkbox, Skeleton, cn, toast } from '@schoolos/ui';
+import type { NotificationChannel, NotificationRuleItem, SchoolSettingsView } from '@schoolos/contracts';
+import { Badge, Button, Card, CardHeader, Checkbox, Field, Input, Skeleton, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Gate } from '@/components/gate';
 import { ApiError, apiPut } from '@/lib/api-client';
+import { useSettings } from '@/components/settings/section-forms';
 import { useData } from '@/lib/hooks';
 
 const CHANNEL_LABEL: Record<NotificationChannel, string> = { IN_APP: 'In app', PUSH: 'App push', SMS: 'SMS', EMAIL: 'Email' };
@@ -76,10 +77,60 @@ function NotificationRules({ initial }: { initial: NotificationRuleItem[] }) {
   );
 }
 
+/** Quiet hours (pushes and SMS wait for the morning) and the school's daily SMS limit. */
+function QuietHours({ initial }: { initial: SchoolSettingsView['notifications'] }) {
+  const qc = useQueryClient();
+  const [value, setValue] = useState(initial);
+  const [limit, setLimit] = useState(initial.dailySmsLimit?.toString() ?? '');
+  const [saving, setSaving] = useState(false);
+  const next = { ...value, dailySmsLimit: limit.trim() ? Number(limit) : null };
+  const dirty = JSON.stringify(next) !== JSON.stringify(initial);
+  const quiet = value.quietHours;
+
+  async function save() {
+    setSaving(true);
+    try {
+      const res = await apiPut<{ data: SchoolSettingsView }>('/school/settings/notifications', next);
+      qc.setQueryData(['school', 'settings'], res.data);
+      setValue(res.data.notifications);
+      toast.success('Saved');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? (err.details?.[0]?.message ?? err.message) : 'We couldn’t save the settings.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader title="Quiet hours and limits" description="App pushes and SMS sent at night wait until the morning. The in-app inbox and email are never held back." />
+      <div className="mt-4 flex flex-col gap-4 border-t border-border px-5 py-4">
+        <Checkbox checked={quiet.enabled} onChange={(e) => setValue({ ...value, quietHours: { ...quiet, enabled: e.target.checked } })} label="Hold pushes and SMS during quiet hours" />
+        <div className={cn('flex flex-wrap gap-4 pl-6', !quiet.enabled && 'opacity-50')}>
+          <Field label="From" htmlFor="quiet-start" className="w-32"><Input id="quiet-start" type="time" disabled={!quiet.enabled} value={quiet.start} onChange={(e) => setValue({ ...value, quietHours: { ...quiet, start: e.target.value } })} /></Field>
+          <Field label="Until" htmlFor="quiet-end" className="w-32"><Input id="quiet-end" type="time" disabled={!quiet.enabled} value={quiet.end} onChange={(e) => setValue({ ...value, quietHours: { ...quiet, end: e.target.value } })} /></Field>
+        </div>
+        <Field label="Most SMS per day" htmlFor="sms-limit" hint="Leave empty for no daily limit. The plan's monthly SMS allowance always applies." className="max-w-xs">
+          <Input id="sms-limit" type="number" min={1} inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="No daily limit" />
+        </Field>
+      </div>
+      <div className="flex justify-end border-t border-border px-5 py-3">
+        <Button onClick={() => void save()} loading={saving} disabled={!dirty}>Save changes</Button>
+      </div>
+    </Card>
+  );
+}
+
 function Content() {
   const rules = useData<NotificationRuleItem[]>(['notification-rules'], '/notification-rules');
+  const settings = useSettings();
   if (!rules.data) return <Skeleton className="h-96" />;
-  return <NotificationRules initial={rules.data} />;
+  return (
+    <div className="flex flex-col gap-6">
+      <NotificationRules initial={rules.data} />
+      {settings.data && <QuietHours initial={settings.data.notifications} />}
+    </div>
+  );
 }
 
 export default function NotificationSettingsPage() {

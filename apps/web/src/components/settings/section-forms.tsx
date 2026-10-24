@@ -1,7 +1,7 @@
 'use client';
 
 import type { SchoolSettingsView, SettingsSection } from '@schoolos/contracts';
-import { Button, Card, CardHeader, Checkbox, Field, Input, Skeleton, Spinner, Textarea, cn, toast } from '@schoolos/ui';
+import { Button, Card, CardHeader, Checkbox, Field, Input, Select, Skeleton, Spinner, Textarea, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { ImageUp, X } from 'lucide-react';
 import { useRef, useState, type ReactNode } from 'react';
@@ -102,6 +102,35 @@ export function ExamSettingsCard() {
     <SectionCard section="examinations" title="Report cards" description="Applies to report cards generated from now on.">
       {(v, set) => (
         <>
+          <div className="flex flex-wrap gap-4">
+            <Field label="Layout" htmlFor="es-layout" hint="Classic: boxes · Modern: coloured header · Compact: smaller, fits more" className="w-72">
+              <Select id="es-layout" value={v.reportCardLayout} onChange={(e) => set({ reportCardLayout: e.target.value as typeof v.reportCardLayout })}>
+                <option value="classic">Classic</option>
+                <option value="modern">Modern</option>
+                <option value="compact">Compact</option>
+              </Select>
+            </Field>
+            <Field label="Heading" htmlFor="es-title" hint="Empty = “Report card”" className="w-64">
+              <Input id="es-title" maxLength={40} value={v.reportCardTitle ?? ''} onChange={(e) => set({ reportCardTitle: e.target.value || null })} placeholder="Report card" />
+            </Field>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-small font-medium">Show on the card</span>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {(
+                [
+                  ['photo', 'Student photo'],
+                  ['passMarks', 'Pass marks column'],
+                  ['rank', 'Rank in section (when the exam ranks)'],
+                  ['gradingKey', 'Grading key'],
+                  ['remarks', 'Teacher and principal remarks'],
+                  ['parentSignature', 'Parent signature line'],
+                ] as const
+              ).map(([key, label]) => (
+                <Checkbox key={key} checked={v.reportCardShow[key]} onChange={(e) => set({ reportCardShow: { ...v.reportCardShow, [key]: e.target.checked } })} label={label} />
+              ))}
+            </div>
+          </div>
           <Checkbox checked={v.showAttendanceOnReportCard} onChange={(e) => set({ showAttendanceOnReportCard: e.target.checked })} label="Show attendance %" />
           <Field label="Co-scholastic grades (best first)" htmlFor="es-co" hint="Comma-separated, 2–6 grades, e.g. A, B, C">
             <Input id="es-co" defaultValue={v.coScholasticGrades.join(', ')} onChange={(e) => set({ coScholasticGrades: e.target.value.split(',').map((g) => g.trim()).filter(Boolean).slice(0, 6) })} className="w-64" />

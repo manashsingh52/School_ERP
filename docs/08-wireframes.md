@@ -210,7 +210,7 @@ Which classes does your school have?
 ```
 Import students                                   Upload › Map › Review › Import
 Map columns
- Your column          →  SchoolOS field          Sample
+ Your column          →  Bastaa field          Sample
  "Student Name"       →  [First + last name ▾]   Rahul Kumar
  "Adm No"             →  [Admission number ▾]    1042
  "Class-Sec"          →  [Class & section ▾]     8-A

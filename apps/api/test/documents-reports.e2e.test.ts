@@ -111,6 +111,24 @@ describe('documents', () => {
   });
 });
 
+describe('staff documents (no teacher record)', () => {
+  it('the office files them on the person; teachers see only their own', async () => {
+    const accountant = await t.platform.membership.findFirstOrThrow({ where: { schoolId: A.schoolId, user: { email: A.users.accountant } } });
+    const teacher = await t.platform.membership.findFirstOrThrow({ where: { schoolId: A.schoolId, user: { email: A.users.teacher } } });
+    const fileId = await upload('pan.pdf', PDF, 'application/pdf');
+    const created = await as('admin').post('/v1/documents', { ownerType: 'MEMBER', ownerId: accountant.id, category: 'id_proof', title: 'PAN card', fileId });
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+
+    const listed = await as('admin').get(`/v1/documents?ownerType=MEMBER&ownerId=${accountant.id}`);
+    expect(listed.body.data.map((x: { title: string }) => x.title)).toEqual(['PAN card']);
+    expect((await as('teacher').get(`/v1/documents?ownerType=MEMBER&ownerId=${accountant.id}`)).status).toBe(404);
+    expect((await as('teacher').get(`/v1/documents?ownerType=MEMBER&ownerId=${teacher.id}`)).status).toBe(200);
+
+    const other = await createTenant(t, 'docs-other');
+    expect((await as('admin').get(`/v1/documents?ownerType=MEMBER&ownerId=${other.adminMembershipId}`)).status).toBe(404);
+  });
+});
+
 describe('report catalogue', () => {
   it('each role sees the reports it may run', async () => {
     const keys = async (who: string) => (await as(who).get('/v1/reports/catalog')).body.data.map((r: { key: string }) => r.key);

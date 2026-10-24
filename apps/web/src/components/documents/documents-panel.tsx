@@ -13,7 +13,7 @@ import { useMe } from '@/lib/me';
 const size = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`);
 const ACCEPT = FILE_PURPOSES.document.mimeTypes.join(',');
 
-/** Documents of one student, guardian, teacher — or the school. Parents only see what's shared with them. */
+/** Documents of one student, guardian, teacher, staff member — or the school. Parents only see what's shared with them. */
 export function DocumentsPanel({ ownerType, ownerId, title = 'Documents', shareLabel = 'Parents can see this' }: { ownerType: DocumentOwnerType; ownerId?: string; title?: string; shareLabel?: string }) {
   const { can } = useMe();
   const qc = useQueryClient();
@@ -67,7 +67,7 @@ export function DocumentsPanel({ ownerType, ownerId, title = 'Documents', shareL
                 <div className="flex flex-wrap items-center gap-2 font-medium">
                   {d.title}
                   <Badge>{DOCUMENT_CATEGORIES[d.category] ?? d.category}</Badge>
-                  {manage && (d.visibleToGuardian ? <Badge tone="info"><Eye className="size-3" /> Shared</Badge> : <Badge><EyeOff className="size-3" /> Staff only</Badge>)}
+                  {manage && ownerType !== 'TEACHER' && ownerType !== 'MEMBER' && (d.visibleToGuardian ? <Badge tone="info"><Eye className="size-3" /> Shared</Badge> : <Badge><EyeOff className="size-3" /> Staff only</Badge>)}
                 </div>
                 <div className="text-small text-fg-tertiary">{[d.file.name, size(d.file.sizeBytes), formatDate(d.createdAt), d.uploadedBy].filter(Boolean).join(' · ')}</div>
               </div>
@@ -118,7 +118,7 @@ function DocumentDialog({ target, ownerType, ownerId, shareLabel, onDone }: { ta
             {Object.entries(DOCUMENT_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </Select>
         </Field>
-        {ownerType !== 'TEACHER' && <Checkbox checked={shared} onChange={(e) => setShared(e.target.checked)} label={shareLabel} description="Off by default — staff only." />}
+        {ownerType !== 'TEACHER' && ownerType !== 'MEMBER' && <Checkbox checked={shared} onChange={(e) => setShared(e.target.checked)} label={shareLabel} description="Off by default — staff only." />}
       </DialogBody>
       <DialogFooter>
         <Button variant="ghost" onClick={onDone}>Cancel</Button>

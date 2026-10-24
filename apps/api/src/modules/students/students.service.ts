@@ -54,13 +54,12 @@ export class StudentsService {
     const filters: Prisma.StudentWhereInput[] = [await this.scope.studentWhere('student.view')];
     filters.push({ status: query.status ?? 'ACTIVE' });
     if (query.sectionId || query.classId) {
+      // A section belongs to one year, so it needs no year filter (promotion lists last year's).
       filters.push({
         enrollments: {
-          some: {
-            academicYearId: yearId ?? undefined,
-            ...(query.sectionId ? { sectionId: query.sectionId } : {}),
-            ...(query.classId ? { classId: query.classId } : {}),
-          },
+          some: query.sectionId
+            ? { sectionId: query.sectionId, ...(query.classId ? { classId: query.classId } : {}) }
+            : { academicYearId: yearId ?? undefined, classId: query.classId },
         },
       });
     }

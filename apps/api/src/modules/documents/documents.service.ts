@@ -64,6 +64,11 @@ export class DocumentsService {
         found = scope === 'ALL' || (parent && g.membershipId === ctx.membershipId);
         break;
       }
+      case 'MEMBER': {
+        if (!(await db.membership.count({ where: { id: ownerId, status: { not: 'REMOVED' } } }))) break;
+        found = scope === 'ALL' || ownerId === ctx.membershipId;
+        break;
+      }
     }
     if (!found) throw AppError.notFound(ownerType.toLowerCase());
     return { ownerId, guardianOnly: parent };

@@ -98,13 +98,14 @@ export class SchoolService {
   async onboarding(): Promise<OnboardingState> {
     const school = await this.prisma.db.school.findUniqueOrThrow({ where: { id: this.schoolId } });
     const yearId = school.currentAcademicYearId;
-    const [classes, sections, subjects, teachers, students, admins] = await Promise.all([
+    const [classes, sections, subjects, teachers, students, admins, feeStructures] = await Promise.all([
       this.prisma.db.schoolClass.count({ where: { isActive: true } }),
       yearId ? this.prisma.db.section.count({ where: { academicYearId: yearId } }) : 0,
       this.prisma.db.subject.count({ where: { isActive: true } }),
       this.prisma.db.teacher.count({ where: { status: { not: 'LEFT' } } }),
       yearId ? this.prisma.db.studentEnrollment.count({ where: { academicYearId: yearId, status: 'ENROLLED' } }) : 0,
       this.prisma.db.membership.count({ where: { status: 'ACTIVE', roles: { some: { role: { permissions: { some: { permission: 'role.manage' } } } } } } }),
+      yearId ? this.prisma.db.feeStructure.count({ where: { academicYearId: yearId } }) : 0,
     ]);
     const year = yearId ? await this.prisma.db.academicYear.findUnique({ where: { id: yearId }, select: { name: true } }) : null;
     const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -116,6 +117,7 @@ export class SchoolService {
       { key: 'subjects', label: 'Subjects', required: false, done: subjects > 0, detail: plural(subjects, 'subject') },
       { key: 'teachers', label: 'Teachers', required: false, done: teachers > 0, detail: plural(teachers, 'teacher') },
       { key: 'students', label: 'Students', required: false, done: students > 0, detail: plural(students, 'student') },
+      { key: 'fees', label: 'Fee structure', required: false, done: feeStructures > 0, detail: plural(feeStructures, 'fee structure') + ' this year' },
       { key: 'admin', label: 'School admin', required: true, done: admins > 0, detail: plural(admins, 'person', 'people') + ' can manage roles' },
     ];
     return {

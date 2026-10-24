@@ -5,7 +5,7 @@ import { serverEnv } from './server-env';
 
 /**
  * Tokens live only in httpOnly, host-only cookies (no Domain attribute), so a session on
- * stmarys.schoolos.in is never sent to dps.schoolos.in (docs/03 §1, docs/09 §1).
+ * stmarys.bastaa.in is never sent to dps.bastaa.in (docs/03 §1, docs/09 §1).
  */
 export const ACCESS_COOKIE = 'sos_at';
 export const REFRESH_COOKIE = 'sos_rt';

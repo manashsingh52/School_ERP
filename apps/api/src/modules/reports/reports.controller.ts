@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import type { z } from 'zod';
-import { auditQuerySchema, createReportRunSchema, reportPreviewQuerySchema, uuidSchema, type AuditItem } from '@schoolos/contracts';
+import { auditQuerySchema, createReportRunSchema, reportPreviewQuerySchema, saveReportSchema, updateSavedReportSchema, uuidSchema, type AuditItem } from '@schoolos/contracts';
 import { RequirePermission, SchoolMember } from '../../core/auth/decorators.js';
 import { PrismaService } from '../../core/prisma/prisma.service.js';
 import { toDate } from '../../core/util/dates.js';
@@ -8,6 +8,7 @@ import { ZodPipe } from '../../core/validation/zod.pipe.js';
 import { toAuditItem } from '../platform/platform.service.js';
 import { ReportRunsService } from './report-runs.service.js';
 import { ReportsService } from './reports.service.js';
+import { SavedReportsService } from './saved-reports.service.js';
 
 const id = new ZodPipe(uuidSchema);
 type Out<T extends z.ZodType> = z.output<T>;
@@ -18,7 +19,40 @@ export class ReportsController {
   constructor(
     private readonly reports: ReportsService,
     private readonly runs: ReportRunsService,
+    private readonly saved: SavedReportsService,
   ) {}
+
+  @Get('saved')
+  @RequirePermission('report.export')
+  async savedList() {
+    return { data: await this.saved.list() };
+  }
+
+  @Post('saved')
+  @RequirePermission('report.export')
+  async save(@Body(new ZodPipe(saveReportSchema)) body: Out<typeof saveReportSchema>) {
+    return { data: await this.saved.create(body) };
+  }
+
+  @Patch('saved/:id')
+  @RequirePermission('report.export')
+  async updateSaved(@Param('id', id) savedId: string, @Body(new ZodPipe(updateSavedReportSchema)) body: Out<typeof updateSavedReportSchema>) {
+    return { data: await this.saved.update(savedId, body) };
+  }
+
+  @Delete('saved/:id')
+  @HttpCode(200)
+  @RequirePermission('report.export')
+  async deleteSaved(@Param('id', id) savedId: string) {
+    await this.saved.remove(savedId);
+    return { data: { ok: true } };
+  }
+
+  @Post('saved/:id/run')
+  @RequirePermission('report.export')
+  async runSaved(@Param('id', id) savedId: string) {
+    return { data: await this.saved.runNow(savedId) };
+  }
 
   /** Reports the caller may run (needs report.academic or report.finance — checked per report). */
   @Get('catalog')
@@ -61,7 +95,7 @@ export class ReportsController {
   }
 }
 
-/** The school's own audit trail (docs/09 §6): who changed what, when — including SchoolOS support. */
+/** The school's own audit trail (docs/09 §6): who changed what, when — including Bastaa support. */
 @Controller('audit')
 export class AuditController {
   constructor(private readonly prisma: PrismaService) {}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/attendance_queue.dart';
+import '../../core/push.dart';
 import '../../core/session.dart';
 import '../../widgets/home_kit.dart';
 import '../common/notifications_screen.dart';
@@ -41,6 +42,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     super.initState();
     // Offline registers go out as soon as the app is opened or comes back to the front.
     Future.microtask(() => ref.read(attendanceQueueProvider.notifier).sync());
+    // Push (when this build has Firebase): a tapped notification opens its screen.
+    Future.microtask(() => ref.read(pushProvider).start(open: (route) => mounted ? _openRoute(route) : null, onMessage: () => ref.invalidate(unreadCountProvider)));
     _lifecycle = AppLifecycleListener(onResume: () {
       ref.read(attendanceQueueProvider.notifier).sync();
       ref.invalidate(unreadCountProvider);

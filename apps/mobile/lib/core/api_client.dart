@@ -7,7 +7,7 @@ import 'api_error.dart';
 import 'config.dart';
 import 'token_store.dart';
 
-/// Thin client over the SchoolOS REST API (docs/05). Adds the Bearer token, refreshes it once on
+/// Thin client over the Bastaa REST API (docs/05). Adds the Bearer token, refreshes it once on
 /// 401 (one refresh at a time, shared by parallel requests), and turns errors into [ApiException].
 class ApiClient {
   ApiClient(this.tokens, {Dio? dio, this.onSignedOut}) : _dio = dio ?? Dio(BaseOptions(baseUrl: apiBaseUrl, connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 30))) {

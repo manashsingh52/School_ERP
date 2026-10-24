@@ -10,16 +10,31 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ApiError, apiPost } from '@/lib/api-client';
 
-type Mode = 'password' | 'otp' | 'reset';
+type Mode = 'password' | 'otp' | 'reset' | 'code';
 
 const passwordSchema = z.object({
   identifier: z.string().trim().min(3, 'Enter your phone number or email'),
   password: z.string().min(1, 'Enter your password'),
 });
 
-export function LoginForm({ next, passwordOnly = false }: { next: string; passwordOnly?: boolean }) {
+export function LoginForm({ next, passwordOnly = false, otpLogin = true }: { next: string; passwordOnly?: boolean; otpLogin?: boolean }) {
   const [mode, setMode] = useState<Mode>('password');
   if (passwordOnly) return <PasswordForm next={next} />;
+  if (mode === 'code') return <SchoolCodeForm next={next} onBack={() => setMode('password')} />;
+  const codeLink = (
+    <button type="button" onClick={() => setMode('code')} className="text-small text-accent-strong hover:underline">
+      First time here, or forgot your password? Use a code from your school
+    </button>
+  );
+  if (!otpLogin) {
+    // No SMS: the school office hands out sign-in codes instead.
+    return (
+      <div className="flex flex-col gap-5">
+        <PasswordForm next={next} onForgot={() => setMode('code')} />
+        {codeLink}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-5">
       {mode !== 'reset' && (
@@ -43,7 +58,61 @@ export function LoginForm({ next, passwordOnly = false }: { next: string; passwo
       {mode === 'password' && <PasswordForm next={next} onForgot={() => setMode('reset')} />}
       {mode === 'otp' && <OtpFlow purpose="LOGIN" next={next} />}
       {mode === 'reset' && <OtpFlow purpose="RESET_PASSWORD" next={next} onDone={() => setMode('password')} />}
+      {mode !== 'reset' && codeLink}
     </div>
+  );
+}
+
+const codeSchema = z.object({
+  identifier: z.string().trim().min(3, 'Enter your phone number or email'),
+  code: z.string().trim().min(8, 'Enter the 8-character code from your school'),
+  newPassword: z.string().min(8, 'Use at least 8 characters'),
+});
+
+/** A code from the school office (no SMS needed): first sign-in or a forgotten password. */
+function SchoolCodeForm({ next, onBack }: { next: string; onBack: () => void }) {
+  const done = useSignedIn(next);
+  const [formError, setFormError] = useState<string>();
+  const form = useForm<z.infer<typeof codeSchema>>({ resolver: zodResolver(codeSchema) });
+  const { errors, isSubmitting } = form.formState;
+
+  const submit = form.handleSubmit(async (values) => {
+    setFormError(undefined);
+    try {
+      await apiPost('/api/session/code', values);
+      done();
+    } catch (err) {
+      setFormError(err instanceof ApiError ? (err.details?.[0]?.message ?? err.message) : 'Please try again.');
+    }
+  });
+
+  return (
+    <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+      <div>
+        <h2 className="text-h3 font-semibold">Sign in with a school code</h2>
+        <p className="text-small text-fg-secondary">The school office gives you a one-time code. Use it once to choose your password.</p>
+      </div>
+      <Field label="Phone or email" htmlFor="code-identifier" error={errors.identifier?.message}>
+        <Input id="code-identifier" autoComplete="username" autoFocus invalid={!!errors.identifier} {...form.register('identifier')} />
+      </Field>
+      <Field label="Code from your school" htmlFor="school-code" error={errors.code?.message}>
+        <Input id="school-code" autoComplete="one-time-code" placeholder="ABCD-EFGH" maxLength={9} className="tabular uppercase tracking-[0.2em]" invalid={!!errors.code} {...form.register('code')} />
+      </Field>
+      <Field label="Choose a password" htmlFor="code-password" hint="At least 8 characters" error={errors.newPassword?.message}>
+        <Input id="code-password" type="password" autoComplete="new-password" invalid={!!errors.newPassword} {...form.register('newPassword')} />
+      </Field>
+      {formError && (
+        <p role="alert" className="rounded-md border border-danger-border bg-danger-bg px-3 py-2 text-small text-danger">
+          {formError}
+        </p>
+      )}
+      <Button type="submit" loading={isSubmitting} className="w-full">
+        Set password and sign in
+      </Button>
+      <Button type="button" variant="ghost" onClick={onBack}>
+        Back to sign in
+      </Button>
+    </form>
   );
 }
 

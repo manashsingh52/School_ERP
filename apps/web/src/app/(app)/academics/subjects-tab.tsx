@@ -106,47 +106,49 @@ export function SubjectsTab({ canManage }: { canManage: boolean }) {
   );
 }
 
-/** Classes × subjects grid for the current year (docs/02: ClassSubject). */
+/** Classes × subjects grid for the current year (docs/02: ClassSubject). A cell is off, studied, or optional. */
 function ClassSubjectMatrix({ canManage, subjects }: { canManage: boolean; subjects: SubjectItem[] }) {
   const school = useSchool();
   const yearId = school.data?.currentAcademicYear?.id;
   const classes = useClasses();
   const current = useClassSubjects();
-  const [cells, setCells] = useState<Set<string>>(new Set());
-  const original = useMemo(() => new Set((current.data ?? []).map((r) => `${r.classId}:${r.subjectId}`)), [current.data]);
-  useEffect(() => setCells(new Set(original)), [original]);
-  const dirty = cells.size !== original.size || [...cells].some((c) => !original.has(c));
+  const [cells, setCells] = useState<Map<string, 'on' | 'optional'>>(new Map());
+  const original = useMemo(() => new Map((current.data ?? []).map((r) => [`${r.classId}:${r.subjectId}`, r.isOptional ? ('optional' as const) : ('on' as const)])), [current.data]);
+  useEffect(() => setCells(new Map(original)), [original]);
+  const dirty = cells.size !== original.size || [...cells].some(([k, v]) => original.get(k) !== v);
 
   const save = useAction(
     async () => {
       const classIds = (classes.data ?? []).map((c) => c.id);
       // One request per distinct subject set keeps it simple and atomic per class group.
-      const groups = new Map<string, string[]>();
+      const groups = new Map<string, { classIds: string[]; subjectIds: string[]; optionalSubjectIds: string[] }>();
       for (const classId of classIds) {
-        const ids = subjects.filter((s) => cells.has(`${classId}:${s.id}`)).map((s) => s.id).sort();
-        const k = ids.join(',');
-        groups.set(k, [...(groups.get(k) ?? []), classId]);
+        const subjectIds = subjects.filter((s) => cells.has(`${classId}:${s.id}`)).map((s) => s.id).sort();
+        const optionalSubjectIds = subjectIds.filter((id) => cells.get(`${classId}:${id}`) === 'optional');
+        const k = `${subjectIds.join(',')}|${optionalSubjectIds.join(',')}`;
+        const g = groups.get(k) ?? { classIds: [], subjectIds, optionalSubjectIds };
+        g.classIds.push(classId);
+        groups.set(k, g);
       }
-      for (const [ids, groupClassIds] of groups) {
-        await apiPut('/class-subjects', { academicYearId: yearId, classIds: groupClassIds, subjectIds: ids ? ids.split(',') : [] });
-      }
+      for (const g of groups.values()) await apiPut('/class-subjects', { academicYearId: yearId, ...g });
     },
     { success: 'Subjects saved for all classes', invalidate: [['class-subjects']] },
   );
 
   if (!yearId || !classes.data?.length) return null;
-  const toggle = (key: string) => setCells((s) => { const n = new Set(s); if (n.has(key)) n.delete(key); else n.add(key); return n; });
+  // off → studied → optional → off
+  const cycle = (key: string) => setCells((s) => { const n = new Map(s); const v = n.get(key); if (!v) n.set(key, 'on'); else if (v === 'on') n.set(key, 'optional'); else n.delete(key); return n; });
   const toggleColumn = (subjectId: string) => {
     const keysFor = classes.data!.map((c) => `${c.id}:${subjectId}`);
     const allOn = keysFor.every((k) => cells.has(k));
-    setCells((s) => { const n = new Set(s); keysFor.forEach((k) => (allOn ? n.delete(k) : n.add(k))); return n; });
+    setCells((s) => { const n = new Map(s); keysFor.forEach((k) => (allOn ? n.delete(k) : n.has(k) || n.set(k, 'on'))); return n; });
   };
 
   return (
     <Card className="overflow-hidden">
       <CardHeader
         title="Subjects by class"
-        description={`What each class studies in ${school.data?.currentAcademicYear?.name}. Click a subject name to toggle the whole column.`}
+        description={`What each class studies in ${school.data?.currentAcademicYear?.name}. Click a cell: studied, then optional (students choose it), then off. Click a subject name for the whole column.`}
         action={canManage && <Button size="sm" disabled={!dirty} loading={save.isPending} onClick={() => save.mutate(undefined)}>Save changes</Button>}
       />
       <div className="mt-3">
@@ -172,16 +174,25 @@ function ClassSubjectMatrix({ canManage, subjects }: { canManage: boolean; subje
                   <TD className="sticky left-0 bg-surface font-medium whitespace-nowrap">{c.name}</TD>
                   {subjects.map((s) => {
                     const key = `${c.id}:${s.id}`;
+                    const state = cells.get(key);
                     return (
                       <TD key={s.id} className="text-center">
-                        <input
-                          type="checkbox"
-                          aria-label={`${c.name} studies ${s.name}`}
-                          className="size-4 accent-[var(--accent-500)]"
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={state === 'optional' ? 'mixed' : !!state}
+                          aria-label={`${c.name} · ${s.name}: ${state === 'optional' ? 'optional' : state ? 'studied' : 'not studied'}`}
                           disabled={!canManage}
-                          checked={cells.has(key)}
-                          onChange={() => toggle(key)}
-                        />
+                          onClick={() => cycle(key)}
+                          className={cn(
+                            'inline-flex h-6 min-w-6 items-center justify-center rounded-[5px] border px-1 text-[11px] font-semibold',
+                            state === 'on' && 'border-accent bg-accent text-accent-fg',
+                            state === 'optional' && 'border-accent-strong bg-accent-soft text-accent-strong',
+                            !state && 'border-border-strong bg-surface',
+                          )}
+                        >
+                          {state === 'on' ? '✓' : state === 'optional' ? 'Opt' : ''}
+                        </button>
                       </TD>
                     );
                   })}

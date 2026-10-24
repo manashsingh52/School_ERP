@@ -3,22 +3,28 @@
 import { Button, Field, Input } from '@schoolos/ui';
 import { ArrowRight, Building2 } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { BastaaMark } from '@/components/brand/logo';
 import { ApiError, apiFetch } from '@/lib/api-client';
 
-export function AuthFrame({ schoolName, subtitle, children }: { schoolName: string; subtitle: string; children: ReactNode }) {
+/** [brand]: a Bastaa page (find your school, staff console) rather than a school's own. */
+export function AuthFrame({ schoolName, subtitle, brand, children }: { schoolName: string; subtitle: string; brand?: boolean; children: ReactNode }) {
   const initial = schoolName.trim()[0]?.toUpperCase() ?? 'S';
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent text-[20px] font-semibold text-accent-fg shadow-e1">
-            {initial}
-          </div>
+          {brand ? (
+            <BastaaMark className="mb-4 size-12 shadow-e1 rounded-xl" />
+          ) : (
+            <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent text-[20px] font-semibold text-accent-fg shadow-e1">{initial}</div>
+          )}
           <h1 className="text-h1 font-semibold tracking-[-0.01em]">{schoolName}</h1>
           <p className="mt-1 text-body text-fg-secondary">{subtitle}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-6 shadow-e1">{children}</div>
-        <p className="mt-8 text-center text-caption text-fg-tertiary">Powered by SchoolOS</p>
+        <p className="mt-8 text-center text-caption text-fg-tertiary">
+          {brand ? 'Bastaa' : 'Powered by Bastaa'} · <a href="/privacy" className="hover:text-fg-secondary hover:underline">Privacy</a> · <a href="/terms" className="hover:text-fg-secondary hover:underline">Terms</a>
+        </p>
       </div>
     </main>
   );
@@ -30,7 +36,7 @@ export function FindSchool() {
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [host, setHost] = useState('');
-  useEffect(() => setHost(window.location.host), []);
+  useEffect(() => setHost(window.location.host.replace(/^www\./, '')), []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -48,7 +54,7 @@ export function FindSchool() {
   }
 
   return (
-    <AuthFrame schoolName="SchoolOS" subtitle="Find your school to sign in">
+    <AuthFrame schoolName="Find your school" subtitle="Enter your school's Bastaa address to sign in" brand>
       <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
         <Field label="School web address" htmlFor="slug" error={error} hint="Your school shared this with you, e.g. stmarys">
           <div className="flex items-center gap-2">

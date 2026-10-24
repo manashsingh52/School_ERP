@@ -206,13 +206,23 @@ export const NOTIFICATION_EVENTS = {
   },
   'support.access_requested': {
     label: 'Support access requests',
-    description: 'When SchoolOS support asks to look at your school to help with a problem.',
+    description: 'When Bastaa support asks to look at your school to help with a problem.',
     audience: 'School admins',
     channels: ['IN_APP', 'EMAIL'],
     defaultChannels: ['IN_APP', 'EMAIL'],
     defaultEnabled: true,
-    title: 'SchoolOS support is asking for access',
+    title: 'Bastaa support is asking for access',
     body: '{{requester}} wants read-only access for {{hours}} hours: "{{reason}}". Approve or decline in Settings → Support access.',
+  },
+  'report.ready': {
+    label: 'Scheduled report ready',
+    description: 'When a weekly or monthly report someone saved has been made.',
+    audience: 'Whoever saved it',
+    channels: ['IN_APP', 'EMAIL'],
+    defaultChannels: ['IN_APP'],
+    defaultEnabled: true,
+    title: '{{name}} is ready',
+    body: 'Your {{schedule}} report "{{name}}" ({{period}}) is ready to download in Reports.',
   },
 } as const satisfies Record<string, NotificationEventDef>;
 

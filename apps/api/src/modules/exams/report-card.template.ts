@@ -1,4 +1,5 @@
 import type { ResultRow } from '@schoolos/contracts';
+import { DEFAULT_CARD, layoutCss, type ReportCardOptions } from './report-card.layout.js';
 
 export interface ReportCardData {
   school: { name: string; address: string | null; contact: string | null; board: string | null; accent: string; logoDataUri: string | null; affiliation?: string | null };
@@ -13,6 +14,8 @@ export interface ReportCardData {
   classTeacher: string | null;
   result: ResultRow;
   grades: { label: string; minPercent: number; maxPercent: number; remark: string | null }[];
+  /** Layout and what to show (Settings → Examinations). */
+  card?: ReportCardOptions;
 }
 
 /** Escape every value that goes into the HTML — names and remarks are user text. */
@@ -30,6 +33,8 @@ const STATUS: Record<ResultRow['status'], string> = { PASS: 'Passed', FAIL: 'Not
 /** A4 report card (Master Prompt §33): branded header, student details, marks, result, remarks, signatures. */
 export function reportCardHtml(d: ReportCardData): string {
   const accent = safeColor(d.school.accent);
+  const card = d.card ?? DEFAULT_CARD;
+  const show = card.show;
   const r = d.result;
   const rows = r.subjects
     .map((s) => {
@@ -38,14 +43,14 @@ export function reportCardHtml(d: ReportCardData): string {
       return `<tr${failed ? ' class="fail"' : ''}>
         <td>${esc(s.subject.name)}</td>
         <td class="num">${s.exempt ? '—' : n(s.maxMarks)}</td>
-        <td class="num">${s.exempt ? '—' : n(s.passMarks)}</td>
+        ${show.passMarks ? `<td class="num">${s.exempt ? '—' : n(s.passMarks)}</td>` : ''}
         <td class="num strong">${esc(obtained)}</td>
         <td class="num">${esc(s.exempt ? '' : (s.grade ?? '—'))}</td>
       </tr>`;
     })
     .join('');
   const detail = (label: string, value: string | null | undefined) => `<div class="field"><span>${esc(label)}</span><b>${esc(value || '—')}</b></div>`;
-  const ranks = d.exam.rankingEnabled && r.rankInSection ? `<div class="stat"><span>Rank in section</span><b>${r.rankInSection}</b></div>` : '';
+  const ranks = show.rank && d.exam.rankingEnabled && r.rankInSection ? `<div class="stat"><span>Rank in section</span><b>${r.rankInSection}</b></div>` : '';
 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>${esc(r.name)} · ${esc(d.exam.name)}</title>
@@ -90,6 +95,7 @@ export function reportCardHtml(d: ReportCardData): string {
   .sign { position: relative; }
   .sig { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); max-height: 34px; max-width: 120px; }
   .note { margin-top: 12px; font-size: 8pt; color: #3d444d; white-space: pre-line; }
+${layoutCss(card.layout, accent)}
 </style></head>
 <body>
   <div class="head">
@@ -102,11 +108,11 @@ export function reportCardHtml(d: ReportCardData): string {
     </div>
   </div>
   <div class="title">
-    <h2>Report card · ${esc(d.exam.name)}</h2>
+    <h2>${esc(card.title ?? 'Report card')} · ${esc(d.exam.name)}</h2>
     <span>${esc([d.exam.term, `Academic year ${d.academicYear}`].filter(Boolean).join(' · '))}</span>
   </div>
   <div class="student">
-    ${d.student.photoDataUri ? `<img src="${d.student.photoDataUri}" alt="">` : ''}
+    ${show.photo && d.student.photoDataUri ? `<img src="${d.student.photoDataUri}" alt="">` : ''}
     <div class="fields">
       ${detail('Student', r.name)}
       ${detail('Class', r.section.label)}
@@ -117,9 +123,9 @@ export function reportCardHtml(d: ReportCardData): string {
     </div>
   </div>
   <table>
-    <thead><tr><th>Subject</th><th class="num">Max</th><th class="num">Pass</th><th class="num">Obtained</th><th class="num">Grade</th></tr></thead>
+    <thead><tr><th>Subject</th><th class="num">Max</th>${show.passMarks ? '<th class="num">Pass</th>' : ''}<th class="num">Obtained</th><th class="num">Grade</th></tr></thead>
     <tbody>${rows}</tbody>
-    <tfoot><tr><td>Total</td><td class="num">${n(r.totalMax)}</td><td></td><td class="num">${n(r.totalObtained)}</td><td class="num">${esc(r.grade ?? '')}</td></tr></tfoot>
+    <tfoot><tr><td>Total</td><td class="num">${n(r.totalMax)}</td>${show.passMarks ? '<td></td>' : ''}<td class="num">${n(r.totalObtained)}</td><td class="num">${esc(r.grade ?? '')}</td></tr></tfoot>
   </table>
   <div class="stats">
     <div class="stat"><span>Percentage</span><b>${n(r.percentage)}%</b></div>
@@ -129,15 +135,15 @@ export function reportCardHtml(d: ReportCardData): string {
     ${d.showAttendance === false ? '' : `<div class="stat"><span>Attendance</span><b>${r.attendancePct === null ? '—' : `${n(r.attendancePct)}%`}</b></div>`}
   </div>
   ${d.coScholastic?.length ? `<table class="co"><thead><tr><th>Co-scholastic area</th><th class="num">Grade</th></tr></thead><tbody>${d.coScholastic.map((c) => `<tr><td>${esc(c.area)}</td><td class="num strong">${esc(c.grade)}</td></tr>`).join('')}</tbody></table>` : ''}
-  <div class="remarks">
+  ${show.remarks ? `<div class="remarks">
     <div class="remark"><span>Class teacher's remarks</span>${esc(r.teacherRemark ?? '')}</div>
     <div class="remark"><span>Principal's remarks</span>${esc(r.principalRemark ?? '')}</div>
-  </div>
-  ${d.grades.length ? `<div class="scale">Grading: ${d.grades.map((g) => `<b>${esc(g.label)}</b> ${n(g.minPercent)}–${n(Math.floor(g.maxPercent))}%`).join(' · ')}</div>` : ''}
+  </div>` : ''}
+  ${show.gradingKey && d.grades.length ? `<div class="scale">Grading: ${d.grades.map((g) => `<b>${esc(g.label)}</b> ${n(g.minPercent)}–${n(Math.floor(g.maxPercent))}%`).join(' · ')}</div>` : ''}
   <div class="signs">
     <div class="sign">Class teacher${d.classTeacher ? ` (${esc(d.classTeacher)})` : ''}</div>
     <div class="sign">${d.principal?.signatureDataUri ? `<img class="sig" src="${d.principal.signatureDataUri}" alt="">` : ''}Principal${d.principal?.name ? ` (${esc(d.principal.name)})` : ''}</div>
-    <div class="sign">Parent / guardian</div>
+    ${show.parentSignature ? '<div class="sign">Parent / guardian</div>' : ''}
   </div>
   ${d.note ? `<div class="note">${esc(d.note)}</div>` : ''}
   <div class="foot">This report card was generated electronically by ${esc(d.school.name)}.</div>

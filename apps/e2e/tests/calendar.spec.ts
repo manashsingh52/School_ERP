@@ -1,4 +1,4 @@
-import { as, expect, school, test } from '../fixtures.js';
+import { as, expect, school, schoolDate, test } from '../fixtures.js';
 
 test.describe(() => {
   test.use({ who: 'admin' });
@@ -9,8 +9,7 @@ test.describe(() => {
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Title').fill('Founders Day');
     await dialog.getByLabel('Type').selectOption({ label: 'Holiday' });
-    const d = new Date(Date.now() + 3 * 86_400_000);
-    await dialog.getByLabel('From').fill(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+    await dialog.getByLabel('From').fill(schoolDate(3));
     await dialog.getByRole('button', { name: 'Add', exact: true }).click();
     await expect(page.getByText(/Added — everyone it concerns has been told/)).toBeVisible();
 

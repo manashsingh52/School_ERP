@@ -152,7 +152,7 @@ describe('video meetings', () => {
     const m = res.body.data as MeetingItem;
     meetingId = m.id;
     expect(m).toMatchObject({ status: 'SCHEDULED', joinable: false, canManage: true, organizer: { name: 'Teacher' } });
-    expect(m.joinUrl).toMatch(/^https:\/\/meet\.jit\.si\/SchoolOS-[\w-]{16}#userInfo\.displayName=/);
+    expect(m.joinUrl).toMatch(/^https:\/\/meet\.jit\.si\/Bastaa-[\w-]{16}#userInfo\.displayName=/);
 
     const told = await inbox('parent', 'meeting.scheduled');
     expect(told[0]!.title).toMatch(/^Video meeting with Teacher on /);

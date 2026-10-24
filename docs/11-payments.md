@@ -4,7 +4,7 @@ Fees are the module schools judge us on. The rules below aim for **zero lost pay
 
 ## 1. Principles
 
-1. **Money goes to the school's own Razorpay account.** SchoolOS never holds funds, so it is not a payment aggregator.
+1. **Money goes to the school's own Razorpay account.** Bastaa never holds funds, so it is not a payment aggregator.
 2. **The client is never trusted.** A payment counts only after server-side verification (signature + API fetch) or a verified webhook.
 3. **Captured money is never rejected.** If it can't be allocated (invoice already paid, order expired), it becomes a **student credit**, not an error.
 4. **Financial rows are append-only.** Fix mistakes with adjustments, voids and refunds, each with a reason and an audit entry.
@@ -17,7 +17,7 @@ Settings → Payment gateway
 1. School admin pastes Key ID + Key Secret (Test mode first)
 2. We verify the keys with a read-only Razorpay API call → "Connected ✓"
 3. We generate a strong webhook secret and show:
-     Webhook URL:  https://api.schoolos.in/v1/webhooks/razorpay/{publicId}
+     Webhook URL:  https://api.bastaa.in/v1/webhooks/razorpay/{publicId}
      Secret:       ••••••••  [Copy]   (shown once)
      Events:       payment.authorized, payment.captured, payment.failed,
                    order.paid, refund.processed, refund.failed
@@ -36,7 +36,7 @@ Settings → Payment gateway
 sequenceDiagram
   autonumber
   participant P as Parent app / web
-  participant API as SchoolOS API
+  participant API as Bastaa API
   participant DB as Postgres
   participant RZ as Razorpay (school's account)
   participant W as Worker

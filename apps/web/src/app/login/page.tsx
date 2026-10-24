@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       if (me.ok && me.data.platformRole) redirect('/platform');
     }
     return (
-      <AuthFrame schoolName="SchoolOS Admin" subtitle="Platform console — staff only">
+      <AuthFrame schoolName="Bastaa Admin" subtitle="Platform console — staff only" brand>
         <LoginForm next={next?.startsWith('/platform') ? safeNext(next) : '/platform'} passwordOnly />
       </AuthFrame>
     );
@@ -40,7 +40,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <AuthFrame schoolName={school.name} subtitle="Sign in to continue">
-      <LoginForm next={safeNext(next)} />
+      <LoginForm next={safeNext(next)} otpLogin={school.otpLogin} />
     </AuthFrame>
   );
 }

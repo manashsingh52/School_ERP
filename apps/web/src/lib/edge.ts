@@ -2,7 +2,7 @@ import { serverEnv } from './server-env';
 
 /**
  * Behind the Cloudflare Worker (docs/10 §3, option B) Cloud Run sees its own *.run.app host; the
- * real one ("stmarys.schoolos.in") arrives in X-Forwarded-Host. We trust that header only when the
+ * real one ("stmarys.bastaa.in") arrives in X-Forwarded-Host. We trust that header only when the
  * request carries the edge secret — so the public run.app URL can't be used to pick a school.
  * Without EDGE_SHARED_SECRET (local development) the Host header is used as before.
  */
@@ -26,7 +26,7 @@ export function requestHost(headers: Headers): string | null {
   return headers.get('host');
 }
 
-/** "https://stmarys.schoolos.in" — for redirects and absolute links. */
+/** "https://stmarys.bastaa.in" — for redirects and absolute links. */
 export function requestOrigin(headers: Headers, fallback: string): string {
   const host = requestHost(headers);
   if (!host) return new URL(fallback).origin;

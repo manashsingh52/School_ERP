@@ -21,7 +21,7 @@ const SPECIAL_TENANT_POLICIES = {
   },
 };
 
-const PLATFORM_ONLY_TABLES = ['sessions', 'otp_challenges', 'device_tokens', 'platform_admins', '_prisma_migrations'];
+const PLATFORM_ONLY_TABLES = ['sessions', 'otp_challenges', 'device_tokens', 'platform_admins', 'rate_limits', '_prisma_migrations'];
 const APP_READ_ONLY_TABLES = ['plans', 'feature_flags', 'subscriptions', 'school_features'];
 const APPEND_ONLY_TABLES = ['audit_logs'];
 

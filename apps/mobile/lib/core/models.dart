@@ -76,16 +76,19 @@ class Me {
 }
 
 class AppConfig {
-  AppConfig({required this.minVersion, required this.latestVersion, required this.paymentsDriver, this.androidUrl, this.iosUrl});
+  AppConfig({required this.minVersion, required this.latestVersion, required this.paymentsDriver, this.androidUrl, this.iosUrl, this.otpLogin = true});
   factory AppConfig.fromJson(Json j) => AppConfig(
         minVersion: j['minVersion'] as String,
         latestVersion: j['latestVersion'] as String,
         paymentsDriver: j['paymentsDriver'] as String,
         androidUrl: _s((j['storeUrls'] as Json?)?['android']),
         iosUrl: _s((j['storeUrls'] as Json?)?['ios']),
+        otpLogin: j['otpLogin'] as bool? ?? true,
       );
   final String minVersion, latestVersion, paymentsDriver;
   final String? androidUrl, iosUrl;
+  /// False when codes by SMS aren't set up: password or a code from the school office.
+  final bool otpLogin;
 }
 
 // ---------------------------------------------------------------- timetable, attendance, homework

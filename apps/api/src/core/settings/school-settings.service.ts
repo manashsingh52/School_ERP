@@ -39,7 +39,13 @@ export class SchoolSettingsService {
 
   async all(): Promise<{ [S in SettingsSection]: Out<S> }> {
     const row = await this.prisma.db.schoolSettings.findUnique({ where: { schoolId: RequestContextStore.school().schoolId } });
-    return { general: this.parse('general', row?.general), fees: this.parse('fees', row?.fees), examinations: this.parse('examinations', row?.examinations), branding: this.parse('branding', row?.branding) };
+    return {
+      general: this.parse('general', row?.general),
+      fees: this.parse('fees', row?.fees),
+      examinations: this.parse('examinations', row?.examinations),
+      branding: this.parse('branding', row?.branding),
+      notifications: this.parse('notifications', row?.notifications),
+    };
   }
 
   async update<S extends SettingsSection>(section: S, input: Out<S>): Promise<Out<S>> {

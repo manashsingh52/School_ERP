@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# SchoolOS web (Next.js standalone, docs/10). Build from the repo root:
+# Bastaa web (Next.js standalone, docs/10). Build from the repo root:
 #   docker build -f apps/web/Dockerfile -t schoolos-web .
 
 ARG NODE_VERSION=22

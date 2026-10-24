@@ -66,7 +66,7 @@ export class EntitlementsService {
     if (students === null) return;
     const current = await this.platform.student.count({ where: { schoolId, status: 'ACTIVE', archivedAt: null } });
     if (current + count > students) {
-      throw new AppError('PLAN_LIMIT_STUDENTS', 422, `Your plan allows ${students} students and you have ${current}. Ask SchoolOS to upgrade your plan.`);
+      throw new AppError('PLAN_LIMIT_STUDENTS', 422, `Your plan allows ${students} students and you have ${current}. Ask Bastaa to upgrade your plan.`);
     }
   }
 
