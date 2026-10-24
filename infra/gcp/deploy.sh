@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build, migrate and deploy SchoolOS to Cloud Run (docs/10, lean mode).
+# Build, migrate and deploy Bastaa to Cloud Run (docs/10, lean mode).
 #   ENV=staging ./infra/gcp/deploy.sh            # build → migrate → deploy → smoke test
 #   ENV=staging ./infra/gcp/deploy.sh roles      # once, after bootstrap: create the database roles
 #   ENV=staging ./infra/gcp/deploy.sh build|migrate|deploy|smoke

@@ -63,6 +63,6 @@ export async function relay(res: Response): Promise<NextResponse> {
 
 export const serviceUnavailable = () =>
   NextResponse.json(
-    { error: { code: 'SERVICE_UNAVAILABLE', message: "We can't reach SchoolOS right now. Please try again in a moment." } },
+    { error: { code: 'SERVICE_UNAVAILABLE', message: "We can't reach Bastaa right now. Please try again in a moment." } },
     { status: 503 },
   );

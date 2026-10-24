@@ -66,7 +66,7 @@ export function AuditList({ path, showSchool = false }: { path: string; showScho
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{actionLabel(a.action)}</span>
-                  {a.actor.type !== 'USER' && <Badge tone={a.actor.type === 'PLATFORM' ? 'accent' : 'neutral'}>{a.actor.type === 'PLATFORM' ? 'SchoolOS' : 'Automatic'}</Badge>}
+                  {a.actor.type !== 'USER' && <Badge tone={a.actor.type === 'PLATFORM' ? 'accent' : 'neutral'}>{a.actor.type === 'PLATFORM' ? 'Bastaa' : 'Automatic'}</Badge>}
                   {showSchool && a.school && <span className="text-small text-fg-tertiary">{a.school.name}</span>}
                 </div>
                 <div className="text-small text-fg-secondary">{[a.actor.name ?? (a.actor.type === 'SYSTEM' ? 'System' : 'Someone'), a.summary].filter(Boolean).join(' · ')}</div>

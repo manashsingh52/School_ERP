@@ -3,7 +3,7 @@ const RESERVED = new Set(['www', 'app', 'api', 'admin', 'status', 'docs', 'help'
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$/;
 
 /**
- * "stmarys.schoolos.in" → "stmarys", "demo.localhost:3000" → "demo".
+ * "stmarys.bastaa.in" → "stmarys", "demo.localhost:3000" → "demo".
  * Returns null for the bare domain and reserved names.
  */
 export function slugFromHost(host: string | null, baseDomain: string): string | null {

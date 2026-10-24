@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# SchoolOS API (docs/10). Build from the repo root:
+# Bastaa API (docs/10). Build from the repo root:
 #   docker build -f apps/api/Dockerfile --target api     -t schoolos-api .
 #   docker build -f apps/api/Dockerfile --target migrate -t schoolos-migrate .
 # The same `api` image runs as the HTTP API, and — with RUN_WORKERS=true — as the job worker

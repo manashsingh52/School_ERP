@@ -1,11 +1,11 @@
 {
-    "name": "schoolos",
-    "short_name": "schoolos",
+    "name": "Bastaa",
+    "short_name": "Bastaa",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "SchoolOS for parents and teachers",
+    "background_color": "#2F6FEB",
+    "theme_color": "#2F6FEB",
+    "description": "Bastaa for parents and teachers",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

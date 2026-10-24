@@ -25,6 +25,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { PeopleTabs } from '@/components/people-tabs';
+import { IdCardsDialog } from '@/components/student/id-cards-dialog';
 import { classSection, formatNumber, fullName } from '@/lib/format';
 import { useMe } from '@/lib/me';
 
@@ -84,6 +85,7 @@ function Students() {
         actions={
           <>
             {can('student.promote') && <Button variant="ghost" asChild><Link href="/students/promotion"><ArrowUpRight /> Promote</Link></Button>}
+            {can('student.edit') && <IdCardsDialog />}
             {can('import.run') && <Button variant="secondary" asChild><Link href="/imports/new?entity=STUDENTS"><Upload /> Import</Link></Button>}
             {can('student.create') && <Button asChild><Link href="/students/new"><Plus /> Add student</Link></Button>}
           </>

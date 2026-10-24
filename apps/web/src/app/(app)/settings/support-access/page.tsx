@@ -13,7 +13,7 @@ import { useData } from '@/lib/hooks';
 const when = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' });
 const STATUS = { PENDING: ['Waiting for you', 'warning'], ACTIVE: ['Has access', 'success'], EXPIRED: ['Ended', 'neutral'], REVOKED: ['Ended', 'neutral'] } as const;
 
-/** SchoolOS support can only look at the school when an admin says yes — read-only, and only for a while. */
+/** Bastaa support can only look at the school when an admin says yes — read-only, and only for a while. */
 export default function SupportAccessPage() {
   return (
     <Gate any={['user.manage']}>
@@ -41,9 +41,9 @@ function SupportAccess() {
   if (!grants.data) return <Skeleton className="h-64" />;
   return (
     <Card>
-      <CardHeader title="SchoolOS support access" description="When you ask SchoolOS for help, they may request to look at your school. They can view, never change, and access ends by itself. Every step is in your audit log." />
+      <CardHeader title="Bastaa support access" description="When you ask Bastaa for help, they may request to look at your school. They can view, never change, and access ends by itself. Every step is in your audit log." />
       {!grants.data.length ? (
-        <EmptyState icon={<ShieldCheck />} title="No requests" description="Nobody from SchoolOS has asked to look at your school." />
+        <EmptyState icon={<ShieldCheck />} title="No requests" description="Nobody from Bastaa has asked to look at your school." />
       ) : (
         <ul className="mt-3 border-t border-border">
           {grants.data.map((g) => {

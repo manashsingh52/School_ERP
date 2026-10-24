@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/brand.dart';
 import '../../core/config.dart';
 import '../../core/session.dart';
 import '../../widgets/common.dart';
@@ -71,17 +72,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Center(
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(14)),
-                    child: const Text('S', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700)),
-                  ),
-                ),
+                const Center(child: BastaaMark()),
                 const SizedBox(height: 16),
-                Text('Welcome to SchoolOS', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                Text('Welcome to Bastaa', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
                 const SizedBox(height: 4),
                 Text('For parents and teachers', style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
                 const SizedBox(height: 28),

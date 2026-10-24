@@ -17,4 +17,4 @@ const app = await NestFactory.createApplicationContext(AppModule.forRoot(env, lo
 app.enableShutdownHooks();
 await app.get(QueueService).startWorkers();
 app.get(SchedulerService).start();
-logger.info('SchoolOS worker running');
+logger.info('Bastaa worker running');

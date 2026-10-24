@@ -1,4 +1,4 @@
-# SchoolOS — project notes
+# Bastaa — project notes
 
 **Read [HANDOFF.md](HANDOFF.md) first.** It has the full picture: what's done, what's pending,
 decisions, gotchas and the exact next step. The design pack is in `docs/`, and the progress log is in

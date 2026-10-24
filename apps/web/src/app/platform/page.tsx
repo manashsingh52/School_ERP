@@ -26,7 +26,7 @@ export default function PlatformHome() {
   const healthy = !x.health.failedJobs && !x.health.outboxFailed && !x.health.webhookFailures24h;
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Overview" description="Every school on SchoolOS at a glance." />
+      <PageHeader title="Overview" description="Every school on Bastaa at a glance." />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="Schools" value={formatNumber(x.schools.total)} hint={`${x.schools.active} live · ${x.schools.onboarding} onboarding · ${x.schools.suspended} suspended`} href="/platform/schools" />
         <Kpi label="Active students" value={formatNumber(x.students)} />

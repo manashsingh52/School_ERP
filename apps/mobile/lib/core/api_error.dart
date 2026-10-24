@@ -18,10 +18,10 @@ class ApiException implements Exception {
           .toList();
       return ApiException(status, '${e['code'] ?? 'UNKNOWN'}', '${e['message'] ?? 'Something went wrong.'}', details: details);
     }
-    return ApiException(status, 'UNKNOWN', status >= 500 ? 'SchoolOS is having trouble right now. Please try again.' : 'Something went wrong. Please try again.');
+    return ApiException(status, 'UNKNOWN', status >= 500 ? 'Bastaa is having trouble right now. Please try again.' : 'Something went wrong. Please try again.');
   }
 
-  static final network = ApiException(0, 'NETWORK', "You're offline or SchoolOS can't be reached. Check your connection and try again.");
+  static final network = ApiException(0, 'NETWORK', "You're offline or Bastaa can't be reached. Check your connection and try again.");
 
   @override
   String toString() => message;

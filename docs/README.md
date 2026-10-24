@@ -1,6 +1,6 @@
-# SchoolOS — V1 Planning Pack
+# Bastaa — V1 Planning Pack
 
-> "SchoolOS" / `schoolos.in` is a **placeholder** product name and domain. Replace when the brand is final.
+> "Bastaa" / `bastaa.in` is a **placeholder** product name and domain. Replace when the brand is final.
 
 This folder is the design baseline that must be reviewed **before** feature code is written (Master Prompt §72).
 Each document is short enough to review in one sitting and ends with **Open questions** that need a decision.
@@ -25,7 +25,7 @@ Each document is short enough to review in one sitting and ends with **Open ques
 
 | Topic | Decision | Doc |
 |---|---|---|
-| School addressing | Subdomain per school: `stmarys.schoolos.in`; `admin.schoolos.in` for platform | 03 |
+| School addressing | Subdomain per school: `stmarys.bastaa.in`; `admin.bastaa.in` for platform | 03 |
 | Tenant isolation | One PostgreSQL DB, `school_id` on every tenant row, Prisma auto-scoping **+ Postgres Row-Level Security** | 03 |
 | Identity | One global `User`, a `Membership` per school, roles per membership, school switcher | 02, 04 |
 | Auth | Own NestJS auth: JWT access + rotating refresh tokens, per-device sessions, SMS OTP (MSG91) | 09 |

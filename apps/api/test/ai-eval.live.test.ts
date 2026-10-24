@@ -17,7 +17,7 @@ const specs = TOOLS.map((t) => {
 
 describe.skipIf(!key)('AI evaluation (live model)', () => {
   const provider = new GeminiProvider(key!, process.env.AI_MODEL ?? 'gemini-2.5-flash');
-  const system = 'You are the SchoolOS assistant for an Indian school. Today is 2026-10-09. Answer only from tool results.';
+  const system = 'You are the Bastaa assistant for an Indian school. Today is 2026-10-09. Answer only from tool results.';
   it.each(EVAL_CASES)('$question → $tool', async (c) => {
     const out = await provider.generate({ system, turns: [{ role: 'user', text: c.question }], tools: specs });
     expect(out.calls[0]?.name).toBe(c.tool);

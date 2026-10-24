@@ -58,14 +58,14 @@ class ProfileScreen extends ConsumerWidget {
             leading: const Icon(Icons.logout),
             title: const Text('Sign out'),
             onTap: () async {
-              final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Sign out of SchoolOS?'), actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sign out'))]));
+              final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Sign out of Bastaa?'), actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sign out'))]));
               if (ok == true) await session.signOut();
             },
           ),
         ]),
       ),
       const SizedBox(height: 16),
-      Text('SchoolOS $appVersion', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
+      Text('Bastaa $appVersion', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
     ]);
   }
 }

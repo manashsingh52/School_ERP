@@ -1,8 +1,8 @@
 /**
- * SchoolOS edge router (docs/10 §3, option B — the lean alternative to a Google load balancer).
+ * Bastaa edge router (docs/10 §3, option B — the lean alternative to a Google load balancer).
  * Cloudflare serves *.<domain> and api.<domain>, then forwards to the Cloud Run services:
  *   api.<domain>            → API service (apps, Razorpay webhooks)
- *   everything else         → web service (school subdomains, admin console, "find your school")
+ *   everything else         → web service (school subdomains, admin console, the public website)
  * The original host goes in X-Forwarded-Host; X-Edge-Secret proves the request came through here,
  * so the public *.run.app URLs refuse direct traffic.
  *

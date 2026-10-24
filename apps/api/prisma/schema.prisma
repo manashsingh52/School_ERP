@@ -1,5 +1,5 @@
 // =============================================================================
-// SchoolOS — V1 schema (Prisma 7). docs/schema.prisma is the reviewed copy; this file is the live one.
+// Bastaa — V1 schema (Prisma 7). docs/schema.prisma is the reviewed copy; this file is the live one.
 //
 // Conventions
 //  • Every tenant-owned table has `school_id` (+ RLS policy, see docs/03-multi-tenancy.md)
@@ -402,7 +402,7 @@ enum AccessMode {
 
 model School {
   id                    String       @id @default(uuid(7)) @db.Uuid
-  slug                  String       @unique // subdomain: stmarys.schoolos.in
+  slug                  String       @unique // subdomain: stmarys.bastaa.in
   code                  String       @unique // short public code for "find your school"
   name                  String
   legalName             String?      @map("legal_name")

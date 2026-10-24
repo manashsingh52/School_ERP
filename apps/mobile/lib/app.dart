@@ -17,11 +17,11 @@ class SchoolOsApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider);
     final config = ref.watch(appConfigProvider).value;
-    // The school's accent once inside a school; SchoolOS blue before that.
+    // The school's accent once inside a school; Bastaa blue before that.
     final accent = parseHex(session is SignedIn ? session.me.membership?.school.accentColor : null);
     final outdated = config != null && compareVersions(appVersion, config.minVersion) < 0;
     return MaterialApp(
-      title: 'SchoolOS',
+      title: 'Bastaa',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light, accent),
       darkTheme: buildTheme(Brightness.dark, accent),

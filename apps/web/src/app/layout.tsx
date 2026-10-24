@@ -11,7 +11,7 @@ import './globals.css';
 export async function generateMetadata(): Promise<Metadata> {
   const school = await schoolBranding(await currentSlug());
   return {
-    title: { default: school?.name ?? 'SchoolOS', template: `%s · ${school?.name ?? 'SchoolOS'}` },
+    title: { default: school?.name ?? 'Bastaa', template: `%s · ${school?.name ?? 'Bastaa'}` },
     description: 'School management for schools that want to move fast.',
     robots: { index: false, follow: false },
   };

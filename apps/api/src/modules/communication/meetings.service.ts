@@ -100,7 +100,7 @@ export class MeetingsService implements OnModuleInit {
   joinUrl(row: { roomCode: string }, displayName?: string): string {
     const base = this.env.MEETING_BASE_URL.replace(/\/+$/, '');
     const name = displayName ? `#userInfo.displayName=${encodeURIComponent(JSON.stringify(displayName))}` : '';
-    return `${base}/SchoolOS-${row.roomCode}${name}`;
+    return `${base}/Bastaa-${row.roomCode}${name}`;
   }
 
   private async toItems(rows: Row[]): Promise<MeetingItem[]> {

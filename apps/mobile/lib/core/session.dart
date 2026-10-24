@@ -47,7 +47,7 @@ class SessionController extends Notifier<SessionState> {
     return const SessionLoading();
   }
 
-  Map<String, Object?> get _device => {'platform': clientPlatform, 'deviceName': 'SchoolOS app'};
+  Map<String, Object?> get _device => {'platform': clientPlatform, 'deviceName': 'Bastaa app'};
 
   /// App start: a saved refresh token → a fresh access token → straight back into the school.
   Future<void> restore() async {

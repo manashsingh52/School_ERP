@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time setup of a Google Cloud project for SchoolOS (docs/10, lean mode). Safe to re-run.
+# One-time setup of a Google Cloud project for Bastaa (docs/10, lean mode). Safe to re-run.
 #   gcloud auth login && gcloud auth application-default login
 #   ENV=staging GITHUB_REPO=owner/schoolerp ./infra/gcp/bootstrap.sh
 # Creates: APIs, Artifact Registry, Cloud SQL (Postgres 17), buckets, service accounts, secrets
@@ -28,7 +28,7 @@ gcloud services enable run.googleapis.com sqladmin.googleapis.com secretmanager.
 
 say "Artifact Registry ($REPO)"
 exists gcloud artifacts repositories describe "$REPO" --location="$REGION" ||
-  gcloud artifacts repositories create "$REPO" --repository-format=docker --location="$REGION" --description="SchoolOS images"
+  gcloud artifacts repositories create "$REPO" --repository-format=docker --location="$REGION" --description="Bastaa images"
 
 say "Cloud SQL $SQL_INSTANCE ($SQL_TIER, Postgres 17) — takes several minutes the first time"
 if ! exists gcloud sql instances describe "$SQL_INSTANCE"; then
@@ -71,7 +71,7 @@ gcloud storage buckets update "gs://$BUCKET_PRIVATE" --cors-file=infra/gcp/cors.
 say "Service accounts (least privilege, docs/10 §2)"
 for sa in api web migrate deploy; do
   exists gcloud iam service-accounts describe "schoolos-$sa@$PROJECT_ID.iam.gserviceaccount.com" ||
-    gcloud iam service-accounts create "schoolos-$sa" --display-name="SchoolOS $sa"
+    gcloud iam service-accounts create "schoolos-$sa" --display-name="Bastaa $sa"
 done
 bind() { gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$1" --role="$2" --condition=None >/dev/null; }
 bind "$SA_API" roles/cloudsql.client

@@ -1,4 +1,4 @@
-# HANDOFF — SchoolOS (School ERP)
+# HANDOFF — Bastaa (School ERP)
 
 Everything needed to continue this project without the original chat history.
 Last updated **2026-10-17**. Last feature commit on `main`: `c3b31f3` (school calendar).
@@ -10,7 +10,7 @@ plus everything that was decided in conversation and never written down elsewher
 
 ## 1. What the app is
 
-**SchoolOS** (placeholder name; placeholder domain `schoolos.in`) is a **multi-tenant School Management
+**Bastaa** (placeholder name; placeholder domain `bastaa.in`) is a **multi-tenant School Management
 SaaS**: one codebase and one database serving many independent schools, with strict isolation so no
 school can ever see another school's data. It's a commercial product, not a college project. The
 owner's guiding line: *"Powerful underneath, extremely simple on the surface."*
@@ -384,6 +384,21 @@ Details per phase are in `docs/12-roadmap.md` → *Progress log*.
 - A README in every API module (`apps/api/src/modules/*/README.md`).
 - Browser walkthrough of every page; fixes for hydration bugs (console tables, dashboard date).
 
+**Bastaa brand and public website** (2026-10-22)
+- The product is called **Bastaa** (it was "SchoolOS"). Internal package names (`@schoolos/*`) and
+  the Android package id stay as they are.
+- Logo: a round "b" with a saffron dot. `apps/mobile/tool/make_icons.py` draws it and writes the
+  Android and web icons, Play Store graphics and `docs/brand/` (SVG and PNG). The web copy is in
+  `components/brand/logo.tsx` and the app copy in `lib/core/brand.dart`. Keep them in step.
+- The bare domain is now the public website: home page (`components/site/landing.tsx`), `/privacy`
+  and `/terms`, all public on every host. "Find your school" stays at `/login`. The demo button
+  emails `CONTACT_EMAIL` in `lib/site.ts`.
+- **Student ID cards** (Students → ID cards for a section, or ID card on a student's profile): a
+  PDF at the standard card size, nine to an A4 sheet with cut lines, in the school's colour, with
+  photo, class, admission number, blood group, parent and phone. Office only (`student.edit`).
+- The setup wizard's fee and notification steps are real now (they used to say "coming soon"), and
+  the go-live checklist includes the fee structure.
+
 **Deployment tooling**
 - Dockerfiles, built in CI.
 - GCP bootstrap and deploy scripts.
@@ -439,9 +454,10 @@ The code is ready for every item below; each waits on an account, a key or a dec
    - online subscription billing for schools (V1.1; plans are billed manually today)
    - the 27 open questions at the end of docs 01–11
 10. **iOS**: Apple Developer account (needs a registered company) and Xcode.
-11. **Before the first real school**: legal review (DPA, privacy policy, DPDP Act, docs/09 §7), a final
-    product name and domain (replace "SchoolOS" / `schoolos.in` everywhere), DNS + Cloudflare Access
-    for `admin.<domain>`, and branch protection on `main`.
+11. **Before the first real school**: legal review (DPA, and the privacy policy and terms now on the
+    website at `/privacy` and `/terms`; DPDP Act, docs/09 §7), buy the domain (the code assumes
+    `bastaa.in`; if it's taken, replace it everywhere), DNS + Cloudflare Access for `admin.<domain>`,
+    and branch protection on `main`.
 
 Everything that needs an account or key is tracked in [`docs/SETUP-LATER.md`](docs/SETUP-LATER.md),
 and each slot is marked `⏸` in the code (`git grep ⏸`).
@@ -466,7 +482,7 @@ and each slot is marked `⏸` in the code (`git grep ⏸`).
 | Mostly solo developer → web + API first, Flutter later | Team size |
 | No student login in V1; English UI only, i18n-ready | Scope |
 | Monolith (modular NestJS), **no microservices/Kafka/Kubernetes** | From the owner's master prompt |
-| Placeholder brand "SchoolOS"; anything without an account gets a **slot** (marked `⏸`) | Owner: "whatever you don't have, keep a place for it; I'll add it at the end" |
+| Placeholder brand "Bastaa"; anything without an account gets a **slot** (marked `⏸`) | Owner: "whatever you don't have, keep a place for it; I'll add it at the end" |
 | Docker optional — "install later, proceed with code" | Docker Desktop was never installed on the owner's Mac |
 | Video meetings must be **free** (no paid Zoom) → Jitsi | Owner's requirement |
 | App home redesigned after a reference screenshot (avatar header, colourful feature-icon grid, "Your Subjects" cards with score rings, pill bottom nav) | Owner asked for "good UI, combination of colours" |

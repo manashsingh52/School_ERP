@@ -95,7 +95,7 @@ export class ReportsController {
   }
 }
 
-/** The school's own audit trail (docs/09 §6): who changed what, when — including SchoolOS support. */
+/** The school's own audit trail (docs/09 §6): who changed what, when — including Bastaa support. */
 @Controller('audit')
 export class AuditController {
   constructor(private readonly prisma: PrismaService) {}

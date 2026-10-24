@@ -235,7 +235,7 @@ export class AuthService {
     });
     // One school must not be able to take over an account someone uses at another school.
     if (user.platformAdmin || user.memberships.length) {
-      throw new AppError('CONFLICT', 409, 'This person also uses SchoolOS somewhere else, so their sign-in can only be reset by them ("Forgot password").');
+      throw new AppError('CONFLICT', 409, 'This person also uses Bastaa somewhere else, so their sign-in can only be reset by them ("Forgot password").');
     }
     const target = user.phone ?? user.email;
     if (!target) throw new AppError('VALIDATION_FAILED', 422, 'Add a mobile number or email for this person first.');

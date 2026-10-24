@@ -5,11 +5,11 @@ main = "worker.js"
 compatibility_date = "2026-10-01"
 
 routes = [
-  { pattern = "*.schoolos.in/*", zone_name = "schoolos.in" },
-  { pattern = "schoolos.in/*", zone_name = "schoolos.in" },
+  { pattern = "*.bastaa.in/*", zone_name = "bastaa.in" },
+  { pattern = "bastaa.in/*", zone_name = "bastaa.in" },
 ]
 
 [vars]
-BASE_DOMAIN = "schoolos.in"
+BASE_DOMAIN = "bastaa.in"
 API_ORIGIN = "https://schoolos-api-XXXXXXXX.asia-south1.run.app"
 WEB_ORIGIN = "https://schoolos-web-XXXXXXXX.asia-south1.run.app"

@@ -71,7 +71,7 @@ describe('codes from the school office', () => {
     expect((await redeem(m.phone, code)).status).toBe(401);
   });
 
-  it('needs user.manage, and refuses someone who uses SchoolOS at another school', async () => {
+  it('needs user.manage, and refuses someone who uses Bastaa at another school', async () => {
     const teacher = (await t.login(A.users.teacher, A.slug)).token;
     const m = await invite('Dev Patel');
     expect((await t.as(teacher).post(`/v1/members/${m.id}/sign-in-code`)).status).toBe(403);

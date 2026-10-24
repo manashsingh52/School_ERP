@@ -141,7 +141,7 @@ class _FeesScreenState extends ConsumerState<FeesScreen> {
   /// Razorpay Checkout on the phone (the school's own account, docs/11).
   Future<Map<String, String>?> _razorpay(OnlineOrder order, AppConfig config) async {
     if (kIsWeb) {
-      toast(context, 'Online payment opens in the SchoolOS app on your phone.', error: true);
+      toast(context, 'Online payment opens in the Bastaa app on your phone.', error: true);
       return null;
     }
     final done = Completer<Map<String, String>?>();

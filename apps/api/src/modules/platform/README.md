@@ -27,7 +27,7 @@ Super-admin and support: schools, plans, feature flags, platform users, time-lim
 | `GET /v1/school/features` | Feature flags switched on for this school | any member of the school |
 | `GET /v1/school/subscription` | This school's plan, limits and usage | `billing.view` |
 | `GET /v1/school/support-access` | Support access requests and grants | `user.manage` |
-| `POST /v1/school/support-access/:id/approve` | Let SchoolOS support look (read-only, time-boxed) | `user.manage` |
+| `POST /v1/school/support-access/:id/approve` | Let Bastaa support look (read-only, time-boxed) | `user.manage` |
 | `POST /v1/school/support-access/:id/revoke` | Decline a request or end access now | `user.manage` |
 
 Access is declared on every route and checked at start-up; `:id` routes return 404 for another school's records (`test/isolation.e2e.test.ts`).

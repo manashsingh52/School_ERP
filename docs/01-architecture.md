@@ -9,12 +9,12 @@ entrypoint.
 ```mermaid
 flowchart TB
   subgraph Clients
-    W["Web app (Next.js)<br/>stmarys.schoolos.in<br/>admin.schoolos.in"]
+    W["Web app (Next.js)<br/>stmarys.bastaa.in<br/>admin.bastaa.in"]
     M["Flutter app<br/>Parent · Teacher"]
   end
 
   CF["Cloudflare<br/>DNS · TLS · WAF · CDN"]
-  LB["Google HTTPS Load Balancer<br/>wildcard *.schoolos.in cert"]
+  LB["Google HTTPS Load Balancer<br/>wildcard *.bastaa.in cert"]
 
   subgraph GCP["Google Cloud · asia-south1 (Mumbai)"]
     WEB["Cloud Run: web<br/>Next.js SSR + BFF proxy"]
@@ -73,7 +73,7 @@ schoolerp/                      (pnpm workspace + Turborepo)
 │   ├── web/                    Next.js 16 (App Router) — school web app + super admin
 │   │   ├── app/(auth)/…        login, OTP, reset, school picker
 │   │   ├── app/(school)/…      tenant app shell: dashboard, students, fees …
-│   │   ├── app/(platform)/…    super admin (only served on admin.schoolos.in)
+│   │   ├── app/(platform)/…    super admin (only served on admin.bastaa.in)
 │   │   └── app/api/[...path]/  BFF proxy → api (adds Bearer token from cookie, refreshes)
 │   ├── api/                    NestJS 12
 │   │   ├── src/main.ts         HTTP entrypoint
@@ -192,8 +192,8 @@ Rules:
   hydrate.
 - Tenant resolution in Next.js `middleware`: read `Host` → slug → fetch public branding
   (`GET /v1/public/schools/:slug`, cached 5 min) → inject accent colour CSS variable + logo.
-- `admin.schoolos.in` renders only the `(platform)` route group; school hosts never render it.
-- `app.schoolos.in` = "Find your school" page (search by school name/code → redirect to its subdomain).
+- `admin.bastaa.in` renders only the `(platform)` route group; school hosts never render it.
+- `app.bastaa.in` = "Find your school" page (search by school name/code → redirect to its subdomain).
 
 ## 7. Mobile architecture (Phase 7, planned now)
 

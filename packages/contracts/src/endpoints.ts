@@ -139,7 +139,7 @@ import {
   updateRoleSchema,
   updateTeacherSchema,
 } from './people.js';
-import { createStudentSchema, listStudentsQuerySchema, updateStudentSchema } from './students.js';
+import { createStudentSchema, idCardsQuerySchema, listStudentsQuerySchema, updateStudentSchema } from './students.js';
 
 export interface EndpointDef {
   summary: string;
@@ -179,6 +179,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/public/schools/:slug': { summary: 'School branding for the login page', tag: 'Public', access: 'public' },
 
   'GET /v1/students': { summary: 'List students', tag: 'Students', access: 'permission:student.view', query: listStudentsQuerySchema },
+  'GET /v1/students/id-cards': { summary: 'Printable ID cards (PDF) for a section or one student', tag: 'Students', access: 'permission:student.edit', query: idCardsQuerySchema },
   'GET /v1/students/:id': { summary: 'Student profile', tag: 'Students', access: 'permission:student.view' },
   'POST /v1/students': { summary: 'Add a student', tag: 'Students', access: 'permission:student.create', body: createStudentSchema, idempotent: true },
   'PATCH /v1/students/:id': { summary: 'Edit a student', tag: 'Students', access: 'permission:student.edit', body: updateStudentSchema },
@@ -392,7 +393,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/school/subscription': { summary: "This school's plan, limits and usage", tag: 'School', access: 'permission:billing.view' },
   'GET /v1/school/features': { summary: 'Feature flags switched on for this school', tag: 'School', access: 'school' },
   'GET /v1/school/support-access': { summary: 'Support access requests and grants', tag: 'School', access: 'permission:user.manage' },
-  'POST /v1/school/support-access/:id/approve': { summary: 'Let SchoolOS support look (read-only, time-boxed)', tag: 'School', access: 'permission:user.manage' },
+  'POST /v1/school/support-access/:id/approve': { summary: 'Let Bastaa support look (read-only, time-boxed)', tag: 'School', access: 'permission:user.manage' },
   'POST /v1/school/support-access/:id/revoke': { summary: 'Decline a request or end access now', tag: 'School', access: 'permission:user.manage' },
 
   'GET /v1/platform/dashboard': { summary: 'Platform overview', tag: 'Platform', access: 'platform:platform.dashboard.view' },

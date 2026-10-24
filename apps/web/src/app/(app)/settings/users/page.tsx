@@ -200,7 +200,7 @@ function SignInCode({ member }: { member: MemberItem }) {
   };
   const school = me.membership?.school.name ?? 'your school';
   const message = issued
-    ? `Hello ${member.name}, your sign-in code for ${school} on SchoolOS is ${issued.code}. Open ${window.location.origin}/login or the SchoolOS app, choose "Use a code from your school", enter ${issued.signInWith} and this code, then choose your password. The code works once, until ${formatDate(issued.expiresAt)}.`
+    ? `Hello ${member.name}, your sign-in code for ${school} on Bastaa is ${issued.code}. Open ${window.location.origin}/login or the Bastaa app, choose "Use a code from your school", enter ${issued.signInWith} and this code, then choose your password. The code works once, until ${formatDate(issued.expiresAt)}.`
     : '';
   return (
     <div className="mt-4 rounded-md border border-border p-3">

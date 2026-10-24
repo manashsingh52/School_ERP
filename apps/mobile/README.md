@@ -1,4 +1,4 @@
-# SchoolOS mobile (Flutter)
+# Bastaa mobile (Flutter)
 
 One app for parents and teachers (docs/01 §7). After sign-in the user picks a school; the home,
 bottom bar and screens follow their role (someone who is both switches in Profile).

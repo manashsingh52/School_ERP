@@ -50,7 +50,7 @@ void main() {
     });
     await tester.pumpWidget(_app(api, tokens));
     await tester.pumpAndSettle();
-    expect(find.text('Welcome to SchoolOS'), findsOneWidget);
+    expect(find.text('Welcome to Bastaa'), findsOneWidget);
 
     await tester.enterText(find.widgetWithText(TextField, 'Mobile number or email'), 'teacher@demo.school');
     await tester.enterText(find.widgetWithText(TextField, 'Password'), 'not-a-real-password');
@@ -69,7 +69,7 @@ void main() {
     final api = FakeApi({'GET /app/config': (_) => {...config, 'minVersion': '9.0.0'}});
     await tester.pumpWidget(_app(api, MemoryTokenStore()));
     await tester.pumpAndSettle();
-    expect(find.text('Please update SchoolOS'), findsOneWidget);
+    expect(find.text('Please update Bastaa'), findsOneWidget);
   });
 
   testWidgets('saved session with several schools → school picker', (tester) async {

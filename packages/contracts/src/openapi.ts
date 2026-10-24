@@ -41,8 +41,8 @@ export function buildOpenApi(version = '1.0.0'): Json {
   }
   return {
     openapi: '3.1.0',
-    info: { title: 'SchoolOS API', version, description: 'Generated from packages/contracts. Do not edit by hand.' },
-    servers: [{ url: 'https://api.schoolos.in' }, { url: 'http://localhost:4000' }],
+    info: { title: 'Bastaa API', version, description: 'Generated from packages/contracts. Do not edit by hand.' },
+    servers: [{ url: 'https://api.bastaa.in' }, { url: 'http://localhost:4000' }],
     security: [{ bearer: [] }],
     paths,
     components: {

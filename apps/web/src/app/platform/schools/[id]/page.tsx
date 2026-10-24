@@ -61,7 +61,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ id: str
     <div className="flex flex-col gap-6">
       <PageHeader
         title={<span className="flex items-center gap-3">{s.name} <Badge tone={st.tone}>{st.label}</Badge></span>}
-        description={[s.slug, s.board, s.city, `on SchoolOS since ${formatDate(s.createdAt)}`].filter(Boolean).join(' · ')}
+        description={[s.slug, s.board, s.city, `on Bastaa since ${formatDate(s.createdAt)}`].filter(Boolean).join(' · ')}
         actions={
           <>
             <Button variant="ghost" asChild><a href={schoolUrl(s.slug)} target="_blank" rel="noreferrer"><ExternalLink /> Open</a></Button>
@@ -79,7 +79,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ id: str
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Subscription" description="Recorded by hand — invoices are sent outside SchoolOS for now." action={superAdmin && <Button size="sm" variant="secondary" onClick={() => setDialog('subscription')}>Edit</Button>} />
+          <CardHeader title="Subscription" description="Recorded by hand — invoices are sent outside Bastaa for now." action={superAdmin && <Button size="sm" variant="secondary" onClick={() => setDialog('subscription')}>Edit</Button>} />
           {s.subscription ? (
             <dl className="grid grid-cols-2 gap-x-6 gap-y-3 p-5 text-body">
               <div><dt className="text-small text-fg-secondary">Plan</dt><dd className="font-medium">{s.subscription.plan.name}</dd></div>
@@ -139,7 +139,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ id: str
 
       {superAdmin && (
         <Card>
-          <CardHeader title="Activity" description="Everything SchoolOS staff and the school's own people changed." />
+          <CardHeader title="Activity" description="Everything Bastaa staff and the school's own people changed." />
           <div className="mt-3 border-t border-border"><AuditList path={`/platform/audit?schoolId=${id}`} /></div>
         </Card>
       )}
