@@ -3,7 +3,7 @@
 import type { NotificationItem } from '@schoolos/contracts';
 import { Button, Menu, MenuContent, MenuTrigger, Skeleton, cn } from '@schoolos/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlarmClock, Bell, CalendarCheck, CalendarDays, CalendarX, Check, Megaphone, MessagesSquare, NotebookPen, Video } from 'lucide-react';
+import { AlarmClock, Award, Bell, CalendarCheck, CalendarDays, CalendarX, Check, Megaphone, MessagesSquare, NotebookPen, Video } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiFetch, apiPost } from '@/lib/api-client';
@@ -24,10 +24,11 @@ const ICON: Record<string, typeof Bell> = {
   'meeting.starting': Video,
   'reminder.due': AlarmClock,
   'calendar.added': CalendarDays,
+  'certificate.issued': Award,
 };
 
 /** Alerts carry the staff route; parents have their own pages for the same things. */
-const PARENT_ROUTE: Record<string, string> = { '/attendance': '/my/attendance', '/homework': '/my/homework', '/results': '/my/results', '/fees': '/my/fees' };
+const PARENT_ROUTE: Record<string, string> = { '/attendance': '/my/attendance', '/homework': '/my/homework', '/results': '/my/results', '/fees': '/my/fees', '/certificates': '/my/achievements' };
 
 /** Header bell: unread badge (polled), latest notifications, mark read. */
 export function NotificationsButton() {

@@ -443,6 +443,32 @@ class DocumentItem {
   final String id, title, category, fileName, createdAt;
 }
 
+/// `CertificateItem` in packages/contracts.
+class Certificate {
+  Certificate({required this.id, required this.serialNo, required this.kind, required this.eventName, required this.eventDate, this.position, this.note, required this.studentId, required this.studentName, this.classLabel, required this.issuedBy, required this.canDelete});
+  factory Certificate.fromJson(Json j) {
+    final st = j['student'] as Json;
+    return Certificate(
+      id: j['id'] as String,
+      serialNo: j['serialNo'] as String,
+      kind: j['kind'] as String,
+      eventName: j['eventName'] as String,
+      eventDate: j['eventDate'] as String,
+      position: _s(j['position']),
+      note: _s(j['note']),
+      studentId: st['id'] as String,
+      studentName: st['name'] as String,
+      classLabel: _s(st['classLabel']),
+      issuedBy: j['issuedBy'] as String,
+      canDelete: j['canDelete'] as bool? ?? false,
+    );
+  }
+  final String id, serialNo, kind, eventName, eventDate, studentId, studentName, issuedBy;
+  final String? position, note, classLabel;
+  final bool canDelete;
+  bool get isAchievement => kind == 'ACHIEVEMENT';
+}
+
 class SessionItem {
   SessionItem({required this.id, required this.platform, this.deviceName, required this.lastUsedAt, required this.current});
   factory SessionItem.fromJson(Json j) => SessionItem(id: j['id'] as String, platform: j['platform'] as String, deviceName: _s(j['deviceName']), lastUsedAt: j['lastUsedAt'] as String, current: j['current'] as bool? ?? false);

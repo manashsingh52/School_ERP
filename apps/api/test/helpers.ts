@@ -156,6 +156,8 @@ export interface Tenant {
   meetingId: string;
   /** A whole-school holiday on the calendar. */
   calendarEventId: string;
+  /** A participation certificate for s1, issued by the admin. */
+  certificateId: string;
   reminderId: string;
   parentMembershipId: string;
   teacherMembershipId: string;
@@ -373,7 +375,10 @@ export async function createTenant(t: TestApp, label: string): Promise<Tenant> {
       });
       const reminder = await db.reminder.create({ data: { schoolId, memberId: parentM.membership.id, title: 'Pick up', remindAt: new Date(Date.now() + 3_600_000) } });
       const holiday = await db.calendarEvent.create({ data: { schoolId, title: 'Founders Day', kind: 'HOLIDAY', startDate: date('2026-11-14'), endDate: date('2026-11-14'), createdByMemberId: adminMembership.id } });
-      return { calendarEventId: holiday.id, conversationId: conv.id, meetingId: meeting.id, reminderId: reminder.id, parentMembershipId: parentM.membership.id, teacherMembershipId: teacherM.membership.id };
+      const certificate = await db.certificate.create({
+        data: { schoolId, studentId: s1, serialNo: 'CERT/FIXTURE/0001', kind: 'PARTICIPATION', eventName: 'Science Fair', eventDate: date('2026-09-10'), issuedByMemberId: adminMembership.id, issuedByName: 'Admin' },
+      });
+      return { calendarEventId: holiday.id, certificateId: certificate.id, conversationId: conv.id, meetingId: meeting.id, reminderId: reminder.id, parentMembershipId: parentM.membership.id, teacherMembershipId: teacherM.membership.id };
     })()),
     supportGrantId: (
       await db.supportAccessGrant.create({ data: { schoolId, platformUserId: randomUUID(), reason: 'Fixture request', expiresAt: new Date(Date.now() + 3_600_000) } })

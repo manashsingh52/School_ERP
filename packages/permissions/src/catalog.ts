@@ -78,6 +78,8 @@ export const PERMISSIONS = {
   'results.view': s('Exams', 'View results', 'ALL', 'ASSIGNED', 'OWN_CHILDREN'),
   'results.publish': s('Exams', 'Publish results'),
   'report_card.generate': s('Exams', 'Generate report cards'),
+  'certificate.view': s('Certificates', 'View certificates and achievements', 'ALL', 'ASSIGNED', 'OWN_CHILDREN'),
+  'certificate.issue': s('Certificates', 'Issue certificates', 'ALL', 'ASSIGNED'),
 
   // Finance
   'fee.view': s('Fees', 'View fee structures', 'ALL', 'OWN_CHILDREN'),

@@ -1,6 +1,7 @@
 import type { Permission, PermissionScope } from '@schoolos/permissions';
 import {
   AlarmClock,
+  Award,
   BarChart3,
   BookOpen,
   CalendarCheck,
@@ -50,6 +51,7 @@ export const NAV: NavItem[] = [
   { href: '/payments', label: 'Payments', icon: CreditCard, any: ['payment.view', 'payment.collect'], scopes: ['ALL'], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: ['notice.view', 'notice.create'], scopes: STAFF, ready: true },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays, any: ['calendar.view'], scopes: ['ALL'], ready: true },
+  { href: '/certificates', label: 'Certificates', icon: Award, any: ['certificate.view'], scopes: STAFF, ready: true },
   { href: '/messages', label: 'Messages', icon: MessagesSquare, any: ['message.use'], scopes: STAFF, ready: true },
   { href: '/meetings', label: 'Meetings', icon: Video, any: ['meeting.view'], scopes: STAFF, ready: true },
   { href: '/reminders', label: 'Reminders', icon: AlarmClock, any: ['reminder.use'], scopes: ['ALL'], ready: true },
@@ -66,6 +68,7 @@ export const PARENT_NAV: NavItem[] = [
   { href: '/my/timetable', label: 'Timetable', icon: CalendarClock, any: [], ready: true },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays, any: [], ready: true },
   { href: '/my/results', label: 'Results', icon: ClipboardList, any: [], ready: true },
+  { href: '/my/achievements', label: 'Achievements', icon: Award, any: [], ready: true },
   { href: '/my/fees', label: 'Fees', icon: IndianRupee, any: [], ready: true },
   { href: '/my/documents', label: 'Documents', icon: FileText, any: [], ready: true },
   { href: '/notices', label: 'Notices', icon: Megaphone, any: [], ready: true },

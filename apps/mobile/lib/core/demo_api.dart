@@ -26,6 +26,7 @@ class DemoApi extends ApiClient {
   late Map<String, Json> _threads, _fees, _sheets;
   final _registers = <String, List<dynamic>>{};
   final _orders = <String, Json>{};
+  final _certificates = <Json>[];
   var _seq = 0;
 
   static const _downloadsOff = 'Files open from the real school app. This demo has sample data only.';
@@ -98,6 +99,42 @@ class DemoApi extends ApiClient {
     _fees = _matching(RegExp(r'^GET /students/([^/]+)/fees$'));
     _sheets = _matching(RegExp(r'^GET /exams/marks\?(.+)$'));
     _registers.clear();
+    _certificates
+      ..clear()
+      ..addAll(_sampleCertificates());
+  }
+
+  /// A prize and a sports day for a parent's first child (nothing is recorded for these yet).
+  List<Json> _sampleCertificates() {
+    final kids = ((_me['membership'] as Json?)?['children'] as List?)?.cast<Json>() ?? const <Json>[];
+    if (kids.isEmpty) return [];
+    final k = kids.first;
+    Json cert(String id, String kind, String event, int daysAgo, {String? position, String? note}) => {
+          'id': id,
+          'serialNo': 'CERT/DEMO/$id',
+          'kind': kind,
+          'eventName': event,
+          'eventDate': _add(_recordedOn, -daysAgo),
+          'position': position,
+          'note': note,
+          'student': {'id': k['id'], 'name': k['name'], 'classLabel': k['classLabel'] == null ? null : 'Class ${k['classLabel']}'},
+          'issuedBy': 'Priya Sharma',
+          'createdAt': '${_add(_recordedOn, -daysAgo + 1)}T06:00:00.000Z',
+          'canDelete': false,
+        };
+    return [
+      cert('0002', 'ACHIEVEMENT', 'Inter-school Science Quiz', 6, position: '1st place', note: 'District level'),
+      cert('0001', 'PARTICIPATION', 'Annual Sports Day', 20),
+    ];
+  }
+
+  /// Students of a section, from its recorded register.
+  List<Json> _sectionStudents(String sectionId) {
+    final key = _data.keys.firstWhere((k) => k.startsWith('GET /sections/$sectionId/attendance'), orElse: () => '');
+    if (key.isEmpty) return [];
+    return [
+      for (final s in ((_body(key) as Json)['students'] as List).cast<Json>()) {'id': s['studentId'], 'firstName': s['name'], 'lastName': null, 'rollNo': s['rollNo']},
+    ];
   }
 
   Map<String, Json> _matching(RegExp re) => {
@@ -157,6 +194,13 @@ class DemoApi extends ApiClient {
         return _moved(q['status'] == 'done' ? _done : _active);
       case '/me/sessions':
         return _moved(_sessions);
+      case '/certificates':
+        return _moved([
+          for (final c in _certificates)
+            if ((q['studentId'] == null || (c['student'] as Json)['id'] == q['studentId']) && (q['mine'] != 'true' || c['canDelete'] == true)) c,
+        ]);
+      case '/students' when q['sectionId'] != null:
+        return _sectionStudents(q['sectionId']!);
       case '/search':
         final words = (q['q'] ?? '').toLowerCase();
         final seen = <String>{};
@@ -317,6 +361,29 @@ class DemoApi extends ApiClient {
           'submission': null,
         });
         return {'id': 'demo-hw-$_seq'};
+      case ('POST', ['certificates']):
+        final names = {for (final k in _data.keys.where((k) => k.startsWith('GET /sections/'))) for (final st in ((_body(k) as Json)['students'] as List? ?? const []).cast<Json>()) st['studentId']: st['name']};
+        final made = [
+          for (final id in (b['studentIds'] as List).cast<String>())
+            {
+              'id': 'demo-cert-${++_seq}',
+              'serialNo': 'CERT/DEMO/${_seq.toString().padLeft(4, '0')}',
+              'kind': b['kind'],
+              'eventName': b['eventName'],
+              'eventDate': _unshift(b['eventDate'] as String),
+              'position': b['kind'] == 'ACHIEVEMENT' ? b['position'] : null,
+              'note': b['note'],
+              'student': {'id': id, 'name': names[id] ?? 'Student', 'classLabel': null},
+              'issuedBy': (_me['user'] as Json)['name'],
+              'createdAt': now,
+              'canDelete': true,
+            },
+        ];
+        _certificates.insertAll(0, made);
+        return _moved(made);
+      case ('DELETE', ['certificates', final id]):
+        _certificates.removeWhere((c) => c['id'] == id);
+        return null;
       case ('POST', ['files', 'upload-url']):
         return {'fileId': 'demo-file-${++_seq}', 'upload': {'url': 'demo://upload', 'headers': <String, String>{}}};
       case ('POST', ['conversations']):

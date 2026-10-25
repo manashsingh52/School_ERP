@@ -8,6 +8,7 @@ import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/home_kit.dart';
+import '../common/certificates_screen.dart';
 import '../connect/calendar_screen.dart';
 import '../connect/connect_data.dart';
 import '../connect/meetings_screen.dart';
@@ -58,6 +59,7 @@ class ParentHome extends ConsumerWidget {
       Feature('Timetable', Icons.calendar_month_rounded, FeatureColors.sky, () => _academics(ref, 2)),
       Feature('Fees', Icons.currency_rupee_rounded, FeatureColors.green, () => onOpenTab(2)),
       if (me.can('calendar.view')) Feature('Calendar', Icons.event_rounded, FeatureColors.red, () => _push(context, const CalendarScreen())),
+      if (me.can('certificate.view')) Feature('Achievements', Icons.emoji_events_rounded, certificateGold, () => _push(context, const AchievementsScreen())),
     ];
 
     final nowText = DateFormat('HH:mm').format(DateTime.now());

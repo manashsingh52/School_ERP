@@ -168,4 +168,22 @@ void main() {
     expect(p.time, '09:00–10:00');
     expect(p.isDayOff, isFalse);
   });
+
+  test('certificate: achievement with position, participation without', () {
+    final a = Certificate.fromJson({
+      'id': 'c1', 'serialNo': 'CERT/2026-27/0001', 'kind': 'ACHIEVEMENT', 'eventName': 'Quiz', 'eventDate': '2026-10-20', 'position': '1st place', 'note': null,
+      'student': {'id': 's1', 'name': 'Ananya Mishra', 'classLabel': 'Class 5 - B'}, 'issuedBy': 'Priya Sharma', 'createdAt': '2026-10-21T06:00:00.000Z', 'canDelete': false,
+    });
+    expect(a.isAchievement, isTrue);
+    expect(a.position, '1st place');
+    expect(a.studentName, 'Ananya Mishra');
+    expect(a.classLabel, 'Class 5 - B');
+    final p = Certificate.fromJson({
+      'id': 'c2', 'serialNo': 'CERT/2026-27/0002', 'kind': 'PARTICIPATION', 'eventName': 'Sports Day', 'eventDate': '2026-10-05', 'position': null, 'note': 'Inter-house',
+      'student': {'id': 's1', 'name': 'Ananya Mishra', 'classLabel': null}, 'issuedBy': 'Admin', 'createdAt': '2026-10-05T06:00:00.000Z', 'canDelete': true,
+    });
+    expect(p.isAchievement, isFalse);
+    expect(p.position, isNull);
+    expect(p.canDelete, isTrue);
+  });
 }

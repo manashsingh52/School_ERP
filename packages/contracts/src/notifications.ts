@@ -143,6 +143,16 @@ export const NOTIFICATION_EVENTS = {
     title: '{{kind}}: {{title}}',
     body: '{{when}}.{{description}}',
   },
+  'certificate.issued': {
+    label: 'Certificate awarded',
+    description: 'When a teacher or the office issues a certificate to a student.',
+    audience: 'Parents',
+    channels: ['IN_APP', 'PUSH'],
+    defaultChannels: ['IN_APP', 'PUSH'],
+    defaultEnabled: true,
+    title: '{{student}} received a certificate',
+    body: '{{what}} {{event}}, {{date}}. Open Achievements to see and download it.',
+  },
   'reminder.due': {
     label: 'Personal reminder',
     description: 'A reminder someone set for themselves (always delivered).',

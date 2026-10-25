@@ -30,6 +30,7 @@ export const FILE_PURPOSES = {
   notice_attachment: { label: 'Notice attachment', mimeTypes: [...PDF, ...IMAGES], maxBytes: 15 * MB, permission: 'notice.create' },
   receipt: { label: 'Fee receipt', mimeTypes: PDF, maxBytes: 5 * MB, permission: 'payment.collect' },
   report_card: { label: 'Report card', mimeTypes: PDF, maxBytes: 10 * MB, permission: 'report_card.generate' },
+  certificate: { label: 'Certificate', mimeTypes: PDF, maxBytes: 5 * MB, permission: 'certificate.issue' },
   import: { label: 'Import file', mimeTypes: [...XLSX, ...CSV], maxBytes: 10 * MB, permission: 'import.run' },
   marks_import: { label: 'Marks sheet', mimeTypes: [...XLSX, ...CSV], maxBytes: 2 * MB, permission: 'marks.enter' },
   report_export: { label: 'Report export', mimeTypes: [...PDF, ...XLSX, ...CSV], maxBytes: 50 * MB, permission: 'report.export' },

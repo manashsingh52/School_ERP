@@ -219,6 +219,13 @@ Still open: settlement (bank UTR) reconciliation — needs a school's live Razor
 - [x] Web `/calendar` (month grid, day details, coming up; add/edit/delete for the office) for staff and parents; app Calendar screen with the same colours — replaces Documents on the home grid (documents stay under Profile)
 - [x] Parents can message their child's class and subject teachers (not only the office); teachers without an app login are listed as "not on the app yet"
 
+### 2026-10-25: E-certificates and Achievements ✅ (546 API · 29 browser · 40 app tests)
+
+- [x] Teachers (their own classes) and the office issue **participation** or **achievement** certificates: the type first, then the event, its date and, for an achievement, the position; one student or a whole team at once. Numbered per academic year (`CERT/2026-27/0001`), audited, withdrawable by whoever issued it (or the office)
+- [x] The PDF (A4 landscape, school colour, logo, principal's signature, gold seal for achievements) is drawn on first download and kept
+- [x] Parents are told (`certificate.issued`) and see every certificate under the child's **Achievements**: app tile on the parent home, web `/my/achievements`. Staff: web `/certificates` and an Achievements tab on the student profile; teachers can also issue from the app (Certificates tile)
+- [x] New permissions `certificate.view` / `certificate.issue` with a data migration for existing schools; demo seed adds 9 certificates
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |
