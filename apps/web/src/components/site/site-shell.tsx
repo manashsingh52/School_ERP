@@ -2,6 +2,7 @@ import { Button } from '@schoolos/ui';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { BastaaLogo } from '@/components/brand/logo';
+import { serverEnv } from '@/lib/server-env';
 import { CONTACT_EMAIL, DEMO_MAILTO, LEGAL_UPDATED } from '@/lib/site';
 
 function SiteHeader() {
@@ -15,7 +16,7 @@ function SiteHeader() {
           <Link href="/#contact" className="hover:text-fg">Contact</Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>
+          {!serverEnv.siteOnly && <Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>}
           <Button asChild size="sm"><a href={DEMO_MAILTO}>Book a demo</a></Button>
         </div>
       </div>
@@ -33,7 +34,7 @@ function SiteFooter() {
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-10 gap-y-2 text-small text-fg-secondary">
           <Link href="/#features" className="hover:text-fg">Features</Link>
-          <Link href="/login" className="hover:text-fg">Sign in</Link>
+          {serverEnv.siteOnly ? <Link href="/#how" className="hover:text-fg">How it works</Link> : <Link href="/login" className="hover:text-fg">Sign in</Link>}
           <Link href="/privacy" className="hover:text-fg">Privacy</Link>
           <Link href="/terms" className="hover:text-fg">Terms</Link>
           <a href={`mailto:${CONTACT_EMAIL}`} className="col-span-2 hover:text-fg">{CONTACT_EMAIL}</a>

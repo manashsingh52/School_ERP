@@ -17,6 +17,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { SiteShell } from './site-shell';
+import { serverEnv } from '@/lib/server-env';
 import { CONTACT_EMAIL, DEMO_MAILTO } from '@/lib/site';
 
 const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
@@ -69,7 +70,11 @@ export function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg"><a href={DEMO_MAILTO}>Book a free demo</a></Button>
-            <Button asChild size="lg" variant="secondary"><Link href="/login">Sign in to your school</Link></Button>
+            {serverEnv.siteOnly ? (
+              <Button asChild size="lg" variant="secondary"><Link href="/#features">See what it does</Link></Button>
+            ) : (
+              <Button asChild size="lg" variant="secondary"><Link href="/login">Sign in to your school</Link></Button>
+            )}
           </div>
         </div>
         <div className="relative mx-auto flex w-full max-w-[420px] justify-center">

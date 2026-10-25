@@ -6,7 +6,8 @@ import { CONSOLE_HEADER, SCHOOL_SLUG_HEADER, isConsoleHost, slugFromHost } from 
 import { fromEdge, requestHost, requestOrigin } from '@/lib/edge';
 import { clientIpFrom, upstream } from '@/lib/upstream';
 
-const PUBLIC_PAGES = ['/login', '/privacy', '/terms'];
+const SITE_PAGES = ['/privacy', '/terms'];
+const PUBLIC_PAGES = ['/login', ...SITE_PAGES];
 
 /**
  * Runs before every page and BFF call:
@@ -20,6 +21,11 @@ export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
   // Only Cloudflare may reach us when an edge secret is configured (run.app URLs stay closed).
   if (!fromEdge(req.headers)) return new NextResponse('Not found', { status: 404 });
+  if (serverEnv.siteOnly) {
+    if (path === '/' || SITE_PAGES.includes(path)) return NextResponse.next();
+    if (path.startsWith('/api/')) return new NextResponse('Not found', { status: 404 });
+    return NextResponse.redirect(new URL('/', req.url));
+  }
   const host = requestHost(req.headers);
   const origin = requestOrigin(req.headers, req.url);
   const slug = slugFromHost(host, serverEnv.baseDomain);
