@@ -1,6 +1,7 @@
 import 'server-only';
 import type { ErrorBody, PublicSchoolBranding } from '@schoolos/contracts';
 import { cookies, headers } from 'next/headers';
+import { demoBranding } from './demo';
 import { serverEnv } from './server-env';
 import { ACCESS_COOKIE } from './session-cookies';
 import { SCHOOL_SLUG_HEADER } from './tenant';
@@ -44,6 +45,7 @@ const HEX = /^#[0-9a-f]{6}$/i;
 /** Public branding for the current subdomain (cached 5 min). Accent is validated before use in CSS. */
 export async function schoolBranding(slug: string | null): Promise<PublicSchoolBranding | null> {
   if (!slug) return null;
+  if (serverEnv.demo) return demoBranding();
   try {
     const res = await fetch(`${serverEnv.apiUrl}/v1/public/schools/${encodeURIComponent(slug)}`, {
       headers: serverEnv.edgeSecret ? { 'x-edge-secret': serverEnv.edgeSecret } : undefined,

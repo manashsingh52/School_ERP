@@ -47,7 +47,7 @@ const STEPS = [
 function Phone({ src, alt, className }: { src: string; alt: string; className?: string }) {
   return (
     <div className={`overflow-hidden rounded-[28px] border-[6px] border-charcoal bg-charcoal shadow-e3 ${className ?? ''}`}>
-      <Image src={src} alt={alt} width={270} height={480} className="block h-auto w-full rounded-[22px]" priority />
+      <Image src={src} alt={alt} width={270} height={584} className="block h-auto w-full rounded-[22px]" priority />
     </div>
   );
 }
@@ -70,7 +70,9 @@ export function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg"><a href={DEMO_MAILTO}>Book a free demo</a></Button>
-            {serverEnv.siteOnly ? (
+            {serverEnv.demo ? (
+              <Button asChild size="lg" variant="secondary"><Link href="/login">Explore the live demo</Link></Button>
+            ) : serverEnv.siteOnly ? (
               <Button asChild size="lg" variant="secondary"><Link href="/#features">See what it does</Link></Button>
             ) : (
               <Button asChild size="lg" variant="secondary"><Link href="/login">Sign in to your school</Link></Button>

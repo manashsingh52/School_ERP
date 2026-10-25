@@ -396,6 +396,10 @@ Details per phase are in `docs/12-roadmap.md` → *Progress log*.
 - **Student ID cards** (Students → ID cards for a section, or ID card on a student's profile): a
   PDF at the standard card size, nine to an A4 sheet with cut lines, in the school's colour, with
   photo, class, admission number, blood group, parent and phone. Office only (`student.edit`).
+- **Website on Vercel without the API** (`infra/README.md`): `SITE_ONLY=true` serves just the public
+  website; `DEMO_MODE=true` serves the whole product (school portal and owner console) from
+  `apps/web/demo/fixtures.json`, recorded from the seeded school by `apps/web/tool/demo/record.mjs`
+  on a faked Wednesday morning. Writes answer "This is a demo…". Record again after UI changes.
 - The setup wizard's fee and notification steps are real now (they used to say "coming soon"), and
   the go-live checklist includes the fee structure.
 

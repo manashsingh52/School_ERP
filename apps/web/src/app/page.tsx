@@ -7,7 +7,7 @@ import { serverEnv } from '@/lib/server-env';
 import { CONSOLE_HEADER } from '@/lib/tenant';
 
 export async function generateMetadata(): Promise<Metadata> {
-  if (!serverEnv.siteOnly && (await currentSlug())) return {};
+  if (!serverEnv.siteOnly && !serverEnv.demo && (await currentSlug())) return {};
   return {
     title: { absolute: 'Bastaa · School management for Indian schools' },
     description: 'Attendance, fees, exams, homework and parent messages in one simple app. The office works on the web; parents and teachers on their phones.',
@@ -18,6 +18,6 @@ export async function generateMetadata(): Promise<Metadata> {
 /** The bare domain is the public website; a school's own address goes straight to its dashboard. */
 export default async function Home() {
   const [slug, headerStore] = await Promise.all([currentSlug(), headers()]);
-  if (serverEnv.siteOnly || (!slug && headerStore.get(CONSOLE_HEADER) !== '1')) return <Landing />;
+  if (serverEnv.siteOnly || serverEnv.demo || (!slug && headerStore.get(CONSOLE_HEADER) !== '1')) return <Landing />;
   redirect('/dashboard');
 }
