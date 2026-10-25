@@ -46,6 +46,29 @@ Run one step with `./infra/gcp/deploy.sh <step>`; deploy an existing image with 
 
 **Rollback**: Cloud Run → service → Revisions → route 100% to the previous revision (seconds). Migrations only ever add (expand/contract, docs/10 §5), so the old code keeps working.
 
+## Public website only, on Vercel (before the API is deployed)
+
+The bare-domain website (home page, privacy, terms) can run on its own on Vercel. School sign-in is
+hidden and every other page redirects to the home page.
+
+1. vercel.com → **Add New → Project** → import `manashsingh52/School_ERP`.
+2. **Root Directory**: `apps/web`. Vercel reads `apps/web/vercel.json` (install from the repo root, build
+   with Turborepo so the shared packages are built first). Leave the other build settings as detected.
+3. **Environment variable**: `SITE_ONLY` = `true`. Nothing else is needed.
+4. **Deploy**. Later, add your domain under Project → Settings → Domains.
+
+### Or: the whole product as a live demo on Vercel
+
+Set `DEMO_MODE` = `true` instead of `SITE_ONLY`. The site then also serves the school portal and the
+owner console with the sample school recorded in `apps/web/demo/fixtures.json`: visitors pick a role
+(school admin, teacher, parent, Bastaa owner) at `/login`, browse every screen, and any change is
+politely refused. Dates move with the calendar, so "today" is always today. No API or database is
+needed. After UI changes, record it again (`apps/web/tool/demo/record.mjs` explains how).
+
+When the API is live (steps above), remove `SITE_ONLY` or `DEMO_MODE`, set `API_URL`, `APP_BASE_DOMAIN` and
+`BFF_SHARED_SECRET`, and add a wildcard domain (`*.bastaa.in`) for school subdomains, or keep the web
+on Cloud Run as scripted.
+
 ## Production needs first (SETUP-LATER)
 
 Production uses real providers only (the API refuses the sandbox ones there):

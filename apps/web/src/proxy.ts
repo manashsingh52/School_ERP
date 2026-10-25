@@ -5,8 +5,10 @@ import { ACCESS_COOKIE, REFRESH_COOKIE, clearSessionCookies, setSessionCookies }
 import { CONSOLE_HEADER, SCHOOL_SLUG_HEADER, isConsoleHost, slugFromHost } from '@/lib/tenant';
 import { fromEdge, requestHost, requestOrigin } from '@/lib/edge';
 import { clientIpFrom, upstream } from '@/lib/upstream';
+import { demoPersonaFrom } from '@/lib/demo';
 
-const PUBLIC_PAGES = ['/login', '/privacy', '/terms'];
+const SITE_PAGES = ['/privacy', '/terms'];
+const PUBLIC_PAGES = ['/login', ...SITE_PAGES];
 
 /**
  * Runs before every page and BFF call:
@@ -20,6 +22,12 @@ export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
   // Only Cloudflare may reach us when an edge secret is configured (run.app URLs stay closed).
   if (!fromEdge(req.headers)) return new NextResponse('Not found', { status: 404 });
+  if (serverEnv.demo) return demoProxy(req, path);
+  if (serverEnv.siteOnly) {
+    if (path === '/' || SITE_PAGES.includes(path)) return NextResponse.next();
+    if (path.startsWith('/api/')) return new NextResponse('Not found', { status: 404 });
+    return NextResponse.redirect(new URL('/', req.url));
+  }
   const host = requestHost(req.headers);
   const origin = requestOrigin(req.headers, req.url);
   const slug = slugFromHost(host, serverEnv.baseDomain);
@@ -84,6 +92,22 @@ export async function proxy(req: NextRequest) {
   if (refreshed) setSessionCookies(response, refreshed);
   if (sessionEnded) clearSessionCookies(response);
   return response;
+}
+
+/** Demo mode: one sample school on any host; the owner persona sees the console instead. */
+function demoProxy(req: NextRequest, path: string) {
+  const persona = demoPersonaFrom(req.cookies.get(ACCESS_COOKIE)?.value);
+  const headers = new Headers(req.headers);
+  headers.delete(SCHOOL_SLUG_HEADER);
+  headers.delete(CONSOLE_HEADER);
+  if (persona === 'owner') headers.set(CONSOLE_HEADER, '1');
+  else headers.set(SCHOOL_SLUG_HEADER, 'demo');
+  const isPlatformPage = path === '/platform' || path.startsWith('/platform/');
+  if (path === '/' || PUBLIC_PAGES.includes(path) || path.startsWith('/api/')) return NextResponse.next({ request: { headers } });
+  if (!persona) return NextResponse.redirect(new URL('/login', req.url));
+  if (persona === 'owner' && !isPlatformPage) return NextResponse.redirect(new URL('/platform', req.url));
+  if (persona !== 'owner' && isPlatformPage) return NextResponse.redirect(new URL('/dashboard', req.url));
+  return NextResponse.next({ request: { headers } });
 }
 
 export const config = {

@@ -12,6 +12,8 @@ const config: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@schoolos/ui'],
   output: 'standalone',
+  // Demo mode reads the recorded sample school at runtime.
+  outputFileTracingIncludes: { '/**': ['./demo/fixtures.json'] },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

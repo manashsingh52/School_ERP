@@ -7,6 +7,9 @@ import { ACCESS_COOKIE } from '@/lib/session-cookies';
 import { CONSOLE_HEADER } from '@/lib/tenant';
 import { AuthFrame, FindSchool, UnknownSchool } from './find-school';
 import { LoginForm } from './login-form';
+import { DemoLogin } from '@/components/site/demo-login';
+import { DEMO_PERSONAS } from '@/lib/demo';
+import { serverEnv } from '@/lib/server-env';
 
 export const metadata: Metadata = { title: 'Sign in' };
 
@@ -16,6 +19,7 @@ function safeNext(next: string | undefined): string {
 }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  if (serverEnv.demo) return <DemoLogin personas={DEMO_PERSONAS} />;
   const [{ next }, slug, headerStore] = await Promise.all([searchParams, currentSlug(), headers()]);
   if (headerStore.get(CONSOLE_HEADER) === '1') {
     if ((await cookies()).has(ACCESS_COOKIE)) {

@@ -1,4 +1,6 @@
 import 'server-only';
+import { demoResponse } from './demo';
+import { recordDemo } from './demo-recorder';
 import { serverEnv } from './server-env';
 import { SCHOOL_SLUG_HEADER } from './tenant';
 
@@ -17,7 +19,8 @@ export interface UpstreamOptions {
 }
 
 /** One place that talks to the API from the web server (BFF, proxy refresh, server components). */
-export function upstream(opts: UpstreamOptions): Promise<Response> {
+export async function upstream(opts: UpstreamOptions): Promise<Response> {
+  if (serverEnv.demo) return demoResponse(opts);
   const headers = new Headers({ accept: 'application/json' });
   if (opts.accessToken) headers.set('authorization', `Bearer ${opts.accessToken}`);
   if (opts.slug) headers.set(SCHOOL_SLUG_HEADER, opts.slug);
@@ -30,13 +33,15 @@ export function upstream(opts: UpstreamOptions): Promise<Response> {
     headers.set('x-bff-key', serverEnv.bffSecret);
     headers.set('x-client-ip', opts.clientIp);
   }
-  return fetch(`${serverEnv.apiUrl}${opts.path}`, {
+  const res = await fetch(`${serverEnv.apiUrl}${opts.path}`, {
     method: opts.method ?? 'GET',
     headers,
     body: opts.body,
     cache: 'no-store',
     redirect: 'manual',
   });
+  if (serverEnv.recordDemoDir) await recordDemo(serverEnv.recordDemoDir, opts, res);
+  return res;
 }
 
 /**
