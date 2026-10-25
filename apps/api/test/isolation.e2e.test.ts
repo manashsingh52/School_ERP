@@ -137,6 +137,8 @@ const CROSS_TENANT_PROBES: Record<string, (b: Tenant) => Probe> = {
   'PATCH /v1/documents/:id': (b) => ({ id: b.documentId, body: { title: 'x' } }),
   'DELETE /v1/documents/:id': (b) => b.documentId,
   'GET /v1/documents/:id/download': (b) => b.documentId,
+  'GET /v1/certificates/:id/download': (b) => b.certificateId,
+  'DELETE /v1/certificates/:id': (b) => b.certificateId,
   'GET /v1/reports/runs/:id': (b) => b.reportRunId,
   'GET /v1/reports/runs/:id/download': (b) => b.reportRunId,
   'PATCH /v1/reports/saved/:id': (b) => ({ id: b.savedReportId, body: { name: 'Mine now' } }),

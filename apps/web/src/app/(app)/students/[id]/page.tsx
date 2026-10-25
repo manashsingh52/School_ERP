@@ -3,9 +3,10 @@
 import type { StudentDetail } from '@schoolos/contracts';
 import { Badge, Button, Card, CardHeader, Dialog, DialogBody, DialogContent, EmptyState, ErrorState, Skeleton, Tooltip, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, IdCard, Pencil, Star, UserX } from 'lucide-react';
+import { ArrowLeft, Award, IdCard, Pencil, Star, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { use, useState, type ReactNode } from 'react';
+import { CertificateList, IssueCertificateDialog } from '@/components/certificates/certificates';
 import { DocumentsPanel } from '@/components/documents/documents-panel';
 import { StudentAttendance } from '@/components/student/attendance-view';
 import { FeeStatement } from '@/components/student/fee-statement';
@@ -21,7 +22,7 @@ import { LOGIN_BADGE, RELATION_LABEL } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 import { StudentForm } from '../student-form';
 
-const TABS = ['Overview', 'Attendance', 'Homework', 'Exams', 'Fees', 'Documents', 'Activity'] as const;
+const TABS = ['Overview', 'Attendance', 'Homework', 'Exams', 'Fees', 'Achievements', 'Documents', 'Activity'] as const;
 type Tab = (typeof TABS)[number];
 const TAB_KEYS = TABS.map((t) => t.toLowerCase()) as Lowercase<Tab>[];
 
@@ -31,6 +32,7 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
   const qc = useQueryClient();
   const student = useData<StudentDetail>(['student', id], `/students/${id}`);
   const [editing, setEditing] = useState(false);
+  const [awarding, setAwarding] = useState(false);
   const [tabKey, setTabKey] = useTabParam(TAB_KEYS);
   const tab = TABS[TAB_KEYS.indexOf(tabKey)]!;
   const setTab = (t: Tab) => setTabKey(t.toLowerCase() as Lowercase<Tab>);
@@ -40,6 +42,7 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
     Homework: 'homework.view',
     Exams: 'results.view',
     Fees: 'invoice.view',
+    Achievements: 'certificate.view',
     Documents: 'document.view',
     Activity: 'audit.view',
   };
@@ -136,6 +139,18 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
         </div>
       )}
       {tab === 'Fees' && enabled(tab) && s && <FeeStatement studentId={id} firstName={s.firstName} staff />}
+      {tab === 'Achievements' && enabled(tab) && s && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-h3 font-semibold">Certificates</h2>
+            {can('certificate.issue') && <Button size="sm" onClick={() => setAwarding(true)}><Award /> Issue certificate</Button>}
+          </div>
+          <CertificateList studentId={id} showStudent={false} empty={{ title: 'No certificates yet', description: `Certificates for competitions and events ${s.firstName} takes part in show up here, and in the parents' app.` }} />
+          <Dialog open={awarding} onOpenChange={setAwarding}>
+            {awarding && <IssueCertificateDialog student={{ id, name }} onDone={() => setAwarding(false)} />}
+          </Dialog>
+        </div>
+      )}
       {tab === 'Documents' && <DocumentsPanel ownerType="STUDENT" ownerId={id} shareLabel="Parents can see and download this" />}
       {tab === 'Activity' && <Card><CardHeader title="Activity" description="Every change to this student's record." /><div className="mt-3 border-t border-border"><AuditList path={`/audit?entityType=Student&entityId=${id}`} /></div></Card>}
 

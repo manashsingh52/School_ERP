@@ -511,6 +511,7 @@ model School {
   meetings               Meeting[]
   reminders              Reminder[]
   calendarEvents         CalendarEvent[]
+  certificates           Certificate[]
 
   @@map("schools")
 }
@@ -999,6 +1000,7 @@ model Student {
   conversations       Conversation[]
   meetings            Meeting[]
   reminders           Reminder[]
+  certificates        Certificate[]
 
   @@unique([schoolId, admissionNo])
   @@index([schoolId, status])
@@ -2124,6 +2126,7 @@ model File {
   receipts            Receipt[]
   importJobs          ImportJob[]
   reportRuns          ReportRun[]
+  certificates        Certificate[]
 
   @@index([schoolId, createdAt])
   @@map("files")
@@ -2501,4 +2504,36 @@ model CalendarEvent {
 
   @@index([schoolId, startDate])
   @@map("calendar_events")
+}
+
+enum CertificateKind {
+  PARTICIPATION
+  ACHIEVEMENT
+}
+
+/// A participation or achievement certificate. The PDF is drawn on first download and kept.
+model Certificate {
+  id               String          @id @default(uuid(7)) @db.Uuid
+  schoolId         String          @map("school_id") @db.Uuid
+  studentId        String          @map("student_id") @db.Uuid
+  serialNo         String          @map("serial_no")
+  kind             CertificateKind
+  eventName        String          @map("event_name")
+  eventDate        DateTime        @map("event_date") @db.Date
+  position         String?
+  note             String?
+  classLabel       String?         @map("class_label") // class at the time, e.g. "Class 8 - A"
+  issuedByMemberId String          @map("issued_by_member_id") @db.Uuid
+  issuedByName     String          @map("issued_by_name")
+  fileId           String?         @map("file_id") @db.Uuid
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+  file    File?   @relation(fields: [fileId], references: [id])
+
+  @@unique([schoolId, serialNo])
+  @@index([schoolId, studentId])
+  @@index([schoolId, createdAt])
+  @@map("certificates")
 }

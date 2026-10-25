@@ -6,6 +6,7 @@ import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/home_kit.dart';
+import '../common/certificates_screen.dart';
 import '../connect/calendar_screen.dart';
 import '../connect/connect_data.dart';
 import '../connect/meetings_screen.dart';
@@ -55,6 +56,7 @@ class TeacherHome extends ConsumerWidget {
       if (me.can('reminder.use')) Feature('Reminders', Icons.alarm_rounded, FeatureColors.orange, () => _push(context, const RemindersScreen())),
       Feature('Alerts', Icons.campaign_rounded, FeatureColors.indigo, () => onOpenTab?.call(3)),
       if (me.can('calendar.view')) Feature('Calendar', Icons.event_rounded, FeatureColors.red, () => _push(context, const CalendarScreen())),
+      if (me.can('certificate.issue')) Feature('Certificates', Icons.workspace_premium_rounded, certificateGold, () => _push(context, const TeacherCertificatesScreen())),
     ];
 
     return SafeArea(

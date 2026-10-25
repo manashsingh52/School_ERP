@@ -25,7 +25,7 @@ const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../de
 const PERSONAS = [
   { key: 'admin', email: 'admin@demo.school', host: `demo.localhost:${WEB_PORT}` },
   { key: 'teacher', email: 'teacher@demo.school', host: `demo.localhost:${WEB_PORT}` },
-  { key: 'parent', email: 'parent@demo.school', host: `demo.localhost:${WEB_PORT}` },
+  { key: 'parent', email: 'parent@demo.school', host: `demo.localhost:${WEB_PORT}`, childCertificates: true },
   { key: 'owner', email: 'superadmin@schoolos.local', host: `admin.localhost:${WEB_PORT}` },
 ];
 const MAX_PAGES = Number(process.env.MAX_PAGES ?? 160);
@@ -141,6 +141,20 @@ for (const persona of PERSONAS) {
       if (fiveB) await (await get(`/api/v1/students/id-cards?sectionId=${fiveB.id}`)).arrayBuffer();
       const ananya = (await (await get('/api/v1/students?q=Ananya%20Mishra')).json()).data[0];
       if (ananya) await (await get(`/api/v1/students/id-cards?studentId=${ananya.id}`)).arrayBuffer();
+    });
+  }
+  if (persona.childCertificates) {
+    // The children's certificates, so Achievements → Certificate opens the PDF in the demo too.
+    await page.evaluate(async () => {
+      const get = (u) => fetch(u, { credentials: 'same-origin' });
+      const me = await (await get('/api/v1/me')).json();
+      for (const child of me.data.membership?.children ?? []) {
+        const list = await (await get(`/api/v1/certificates?page=1&pageSize=20&studentId=${child.id}`)).json();
+        for (const c of list.data) {
+          const link = await (await get(`/api/v1/certificates/${c.id}/download`)).json();
+          if (link.data?.url) await (await get(link.data.url)).arrayBuffer();
+        }
+      }
     });
   }
   await ctx.close();

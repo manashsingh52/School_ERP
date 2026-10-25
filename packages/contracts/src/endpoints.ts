@@ -1,5 +1,6 @@
 import type { ZodType } from 'zod';
 import { calendarEventSchema, calendarQuerySchema, updateCalendarEventSchema } from './calendar.js';
+import { issueCertificatesSchema, listCertificatesQuerySchema } from './certificates.js';
 import {
   cancelMeetingSchema,
   contactsQuerySchema,
@@ -461,6 +462,10 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'POST /v1/calendar': { summary: 'Add a holiday or event (optionally notify parents and staff)', tag: 'Calendar', access: 'permission:calendar.manage', body: calendarEventSchema },
   'PATCH /v1/calendar/:id': { summary: 'Edit a calendar entry', tag: 'Calendar', access: 'permission:calendar.manage', body: updateCalendarEventSchema },
   'DELETE /v1/calendar/:id': { summary: 'Remove a calendar entry', tag: 'Calendar', access: 'permission:calendar.manage' },
+  'GET /v1/certificates': { summary: "Certificates issued to students (a parent sees their child's achievements)", tag: 'Certificates', access: 'permission:certificate.view', query: listCertificatesQuerySchema },
+  'POST /v1/certificates': { summary: 'Issue a participation or achievement certificate to one or more students', tag: 'Certificates', access: 'permission:certificate.issue', body: issueCertificatesSchema },
+  'GET /v1/certificates/:id/download': { summary: 'Short-lived download link for the certificate PDF', tag: 'Certificates', access: 'permission:certificate.view' },
+  'DELETE /v1/certificates/:id': { summary: 'Withdraw a certificate issued by mistake', tag: 'Certificates', access: 'permission:certificate.issue' },
   'GET /v1/meetings': { summary: 'Parent–teacher video meetings', tag: 'Meetings', access: 'permission:meeting.view', query: listMeetingsQuerySchema },
   'POST /v1/meetings': { summary: "Schedule a video meeting with a child's parents", tag: 'Meetings', access: 'permission:meeting.manage', body: createMeetingSchema },
   'GET /v1/meetings/:id': { summary: 'One meeting with its join link', tag: 'Meetings', access: 'permission:meeting.view' },

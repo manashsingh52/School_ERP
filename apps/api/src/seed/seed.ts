@@ -245,6 +245,7 @@ async function topUp(db: PlatformPrismaService, schoolId: string, app: INestAppl
   notes.push(...(await communication(db, schoolId)));
   notes.push(...(await upcomingExams(db, schoolId, yearId)));
   notes.push(...(await schoolCalendar(db, schoolId)));
+  notes.push(...(await certificates(db, schoolId, yearId)));
   return notes.filter(Boolean).join(', ');
 }
 
@@ -842,6 +843,58 @@ async function schoolCalendar(db: PlatformPrismaService, schoolId: string): Prom
     data: rows.map((r) => ({ schoolId, title: r.title, kind: r.kind, description: r.description ?? null, startDate: date(r.start), endDate: date(r.end ?? r.start), classIds: r.classIds ?? [], createdByMemberId: admin.id })),
   });
   return [`school calendar (${rows.length} holidays and events)`];
+}
+
+/** Certificates for the parent's two children and a few classmates, numbered like real ones. Idempotent. */
+async function certificates(db: PlatformPrismaService, schoolId: string, yearId: string): Promise<string[]> {
+  if (await db.certificate.count({ where: { schoolId } })) return [];
+  const parent = await db.guardian.findFirst({ where: { schoolId, membership: { user: { email: 'parent@demo.school' } } }, select: { children: { select: { studentId: true } } } });
+  const kids = await db.studentEnrollment.findMany({
+    where: { schoolId, academicYearId: yearId, studentId: { in: parent?.children.map((c) => c.studentId) ?? [] } },
+    select: { studentId: true, sectionId: true, class: { select: { name: true, displayOrder: true } }, section: { select: { name: true, classTeacher: { select: { firstName: true, lastName: true } } } } },
+    orderBy: { class: { displayOrder: 'desc' } },
+  });
+  const [elder, younger] = kids;
+  if (!elder || !younger) return [];
+  const year = (await db.academicYear.findUniqueOrThrow({ where: { id: yearId }, select: { name: true } })).name.replace(/[‒-―]/g, '-').replace(/\s+/g, '');
+  const admin = await db.membership.findFirstOrThrow({ where: { schoolId, roles: { some: { role: { key: 'school_admin' } } } }, select: { id: true, user: { select: { name: true } } } });
+  const classmates = async (sectionId: string, not: string, n: number) =>
+    (await db.studentEnrollment.findMany({ where: { schoolId, sectionId, studentId: { not } }, select: { studentId: true }, orderBy: { rollNo: 'asc' }, take: n })).map((e) => e.studentId);
+  const teacher = (k: typeof elder) => (k.section.classTeacher ? [k.section.classTeacher.firstName, k.section.classTeacher.lastName].filter(Boolean).join(' ') : admin.user.name);
+  type Row = { studentId: string; kid: typeof elder; kind: 'PARTICIPATION' | 'ACHIEVEMENT'; event: string; on: string; position?: string; note?: string };
+  const quizTeam = await classmates(younger.sectionId, younger.studentId, 2);
+  const kabaddi = await classmates(elder.sectionId, elder.studentId, 3);
+  const rows: Row[] = [
+    { studentId: younger.studentId, kid: younger, kind: 'ACHIEVEMENT', event: 'Inter-school Science Quiz', on: '2026-10-09', position: '1st place', note: 'District level, organised by the Ranchi Sahodaya Complex' },
+    ...quizTeam.map((studentId) => ({ studentId, kid: younger, kind: 'ACHIEVEMENT' as const, event: 'Inter-school Science Quiz', on: '2026-10-09', position: '1st place', note: 'District level, organised by the Ranchi Sahodaya Complex' })),
+    { studentId: younger.studentId, kid: younger, kind: 'PARTICIPATION', event: 'Independence Day drawing competition', on: '2026-08-14' },
+    { studentId: elder.studentId, kid: elder, kind: 'ACHIEVEMENT', event: 'Inter-house Kabaddi tournament', on: '2026-09-18', position: 'Runner-up' },
+    ...kabaddi.map((studentId) => ({ studentId, kid: elder, kind: 'ACHIEVEMENT' as const, event: 'Inter-house Kabaddi tournament', on: '2026-09-18', position: 'Runner-up' })),
+    { studentId: elder.studentId, kid: elder, kind: 'PARTICIPATION', event: 'Hindi Diwas elocution', on: '2026-09-14' },
+  ];
+  rows.sort((a, b) => a.on.localeCompare(b.on));
+  await db.certificate.createMany({
+    data: rows.map((r, i) => ({
+      schoolId,
+      studentId: r.studentId,
+      serialNo: `CERT/${year}/${String(i + 1).padStart(4, '0')}`,
+      kind: r.kind,
+      eventName: r.event,
+      eventDate: date(r.on),
+      position: r.position ?? null,
+      note: r.note ?? null,
+      classLabel: `${r.kid.class.name} - ${r.kid.section.name}`,
+      issuedByMemberId: admin.id,
+      issuedByName: teacher(r.kid),
+      createdAt: new Date(`${r.on}T10:30:00Z`),
+    })),
+  });
+  await db.schoolSequence.upsert({
+    where: { schoolId_key: { schoolId, key: `CERTIFICATE:${year}` } },
+    create: { schoolId, key: `CERTIFICATE:${year}`, prefix: `CERT/${year}/`, nextValue: rows.length + 1 },
+    update: { nextValue: rows.length + 1 },
+  });
+  return [`${rows.length} certificates`];
 }
 
 await main();

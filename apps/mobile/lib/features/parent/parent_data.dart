@@ -50,6 +50,11 @@ final childDocuments = FutureProvider.autoDispose.family<List<DocumentItem>, Str
   return [...mine, ...school].cast<Json>().map(DocumentItem.fromJson).toList();
 });
 
+final childCertificates = FutureProvider.autoDispose.family<List<Certificate>, String>((ref, id) async {
+  final rows = await ref.read(apiProvider).get<List<dynamic>>('/certificates', query: {'studentId': id, 'pageSize': 100});
+  return rows.cast<Json>().map(Certificate.fromJson).toList();
+});
+
 void refreshChild(WidgetRef ref, String id) {
   ref.invalidate(childTodayAttendance(id));
   ref.invalidate(childSchedule(id));
@@ -59,4 +64,5 @@ void refreshChild(WidgetRef ref, String id) {
   ref.invalidate(childTerms(id));
   ref.invalidate(childSessionAttendance(id));
   ref.invalidate(childPerformance(id));
+  ref.invalidate(childCertificates(id));
 }

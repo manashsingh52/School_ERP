@@ -158,6 +158,29 @@ void main() {
     expect((await api.get<Json>('/notifications/unread-count'))['count'], greaterThan(0));
   });
 
+  test('certificates: a parent sees the achievements; a teacher issues one to a team', () async {
+    final now = day(3);
+    final parent = await signIn('parent', now);
+    final child = Me.fromJson(await parent.get<Json>('/me')).children.first;
+    final mine = (await parent.get<List<dynamic>>('/certificates', query: {'studentId': child.id, 'pageSize': 100})).cast<Json>().map(Certificate.fromJson).toList();
+    expect(mine.map((c) => c.kind), ['ACHIEVEMENT', 'PARTICIPATION']);
+    expect(mine.first.position, '1st place');
+    expect(mine.every((c) => c.eventDate.compareTo(iso(now)) <= 0), isTrue);
+
+    final teacher = await signIn('teacher', now);
+    final overview = await teacher.get<Json>('/attendance/overview', query: {'date': iso(now)});
+    final section = (overview['sections'] as List).cast<Json>().firstWhere((s) => s['canMark'] == true)['sectionId'] as String;
+    final roster = (await teacher.get<List<dynamic>>('/students', query: {'sectionId': section, 'status': 'ACTIVE', 'pageSize': 100})).cast<Json>();
+    expect(roster, isNotEmpty);
+    final made = await teacher.post<List<dynamic>>('/certificates', {'kind': 'ACHIEVEMENT', 'eventName': 'Kho-kho', 'eventDate': iso(now), 'position': 'Winner', 'studentIds': [roster[0]['id'], roster[1]['id']]});
+    expect(made, hasLength(2));
+    final issued = (await teacher.get<List<dynamic>>('/certificates', query: {'mine': 'true', 'pageSize': 100})).cast<Json>().map(Certificate.fromJson).toList();
+    expect(issued.map((c) => c.studentName), [roster[0]['firstName'], roster[1]['firstName']]);
+    expect(issued.first.canDelete, isTrue);
+    await teacher.delete<Object?>('/certificates/${issued.first.id}');
+    expect(await teacher.get<List<dynamic>>('/certificates', query: {'mine': 'true'}), hasLength(1));
+  });
+
   test('a saved session reopens the same demo user; sign-out ends it', () async {
     final tokens = MemoryTokenStore();
     final first = DemoApi(tokens);
