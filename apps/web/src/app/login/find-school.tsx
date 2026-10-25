@@ -3,6 +3,7 @@
 import { Button, Field, Input } from '@schoolos/ui';
 import { ArrowRight, Building2 } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { ThemeToggle } from '@/lib/theme';
 import { BastaaMark } from '@/components/brand/logo';
 import { ApiError, apiFetch } from '@/lib/api-client';
 
@@ -10,18 +11,20 @@ import { ApiError, apiFetch } from '@/lib/api-client';
 export function AuthFrame({ schoolName, subtitle, brand, children }: { schoolName: string; subtitle: string; brand?: boolean; children: ReactNode }) {
   const initial = schoolName.trim()[0]?.toUpperCase() ?? 'S';
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
-      <div className="w-full max-w-[400px]">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center bg-app px-4 py-10">
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_40%_at_50%_0%,var(--accent-50),transparent)]" />
+      <ThemeToggle className="absolute top-4 right-4" />
+      <div className="relative w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
           {brand ? (
             <BastaaMark className="mb-4 size-12 shadow-e1 rounded-xl" />
           ) : (
             <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent text-[20px] font-semibold text-accent-fg shadow-e1">{initial}</div>
           )}
-          <h1 className="text-h1 font-semibold tracking-[-0.01em]">{schoolName}</h1>
+          <h1 className="font-display text-[28px] leading-tight font-semibold tracking-[-0.02em]">{schoolName}</h1>
           <p className="mt-1 text-body text-fg-secondary">{subtitle}</p>
         </div>
-        <div className="rounded-xl border border-border bg-surface p-6 shadow-e1">{children}</div>
+        <div className="rounded-2xl border border-border bg-surface p-6 shadow-e2">{children}</div>
         <p className="mt-8 text-center text-caption text-fg-tertiary">
           {brand ? 'Bastaa' : 'Powered by Bastaa'} · <a href="/privacy" className="hover:text-fg-secondary hover:underline">Privacy</a> · <a href="/terms" className="hover:text-fg-secondary hover:underline">Terms</a>
         </p>

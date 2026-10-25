@@ -8,14 +8,14 @@ import { ApiError, apiPatch } from '@/lib/api-client';
 import { DocumentBrandingCard } from '@/components/settings/section-forms';
 import { uploadFile, useSchool } from '@/lib/hooks';
 
-const SWATCHES = ['#2F6FEB', '#0E7490', '#16A34A', '#7C3AED', '#C2410C', '#BE123C', '#1F2937', '#B45309'];
+const SWATCHES = ['#0F5338', '#1E3A8A', '#0E7490', '#7C3AED', '#C2410C', '#BE123C', '#1F2937', '#B45309'];
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 /** Logo + one accent colour; the whole app derives its shades from it (docs/07 §1.2). */
 export default function BrandingPage() {
   const school = useSchool();
   const qc = useQueryClient();
-  const [color, setColor] = useState('#2F6FEB');
+  const [color, setColor] = useState('#0F5338');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -93,9 +93,9 @@ export default function BrandingPage() {
                 style={{ background: s }}
               />
             ))}
-            <input type="color" aria-label="Custom colour" value={HEX.test(color) ? color : '#2F6FEB'} onChange={(e) => setColor(e.target.value.toUpperCase())} className="size-8 cursor-pointer rounded-full border border-border bg-transparent" />
+            <input type="color" aria-label="Custom colour" value={HEX.test(color) ? color : '#0F5338'} onChange={(e) => setColor(e.target.value.toUpperCase())} className="size-8 cursor-pointer rounded-full border border-border bg-transparent" />
           </div>
-          <Field label="Hex value" htmlFor="br-hex" error={HEX.test(color) ? undefined : 'Use a colour like #2F6FEB'} className="w-40">
+          <Field label="Hex value" htmlFor="br-hex" error={HEX.test(color) ? undefined : 'Use a colour like #0F5338'} className="w-40">
             <Input id="br-hex" value={color} onChange={(e) => setColor(e.target.value)} className="font-mono" />
           </Field>
           <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-app p-4">

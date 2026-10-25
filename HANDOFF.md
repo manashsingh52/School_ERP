@@ -401,6 +401,13 @@ Details per phase are in `docs/12-roadmap.md` → *Progress log*.
   student or a whole team. Type first, then event, date and position. The PDF is drawn on first
   download and kept (`modules/certificates`). Parents get a notification and see them under
   **Achievements** (app tile, web `/my/achievements`). Teachers can issue from the app too.
+- **Redesign (emerald and terracotta)**: tokens in `packages/ui/src/styles.css` (warm parchment light
+  theme, obsidian dark theme; in dark mode the accent turns bright with dark text, for every school's
+  colour). Fonts: Fraunces (headings), Inter (UI), JetBrains Mono (`.figures` for amounts and dates).
+  The theme toggle (`ThemeToggle` in `lib/theme.tsx`) is on the website, login and dashboard header and
+  uses the existing cookie, so the server paints the right theme first time. The homepage is in
+  `components/site/` (hero, bento, trust, closing, book-demo, motion via `motion/react`).
+  `/login?as=admin|teacher|parent|owner` opens a demo role in one tap. New schools default to `#0F5338`.
 - **Website on Vercel without the API** (`infra/README.md`): `SITE_ONLY=true` serves just the public
   website; `DEMO_MODE=true` serves the whole product (school portal and owner console) from
   `apps/web/demo/fixtures.json`, recorded from the seeded school by `apps/web/tool/demo/record.mjs`

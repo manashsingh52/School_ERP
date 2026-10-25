@@ -1,6 +1,6 @@
 """Bastaa logo, app icons and Play Store graphics, all from one drawing.
 
-The mark is a round lowercase "b" with a saffron dot in its bowl: a bright face, or a sun coming up.
+The mark is a round lowercase "b" with a terracotta dot in its bowl: a bright face, or a sun coming up.
 Re-run after a change to the mark or the colours:  python3 apps/mobile/tool/make_icons.py
 Needs Pillow and the Inter font (any bold sans works: change FONT).
 """
@@ -8,7 +8,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-BLUE, SAFFRON, INK = '#2F6FEB', '#F7A400', '#0F172A'
+EMERALD, TERRACOTTA, INK = '#0F5338', '#D95D39', '#111814'
 FONT = '/usr/share/fonts/opentype/inter/InterDisplay-Bold.otf'
 NAME, TAGLINE = 'Bastaa', 'School, in your pocket'
 here = Path(__file__).resolve().parent
@@ -25,7 +25,7 @@ BOWL = (0.5, 0.595, 0.235, 0.095)  # centre x, centre y, outer radius, inner rad
 DOT = 0.062
 
 
-def draw_mark(img, box, ink='white', dot=SAFFRON, hole=(0, 0, 0, 0)):
+def draw_mark(img, box, ink='white', dot=TERRACOTTA, hole=(0, 0, 0, 0)):
     """The "b" scaled into box (x0, y0, x1, y1) of an RGBA image."""
     x0, y0, x1, y1 = box
     s = x1 - x0
@@ -46,7 +46,7 @@ def render(px, paint):
     return big.resize((px, px), Image.LANCZOS)
 
 
-def tile(px, radius=0.22, inset=0.0, bg=BLUE):
+def tile(px, radius=0.22, inset=0.0, bg=EMERALD):
     def paint(img, size):
         pad = round(size * inset)
         inner = size - 2 * pad
@@ -55,7 +55,7 @@ def tile(px, radius=0.22, inset=0.0, bg=BLUE):
     return render(px, paint)
 
 
-def square(px, bg=BLUE, scale=1.0):
+def square(px, bg=EMERALD, scale=1.0):
     """Full-bleed square (Play icon, maskable web icon): the platform rounds it."""
     def paint(img, size):
         ImageDraw.Draw(img).rectangle((0, 0, size, size), fill=bg)
@@ -64,7 +64,7 @@ def square(px, bg=BLUE, scale=1.0):
     return render(px, paint)
 
 
-def svg_mark(bg=BLUE, radius=0.22, size=512):
+def svg_mark(bg=EMERALD, radius=0.22, size=512):
     """The same drawing as SVG, for the website and print."""
     s = size
     sx0, sy0, sx1, sy1 = STEM
@@ -77,7 +77,7 @@ def svg_mark(bg=BLUE, radius=0.22, size=512):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {s} {s}">{back}'
             f'<rect x="{f(sx0)}" y="{f(sy0)}" width="{f(sx1 - sx0)}" height="{f(sy1 - sy0)}" rx="{f(r)}" fill="#fff"/>'
             f'<path d="{bowl}" fill="#fff" fill-rule="evenodd"/>'
-            f'<circle cx="{f(cx)}" cy="{f(cy)}" r="{f(DOT)}" fill="{SAFFRON}"/></svg>\n')
+            f'<circle cx="{f(cx)}" cy="{f(cy)}" r="{f(DOT)}" fill="{TERRACOTTA}"/></svg>\n')
 
 
 # Android launcher icons.
@@ -101,7 +101,7 @@ for name, scale in DENSITIES.items():
 )
 (res / 'values/colors.xml').write_text(
     '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
-    f'    <color name="ic_launcher_background">{BLUE}</color>\n</resources>\n'
+    f'    <color name="ic_launcher_background">{EMERALD}</color>\n</resources>\n'
 )
 
 # Flutter web (the app in a browser).
@@ -115,13 +115,13 @@ for px in (192, 512):
 store.mkdir(parents=True, exist_ok=True)
 square(512).convert('RGB').save(store / 'icon-512.png')
 
-feature = Image.new('RGB', (1024, 500), BLUE)
+feature = Image.new('RGB', (1024, 500), EMERALD)
 badge = render(180, lambda img, size: (ImageDraw.Draw(img).rounded_rectangle((0, 0, size - 1, size - 1), radius=round(size * 0.24), fill='white'),
-                                       draw_mark(img, (0, 0, size, size), ink=BLUE, hole='white')))
+                                       draw_mark(img, (0, 0, size, size), ink=EMERALD, hole='white')))
 feature.paste(badge, (110, 160), badge)
 draw = ImageDraw.Draw(feature)
 draw.text((330, 168), NAME, font=ImageFont.truetype(FONT, 104), fill='white')
-draw.text((334, 296), TAGLINE, font=ImageFont.truetype(FONT, 40), fill='#DCE6FD')
+draw.text((334, 296), TAGLINE, font=ImageFont.truetype(FONT, 40), fill='#CFE6DA')
 feature.save(store / 'feature-graphic.png')
 
 # Brand kit: the mark (SVG + PNG) and the logo with the name, for letters, slides and the website.

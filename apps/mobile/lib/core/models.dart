@@ -13,7 +13,7 @@ List<Json> _list(Object? v) => (v as List? ?? const []).cast<Json>();
 
 class School {
   School({required this.id, required this.slug, required this.name, required this.accentColor, this.logoUrl});
-  factory School.fromJson(Json j) => School(id: j['id'] as String, slug: j['slug'] as String, name: j['name'] as String, accentColor: j['accentColor'] as String? ?? '#2F6FEB', logoUrl: _s(j['logoUrl']));
+  factory School.fromJson(Json j) => School(id: j['id'] as String, slug: j['slug'] as String, name: j['name'] as String, accentColor: j['accentColor'] as String? ?? '#0F5338', logoUrl: _s(j['logoUrl']));
   final String id, slug, name, accentColor;
   final String? logoUrl;
 }

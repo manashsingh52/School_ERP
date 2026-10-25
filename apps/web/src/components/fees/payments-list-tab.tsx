@@ -69,7 +69,7 @@ export function PaymentsListTab() {
           <EmptyState icon={<CreditCard />} title="No payments found" />
         ) : (
           <>
-            <Table>{HEAD}<tbody>{query.isPending ? <TableSkeleton columns={7} /> : query.data!.data.map((p) => <PaymentRow key={p.id} p={p} onOpen={() => setOpen(p.id)} />)}</tbody></Table>
+            <Table stickyFirst>{HEAD}<tbody>{query.isPending ? <TableSkeleton columns={7} /> : query.data!.data.map((p) => <PaymentRow key={p.id} p={p} onOpen={() => setOpen(p.id)} />)}</tbody></Table>
             {!!query.data?.page.total && <div className="border-t border-border"><Pagination page={page} pageSize={PAGE} total={query.data.page.total} onPageChange={setPage} /></div>}
           </>
         )}

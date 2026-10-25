@@ -1,6 +1,5 @@
-import { GeistMono } from 'geist/font/mono';
-import { GeistSans } from 'geist/font/sans';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Fraunces, Inter, JetBrains_Mono } from 'next/font/google';
 import { cookies } from 'next/headers';
 import type { CSSProperties, ReactNode } from 'react';
 import { currentSlug, schoolBranding } from '@/lib/server-api';
@@ -10,6 +9,17 @@ import { serverEnv } from '@/lib/server-env';
 import { ACCESS_COOKIE } from '@/lib/session-cookies';
 import { Providers } from './providers';
 import './globals.css';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', style: ['normal', 'italic'], axes: ['opsz', 'SOFT'], display: 'swap' });
+const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains', display: 'swap' });
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#faf8f5' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0e0c' },
+  ],
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const school = await schoolBranding(await currentSlug());
@@ -27,7 +37,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // The school's accent is set once on <html>; every shade is derived from it in CSS.
   const style = school ? ({ '--accent': school.accentColor } as CSSProperties) : undefined;
   return (
-    <html lang="en-IN" data-theme={theme} className={`${GeistSans.variable} ${GeistMono.variable}`} style={style}>
+    <html lang="en-IN" data-theme={theme} className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable}`} style={style}>
       <body>
         <Providers>{children}</Providers>
         {serverEnv.demo && demoPersonaFrom(cookieStore.get(ACCESS_COOKIE)?.value) && (

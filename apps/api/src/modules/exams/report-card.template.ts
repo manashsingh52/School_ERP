@@ -26,7 +26,7 @@ const esc = (v: unknown) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-const safeColor = (c: string) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#2F6FEB');
+const safeColor = (c: string) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#0F5338');
 const n = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0$/, ''));
 const STATUS: Record<ResultRow['status'], string> = { PASS: 'Passed', FAIL: 'Not passed', INCOMPLETE: 'Incomplete', WITHHELD: 'Withheld' };
 

@@ -53,7 +53,7 @@ export async function schoolBranding(slug: string | null): Promise<PublicSchoolB
     });
     if (!res.ok) return null;
     const { data } = (await res.json()) as { data: PublicSchoolBranding };
-    return { ...data, accentColor: HEX.test(data.accentColor) ? data.accentColor : '#2F6FEB' };
+    return { ...data, accentColor: HEX.test(data.accentColor) ? data.accentColor : '#0F5338' };
   } catch {
     return null;
   }

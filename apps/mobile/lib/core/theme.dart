@@ -13,7 +13,7 @@ class Tokens {
 
 Color parseHex(String? hex) {
   final h = (hex ?? '').replaceFirst('#', '');
-  return h.length == 6 ? Color(int.parse('FF$h', radix: 16)) : const Color(0xFF2F6FEB);
+  return h.length == 6 ? Color(int.parse('FF$h', radix: 16)) : const Color(0xFF0F5338);
 }
 
 /// Semantic status colours that stay readable in both themes.

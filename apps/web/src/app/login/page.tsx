@@ -18,8 +18,12 @@ function safeNext(next: string | undefined): string {
   return next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/api/') ? next : '/dashboard';
 }
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  if (serverEnv.demo) return <DemoLogin personas={DEMO_PERSONAS} />;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; as?: string }> }) {
+  if (serverEnv.demo) {
+    // /login?as=teacher opens that role straight away (links on the home page).
+    const { as } = await searchParams;
+    return <DemoLogin personas={DEMO_PERSONAS} autoEnter={DEMO_PERSONAS.find((p) => p.key === as)?.key} />;
+  }
   const [{ next }, slug, headerStore] = await Promise.all([searchParams, currentSlug(), headers()]);
   if (headerStore.get(CONSOLE_HEADER) === '1') {
     if ((await cookies()).has(ACCESS_COOKIE)) {

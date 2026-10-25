@@ -58,7 +58,7 @@ export class SchoolsService {
           code: (input.code ?? slug).toUpperCase(),
           name: input.name,
           board: input.board,
-          accentColor: input.accentColor ?? '#2F6FEB',
+          accentColor: input.accentColor ?? '#0F5338',
           status: input.status ?? 'ONBOARDING',
         },
       });

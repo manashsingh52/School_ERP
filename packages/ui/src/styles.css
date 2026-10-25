@@ -5,27 +5,32 @@
  */
 
 :root {
-  /* Neutrals */
-  --bg-app: #f7f7f8;
+  /* Neutrals: warm parchment, deep forest ink */
+  --bg-app: #faf8f5;
   --bg-surface: #ffffff;
-  --bg-subtle: #efeff1;
-  --bg-hover: #f4f4f5;
-  --border: #e4e4e7;
-  --border-strong: #d1d1d6;
-  --text-primary: #18181b;
-  --text-secondary: #52525b;
-  --text-tertiary: #71717a;
+  --bg-subtle: #f2efe9;
+  --bg-hover: #f5f2ec;
+  --border: #e8e4dc;
+  --border-strong: #d6d0c5;
+  --text-primary: #111814;
+  --text-secondary: #4a554e;
+  --text-tertiary: #69736d;
   --text-inverse: #ffffff;
-  --charcoal: #27272a;
+  --charcoal: #1b2420;
 
-  /* School accent: one input, derived scale (lightness clamped so white text always reads) */
-  --accent: #2f6feb;
-  --accent-500: oklch(from var(--accent) clamp(0.45, l, 0.6) c h);
+  /* School accent: one input, derived scale (lightness clamped so white text always reads).
+     Bastaa's own accent is school-blazer emerald; each school can set its own. */
+  --accent: #0f5338;
+  --accent-500: oklch(from var(--accent) clamp(0.38, l, 0.6) c h);
   --accent-600: oklch(from var(--accent-500) calc(l - 0.05) c h);
   --accent-700: oklch(from var(--accent-500) calc(l - 0.1) c h);
   --accent-100: oklch(from var(--accent) 0.93 calc(c * 0.35) h);
   --accent-50: oklch(from var(--accent) 0.975 calc(c * 0.18) h);
   --accent-fg: #ffffff;
+
+  /* Saffron terracotta: alerts, highlights, the dot in the logo */
+  --warm: #d95d39;
+  --warm-soft: #fbe9e2;
 
   /* Semantic */
   --success: #15803d;
@@ -37,39 +42,45 @@
   --danger: #b91c1c;
   --danger-bg: #fef2f2;
   --danger-border: #fecaca;
-  --info: #1d4ed8;
-  --info-bg: #eff6ff;
-  --info-border: #bfdbfe;
+  --info: #1f5f74;
+  --info-bg: #edf5f7;
+  --info-border: #c3dce3;
 
   /* Elevation */
-  --shadow-e1: 0 1px 2px rgb(0 0 0 / 0.05);
-  --shadow-e2: 0 4px 12px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
-  --shadow-e3: 0 12px 32px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.05);
+  --shadow-e1: 0 1px 2px rgb(20 28 23 / 0.05);
+  --shadow-e2: 0 4px 12px rgb(20 28 23 / 0.07), 0 1px 2px rgb(20 28 23 / 0.04);
+  --shadow-e3: 0 18px 40px rgb(20 28 23 / 0.12), 0 2px 6px rgb(20 28 23 / 0.05);
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /*
- * Dark theme (docs/12 Phase 6). <html data-theme> is "light", "dark" or "system" (follows the OS).
+ * Dark theme: obsidian slate and luminous jade. <html data-theme> is "light", "dark" or "system"
+ * (follows the OS). The accent turns bright with dark ink on it, for any school's colour.
  * The same tokens appear twice because CSS can't share a block between a selector and a media query.
  */
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg-app: #0b0b0d;
-  --bg-surface: #141417;
-  --bg-subtle: #1c1c20;
-  --bg-hover: #1f1f24;
-  --border: #26262b;
-  --border-strong: #3a3a41;
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --text-tertiary: #8b8b94;
-  --text-inverse: #0b0b0d;
-  --charcoal: #3f3f46;
-  --accent-700: oklch(from var(--accent-500) 0.78 calc(c * 0.8) h);
-  --accent-100: oklch(from var(--accent) 0.32 calc(c * 0.45) h);
-  --accent-50: oklch(from var(--accent) 0.25 calc(c * 0.3) h);
+  --bg-app: #0a0e0c;
+  --bg-surface: #121815;
+  --bg-subtle: #17201b;
+  --bg-hover: #1b2520;
+  --border: #222b26;
+  --border-strong: #323c37;
+  --text-primary: #f3f6f4;
+  --text-secondary: #94a39b;
+  --text-tertiary: #7f8e86;
+  --text-inverse: #0a0e0c;
+  --charcoal: #222b26;
+  --accent-500: oklch(from var(--accent) 0.72 min(calc(c * 1.8), 0.16) h);
+  --accent-600: oklch(from var(--accent-500) calc(l + 0.05) c h);
+  --accent-700: oklch(from var(--accent-500) 0.8 calc(c * 0.85) h);
+  --accent-100: oklch(from var(--accent-500) 0.3 calc(c * 0.4) h);
+  --accent-50: oklch(from var(--accent-500) 0.22 calc(c * 0.3) h);
+  --accent-fg: oklch(from var(--accent-500) 0.22 calc(c * 0.5) h);
+  --warm: #f97316;
+  --warm-soft: #2c1a0e;
   --success: #4ade80;
   --success-bg: #052e16;
   --success-border: #14532d;
@@ -79,30 +90,35 @@
   --danger: #f87171;
   --danger-bg: #2a0b0b;
   --danger-border: #7f1d1d;
-  --info: #60a5fa;
-  --info-bg: #0b1a3a;
-  --info-border: #1e3a8a;
-  --shadow-e1: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-e2: 0 4px 12px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3);
-  --shadow-e3: 0 12px 32px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+  --info: #6cc6d9;
+  --info-bg: #0b2229;
+  --info-border: #164453;
+  --shadow-e1: inset 0 1px 0 0 rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-e2: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 4px 12px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-e3: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 18px 40px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
 }
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] {
     color-scheme: dark;
-    --bg-app: #0b0b0d;
-    --bg-surface: #141417;
-    --bg-subtle: #1c1c20;
-    --bg-hover: #1f1f24;
-    --border: #26262b;
-    --border-strong: #3a3a41;
-    --text-primary: #f4f4f5;
-    --text-secondary: #a1a1aa;
-    --text-tertiary: #8b8b94;
-    --text-inverse: #0b0b0d;
-    --charcoal: #3f3f46;
-    --accent-700: oklch(from var(--accent-500) 0.78 calc(c * 0.8) h);
-    --accent-100: oklch(from var(--accent) 0.32 calc(c * 0.45) h);
-    --accent-50: oklch(from var(--accent) 0.25 calc(c * 0.3) h);
+    --bg-app: #0a0e0c;
+    --bg-surface: #121815;
+    --bg-subtle: #17201b;
+    --bg-hover: #1b2520;
+    --border: #222b26;
+    --border-strong: #323c37;
+    --text-primary: #f3f6f4;
+    --text-secondary: #94a39b;
+    --text-tertiary: #7f8e86;
+    --text-inverse: #0a0e0c;
+    --charcoal: #222b26;
+    --accent-500: oklch(from var(--accent) 0.72 min(calc(c * 1.8), 0.16) h);
+    --accent-600: oklch(from var(--accent-500) calc(l + 0.05) c h);
+    --accent-700: oklch(from var(--accent-500) 0.8 calc(c * 0.85) h);
+    --accent-100: oklch(from var(--accent-500) 0.3 calc(c * 0.4) h);
+    --accent-50: oklch(from var(--accent-500) 0.22 calc(c * 0.3) h);
+    --accent-fg: oklch(from var(--accent-500) 0.22 calc(c * 0.5) h);
+    --warm: #f97316;
+    --warm-soft: #2c1a0e;
     --success: #4ade80;
     --success-bg: #052e16;
     --success-border: #14532d;
@@ -112,13 +128,13 @@
     --danger: #f87171;
     --danger-bg: #2a0b0b;
     --danger-border: #7f1d1d;
-    --info: #60a5fa;
-    --info-bg: #0b1a3a;
-    --info-border: #1e3a8a;
-    --shadow-e1: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-e2: 0 4px 12px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3);
-    --shadow-e3: 0 12px 32px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
-}
+    --info: #6cc6d9;
+    --info-bg: #0b2229;
+    --info-border: #164453;
+    --shadow-e1: inset 0 1px 0 0 rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-e2: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 4px 12px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-e3: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 18px 40px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+  }
 }
 
 @theme inline {
@@ -139,6 +155,8 @@
   --color-accent-soft: var(--accent-100);
   --color-accent-tint: var(--accent-50);
   --color-accent-fg: var(--accent-fg);
+  --color-warm: var(--warm);
+  --color-warm-soft: var(--warm-soft);
   --color-success: var(--success);
   --color-success-bg: var(--success-bg);
   --color-success-border: var(--success-border);
@@ -152,8 +170,9 @@
   --color-info-bg: var(--info-bg);
   --color-info-border: var(--info-border);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* Type scale (size / line-height) — docs/07 §1.4 */
   --text-caption: 12px;
@@ -208,6 +227,12 @@
 @layer utilities {
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+  /* Amounts, dates, roll numbers: monospaced figures that line up */
+  .figures {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
 }
 

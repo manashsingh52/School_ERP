@@ -72,7 +72,7 @@ export function FeeStatement({ studentId, firstName, staff = false }: { studentI
         name: order.schoolName,
         description: order.description,
         prefill: order.prefill,
-        theme: { color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2F6FEB' },
+        theme: { color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0F5338' },
         handler: (r: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
           void verify({ providerOrderId: r.razorpay_order_id, providerPaymentId: r.razorpay_payment_id, signature: r.razorpay_signature }),
       });

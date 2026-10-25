@@ -45,7 +45,7 @@ function GuardiansPageContent() {
           <EmptyState icon={q ? <Search /> : <Users />} title={q ? `No parents match “${q}”` : 'No parents yet'} description={q ? 'Try a name or mobile number.' : 'Parents are added with their children — on the student form or by importing.'} />
         ) : (
           <>
-            <Table>
+            <Table stickyFirst>
               <THead><tr><TH>Parent</TH><TH>Children</TH><TH className="w-32">Parent app</TH></tr></THead>
               <tbody>
                 {query.isPending ? (

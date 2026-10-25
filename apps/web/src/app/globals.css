@@ -3,3 +3,33 @@
 
 /* Tailwind v4 scans these for class names */
 @source '../../../../packages/ui/src';
+
+/* Public website type scale (fluid). The app itself keeps the compact scale in the design tokens. */
+@layer components {
+  .site-h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.25rem, 4.5vw + 1rem, 4.25rem);
+    line-height: 1.06;
+    letter-spacing: -0.022em;
+    word-spacing: 0.04em;
+    text-wrap: balance;
+    font-variation-settings: 'SOFT' 50;
+  }
+  .site-h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.75rem, 3vw + 0.5rem, 2.75rem);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    word-spacing: 0.03em;
+    text-wrap: balance;
+    font-variation-settings: 'SOFT' 50;
+  }
+  .site-lead {
+    font-size: clamp(0.95rem, 0.5vw + 0.85rem, 1.125rem);
+    line-height: 1.65;
+    max-width: 62ch;
+    text-wrap: pretty;
+  }
+}

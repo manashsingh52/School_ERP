@@ -142,7 +142,7 @@ function Students() {
           )
         ) : (
           <>
-            <Table>
+            <Table stickyFirst>
               <THead>
                 <tr>
                   <TH>Student</TH>

@@ -418,7 +418,7 @@ model School {
   state                 String?
   postalCode            String?      @map("postal_code")
   logoFileId            String?      @map("logo_file_id") @db.Uuid
-  accentColor           String       @default("#2F6FEB") @map("accent_color")
+  accentColor           String       @default("#0F5338") @map("accent_color")
   currentAcademicYearId String?      @map("current_academic_year_id") @db.Uuid
   onboardingStep        Int          @default(1) @map("onboarding_step")
   wentLiveAt            DateTime?    @map("went_live_at")

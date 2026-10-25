@@ -61,7 +61,7 @@ export function InvoicesTab() {
           <EmptyState icon={<Receipt />} title={q || status || classId ? 'No invoices match' : 'No invoices yet'} description={can('invoice.generate') && !q ? 'Set up a fee structure, publish it, then make invoices for an installment.' : undefined} />
         ) : (
           <>
-            <Table>
+            <Table stickyFirst>
               <THead><tr><TH>Invoice</TH><TH>Student</TH><TH>Installment</TH><TH>Due</TH><TH className="text-right">Total</TH><TH className="text-right">Balance</TH><TH className="w-28">Status</TH></tr></THead>
               <tbody>
                 {query.isPending ? (
