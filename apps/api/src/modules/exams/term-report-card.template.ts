@@ -21,7 +21,7 @@ const esc = (v: unknown) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-const safeColor = (c: string) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#2F6FEB');
+const safeColor = (c: string) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#0F5338');
 const pct = (v: number | null) => (v === null ? '—' : `${Number.isInteger(v) ? v : v.toFixed(1)}%`);
 const STATUS = { PASS: 'Passed', FAIL: 'Not passed', INCOMPLETE: 'Incomplete' } as const;
 

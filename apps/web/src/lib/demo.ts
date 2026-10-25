@@ -9,10 +9,10 @@ import type { PublicSchoolBranding } from '@schoolos/contracts';
  * pick a role; changes are refused politely. Dates move with the calendar, so "today" stays today.
  */
 export const DEMO_PERSONAS = [
-  { key: 'admin', title: 'School admin', person: 'Anita Desai', text: 'Students, fees, exams, ID cards, reports and settings for the whole school.', home: '/dashboard' },
-  { key: 'teacher', title: 'Teacher', person: 'Priya Sharma, class teacher of 8-A', text: 'Registers, homework, marks and messages for her classes.', home: '/dashboard' },
-  { key: 'parent', title: 'Parent', person: 'Rajesh Mishra, father of Rahul and Ananya', text: 'Attendance, homework, results and fees for his children.', home: '/dashboard' },
-  { key: 'owner', title: 'Bastaa owner', person: 'Platform console', text: 'Every school on Bastaa: onboarding, plans, support and system health.', home: '/platform' },
+  { key: 'admin', title: 'School admin', person: 'Anita Desai, principal’s office', text: 'Students, fees, exams, ID cards, reports and settings for the whole school.', caps: ['Fees collected and due', 'Report cards and ID cards', 'Attendance in every class'], home: '/dashboard' },
+  { key: 'teacher', title: 'Teacher', person: 'Priya Sharma, class teacher of 8-A', text: 'Registers, homework, marks and messages for her classes.', caps: ['Today’s register', 'Marks, homework, certificates', 'Messages from parents'], home: '/dashboard' },
+  { key: 'parent', title: 'Parent', person: 'Rajesh Mishra, father of Rahul and Ananya', text: 'Attendance, homework, results and fees for his children.', caps: ['Attendance and homework', 'Fees and receipts', 'Results and achievements'], home: '/dashboard' },
+  { key: 'owner', title: 'Bastaa owner', person: 'Platform console', text: 'Every school on Bastaa: onboarding, plans, support and system health.', caps: ['Every school and its plan', 'Support access requests', 'System health and jobs'], home: '/platform' },
 ] as const;
 export type DemoPersona = (typeof DEMO_PERSONAS)[number]['key'];
 

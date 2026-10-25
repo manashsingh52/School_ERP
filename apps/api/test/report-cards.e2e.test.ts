@@ -139,7 +139,7 @@ describe('report card template', () => {
     expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
     expect(html).toContain('St. Mary&#39;s &lt;School&gt;');
     expect(html).not.toContain('<script>');
-    expect(html).toContain('#2F6FEB');
+    expect(html).toContain('#0F5338');
     expect(html).toContain('Rank in section');
   });
 

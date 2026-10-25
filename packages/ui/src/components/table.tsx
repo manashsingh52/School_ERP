@@ -4,11 +4,22 @@ import { cn } from '../lib/cn';
 import { Button } from './button';
 import { Skeleton } from './surface';
 
-/** Real <table> markup for accessibility (docs/07 §5). */
-export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
+/**
+ * Real <table> markup for accessibility (docs/07 §5). Wide tables scroll sideways on small screens;
+ * `stickyFirst` keeps the first column (usually the name) in view while they do.
+ */
+export function Table({ className, stickyFirst, ...props }: React.TableHTMLAttributes<HTMLTableElement> & { stickyFirst?: boolean }) {
   return (
-    <div className="w-full overflow-x-auto">
-      <table className={cn('w-full border-collapse text-body', className)} {...props} />
+    <div className="w-full overflow-x-auto overscroll-x-contain">
+      <table
+        className={cn(
+          'w-full border-collapse text-body',
+          stickyFirst &&
+            'max-md:[&_tr>:first-child]:sticky max-md:[&_tr>:first-child]:left-0 max-md:[&_tr>:first-child]:z-[1] max-md:[&_tr>:first-child]:bg-surface max-md:[&_tr>:first-child]:whitespace-nowrap max-md:[&_tr>:first-child]:shadow-[1px_0_0_var(--border)] max-md:[&_tr:hover>td:first-child]:bg-hover',
+          className,
+        )}
+        {...props}
+      />
     </div>
   );
 }

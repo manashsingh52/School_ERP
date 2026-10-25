@@ -20,7 +20,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { apiPost } from '@/lib/api-client';
 import { ChildProvider, useIsParentView } from '@/lib/child';
 import { useMe } from '@/lib/me';
-import { ThemeMenuItems } from '@/lib/theme';
+import { ThemeMenuItems, ThemeToggle } from '@/lib/theme';
 import { CommandPalette } from './command-palette';
 import { NotificationsButton } from './notifications-button';
 import { ChildSwitcher } from './child-switcher';
@@ -168,6 +168,7 @@ function Shell({ children }: { children: ReactNode }) {
           </button>
           <div className="ml-auto flex shrink-0 items-center gap-1">
             {parentView && <ChildSwitcher />}
+            <ThemeToggle className="size-8 border-transparent bg-transparent" />
             <NotificationsButton />
             <UserMenu />
           </div>

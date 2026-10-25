@@ -28,6 +28,7 @@ Search the code for `⏸` to find every slot.
 | 15 | **DNS for `admin.<domain>`** (super-admin console), ideally behind Cloudflare Access / an IP allow-list | Platform console in staging/prod | Same `APP_BASE_DOMAIN`; the console is served by the web app on the `admin` subdomain | `http://admin.localhost:3000` (seed: `superadmin@schoolos.local`, `support@schoolos.local`) |
 | 20 | **Video meetings host** — *optional* | Parent–teacher video meetings without the "sign in to start" step | `MEETING_BASE_URL` (API `.env`) → your own Jitsi (Docker, a small VM) or a Jitsi-as-a-Service tenant | Public `https://meet.jit.si` (free): works now; the first person to join signs in with Google/GitHub to open the room. Rooms are random per meeting |
 | 21 | **Move the project off the iCloud-synced Desktop** | Safety of the local database | e.g. `~/Developer/schoolerp` (then reopen it there) | iCloud makes conflict copies inside `apps/api/.data/pg` — a live database must not be synced |
+| 22 | **WhatsApp number for demo requests** — *optional* | A WhatsApp button in the website's "Book a demo" form and menu | `WHATSAPP_NUMBER` in `apps/web/src/lib/site.ts` (digits with country code, e.g. `919876543210`) | Email and "Copy details" only |
 
 ## Secrets that must be **regenerated** for staging/production
 

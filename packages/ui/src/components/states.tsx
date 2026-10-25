@@ -98,7 +98,7 @@ export function PageHeader({
         <h1 className="text-h1 font-semibold tracking-[-0.01em] text-fg">{title}</h1>
         {description && <p className="mt-1 text-body text-fg-secondary">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && <div className="flex max-w-full flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }

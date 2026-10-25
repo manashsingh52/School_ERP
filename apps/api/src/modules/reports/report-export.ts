@@ -63,7 +63,7 @@ const esc = (v: unknown) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-const safeColor = (c: string) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#2F6FEB');
+const safeColor = (c: string) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#0F5338');
 const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const num = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 });
 

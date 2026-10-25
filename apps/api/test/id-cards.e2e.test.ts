@@ -88,7 +88,7 @@ describe('ID card template', () => {
     const html = idCardsHtml({ ...base, school: { ...base.school, accent: 'red;}</style><script>' }, students: [{ ...student, name: '<img src=x onerror=alert(1)>' }] });
     expect(html).not.toContain('<img src=x');
     expect(html).not.toContain('<script>');
-    expect(html).toContain('#2F6FEB');
+    expect(html).toContain('#0F5338');
   });
 
   it('leaves out what the school has not filled in', () => {
