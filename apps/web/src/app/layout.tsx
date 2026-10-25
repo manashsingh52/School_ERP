@@ -5,6 +5,9 @@ import { cookies } from 'next/headers';
 import type { CSSProperties, ReactNode } from 'react';
 import { currentSlug, schoolBranding } from '@/lib/server-api';
 import { THEME_COOKIE, parseTheme } from '@/lib/theme-shared';
+import { demoPersonaFrom } from '@/lib/demo';
+import { serverEnv } from '@/lib/server-env';
+import { ACCESS_COOKIE } from '@/lib/session-cookies';
 import { Providers } from './providers';
 import './globals.css';
 
@@ -27,6 +30,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en-IN" data-theme={theme} className={`${GeistSans.variable} ${GeistMono.variable}`} style={style}>
       <body>
         <Providers>{children}</Providers>
+        {serverEnv.demo && demoPersonaFrom(cookieStore.get(ACCESS_COOKIE)?.value) && (
+          <a href="/login" className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full bg-charcoal px-4 py-2 text-small text-white shadow-e3 hover:opacity-90">
+            Demo with a sample school · changes aren&apos;t saved · <span className="font-semibold underline">Switch role</span>
+          </a>
+        )}
       </body>
     </html>
   );
