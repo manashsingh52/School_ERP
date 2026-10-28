@@ -10,7 +10,7 @@ Play Store like any app, with no review wait.
 | App name on the phone | Bastaa |
 | Build | GitHub Actions → **Android** workflow → artifact `schoolos-demo-<n>` (`app-release.aab`) |
 | Listing text and graphics | [listing.md](listing.md), `icon-512.png`, `feature-graphic.png`, `screenshots/` |
-| Privacy policy | [privacy-policy.md](privacy-policy.md) |
+| Privacy policy | The website's privacy page, e.g. `https://school-erp-hazel-nu.vercel.app/privacy` (text also in [privacy-policy.md](privacy-policy.md)) |
 
 ## 1. One-time setup
 
@@ -41,7 +41,7 @@ inside is `app-release.aab`. A yellow warning about a debug key means the secret
 
    | Form | Answer |
    |---|---|
-   | Privacy policy | Link to `privacy-policy.md` on GitHub (after it's on `main`) |
+   | Privacy policy | The website's privacy page: `https://school-erp-hazel-nu.vercel.app/privacy` (or your domain's `/privacy` once you have one) |
    | App access | All functionality is available without special access (demo buttons, no login) |
    | Ads | No ads |
    | Content rating | Category "Education/Reference"; answer No to violence, user content sharing, location, purchases → rated for everyone |
