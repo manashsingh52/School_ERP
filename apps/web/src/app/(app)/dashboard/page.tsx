@@ -9,20 +9,24 @@ import { StaffHome } from '@/components/dashboard/staff-home';
 import { useIsParentView } from '@/lib/child';
 import { useData, useSchool } from '@/lib/hooks';
 import { greeting, today } from '@/lib/format';
+import { useI18n } from '@/lib/i18n';
+import { hindiToday } from '@/lib/i18n-translate';
 import { useMe } from '@/lib/me';
 
 export default function DashboardPage() {
   const { me } = useMe();
   const firstName = me.user.name.split(' ')[0];
   const isParent = useIsParentView();
+  const { lang, t } = useI18n();
+  const date = lang === 'hi' ? hindiToday() : today();
 
   return (
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-display font-semibold tracking-[-0.02em]">
-          {greeting()}, {firstName}.
+          {t(greeting())}, {firstName}.
         </h1>
-        <p className="mt-1 text-body text-fg-secondary">{today()} · Here's what needs you today.</p>
+        <p className="mt-1 text-body text-fg-secondary">{date} · {t('Here’s what needs you today.')}</p>
       </div>
       {isParent ? <ParentHome /> : <><SetupCard /><StaffHome /></>}
     </div>

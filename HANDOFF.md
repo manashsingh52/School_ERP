@@ -412,6 +412,12 @@ Details per phase are in `docs/12-roadmap.md` → *Progress log*.
   website; `DEMO_MODE=true` serves the whole product (school portal and owner console) from
   `apps/web/demo/fixtures.json`, recorded from the seeded school by `apps/web/tool/demo/record.mjs`
   on a faked Wednesday morning. Writes answer "This is a demo…". Record again after UI changes.
+- **Hindi / English, Betu, printable receipts, app ID card** (2026-10-30, see `docs/12-roadmap.md`).
+  Web i18n: `t('English text')` from `useT()` (client) or `getT()` (server); add the Hindi to
+  `apps/web/src/lib/i18n-hi.ts`. Untranslated text simply shows in English. App: `tr()` from
+  `core/i18n.dart`; the signed-in shell is rebuilt when the language changes. Betu's answers live in
+  `components/betu/knowledge.ts` (web) and `features/common/betu.dart` (app). Receipts print through a
+  hidden frame where the browser can print a PDF, otherwise they download.
 - The setup wizard's fee and notification steps are real now (they used to say "coming soon"), and
   the go-live checklist includes the fee structure.
 

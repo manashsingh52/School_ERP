@@ -33,3 +33,9 @@
     text-wrap: pretty;
   }
 }
+
+/* Devanagari joins letters into one shape; spacing them out (or squeezing them) breaks the words. */
+html:lang(hi) * {
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+}

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n.dart';
 import '../../core/attendance_queue.dart';
 import '../../core/push.dart';
 import '../../core/session.dart';
 import '../../widgets/home_kit.dart';
+import '../common/betu.dart';
 import '../common/notifications_screen.dart';
 import '../connect/connect_row.dart';
 import '../common/profile_screen.dart';
@@ -29,17 +31,21 @@ import '../teacher/teacher_home.dart';
 /// One app, two homes (docs/01 §7): parent or teacher, by role; bottom nav per docs/06 §4–5.
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
+
+  /// The tab to open after the shell is rebuilt (a language change from Profile).
+  static int? reopenTab;
   @override
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
-  int _tab = 0;
+  int _tab = HomeShell.reopenTab ?? 0;
   late final AppLifecycleListener _lifecycle;
 
   @override
   void initState() {
     super.initState();
+    HomeShell.reopenTab = null;
     // Offline registers go out as soon as the app is opened or comes back to the front.
     Future.microtask(() => ref.read(attendanceQueueProvider.notifier).sync());
     // Push (when this build has Firebase): a tapped notification opens its screen.
@@ -78,7 +84,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final pages = parent
         ? [ParentHome(onOpenTab: (t) => setState(() => _tab = t)), const AcademicsScreen(), const FeesScreen(), NotificationsScreen(onOpenRoute: _openRoute), const ProfileScreen()]
         : [TeacherHome(onOpenTab: (t) => setState(() => _tab = t)), const AttendanceTab(), const ClassesTab(), NotificationsScreen(onOpenRoute: _openRoute), const ProfileScreen()];
-    final titles = parent ? ['Home', 'Academics', 'Fees', 'Notifications', 'Profile'] : ['Home', 'Attendance', 'Classes', 'Notifications', 'Profile'];
+    final titles = (parent ? ['Home', 'Academics', 'Fees', 'Notifications', 'Profile'] : ['Home', 'Attendance', 'Classes', 'Notifications', 'Profile']).map(tr).toList();
     void select(int i) {
       setState(() => _tab = i);
       if (i == 3) ref.invalidate(notificationsProvider);
@@ -96,23 +102,24 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               actions: [if (parent) const ChildChip()],
             ),
       body: IndexedStack(index: _tab, children: pages),
+      floatingActionButton: BetuButton(parent: parent, onOpenTab: select),
       bottomNavigationBar: PillNavBar(
         selected: _tab,
         onSelect: select,
         items: parent
             ? [
-                const PillNavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
-                const PillNavItem(Icons.school_outlined, Icons.school_rounded, 'Academics'),
-                const PillNavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Fees'),
-                PillNavItem(Icons.notifications_outlined, Icons.notifications_rounded, 'Alerts', badge: unread),
-                const PillNavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+                PillNavItem(Icons.home_outlined, Icons.home_rounded, tr('Home')),
+                PillNavItem(Icons.school_outlined, Icons.school_rounded, tr('Academics')),
+                PillNavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, tr('Fees')),
+                PillNavItem(Icons.notifications_outlined, Icons.notifications_rounded, tr('Alerts'), badge: unread),
+                PillNavItem(Icons.person_outline_rounded, Icons.person_rounded, tr('Profile')),
               ]
             : [
-                const PillNavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
-                const PillNavItem(Icons.how_to_reg_outlined, Icons.how_to_reg_rounded, 'Attendance'),
-                const PillNavItem(Icons.class_outlined, Icons.class_rounded, 'Classes'),
-                PillNavItem(Icons.notifications_outlined, Icons.notifications_rounded, 'Alerts', badge: unread),
-                const PillNavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+                PillNavItem(Icons.home_outlined, Icons.home_rounded, tr('Home')),
+                PillNavItem(Icons.how_to_reg_outlined, Icons.how_to_reg_rounded, tr('Attendance')),
+                PillNavItem(Icons.class_outlined, Icons.class_rounded, tr('Classes')),
+                PillNavItem(Icons.notifications_outlined, Icons.notifications_rounded, tr('Alerts'), badge: unread),
+                PillNavItem(Icons.person_outline_rounded, Icons.person_rounded, tr('Profile')),
               ],
       ),
     );

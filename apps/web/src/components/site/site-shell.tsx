@@ -1,36 +1,39 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { BastaaLogo } from '@/components/brand/logo';
+import { getT } from '@/lib/i18n-server';
 import { serverEnv } from '@/lib/server-env';
 import { CONTACT_EMAIL, LEGAL_UPDATED } from '@/lib/site';
 import { ThemeToggle } from '@/lib/theme';
+import { Betu } from '@/components/betu/betu';
 import { BookDemoProvider } from './book-demo';
 import { SiteMotion } from './motion-bits';
 import { SiteHeader, type SiteMode } from './site-header';
 
 export const siteMode = (): SiteMode => (serverEnv.demo ? 'demo' : serverEnv.siteOnly ? 'site' : 'app');
 
-function SiteFooter({ mode }: { mode: SiteMode }) {
+async function SiteFooter({ mode }: { mode: SiteMode }) {
+  const t = await getT();
   return (
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 min-[375px]:px-5 sm:grid-cols-[1.4fr_1fr] lg:px-8">
         <div className="flex flex-col gap-3">
           <BastaaLogo />
-          <p className="max-w-sm text-[14px] leading-relaxed text-fg-secondary">School management for Indian schools: the office on the web, parents and teachers on their phones.</p>
+          <p className="max-w-sm text-[14px] leading-relaxed text-fg-secondary">{t('School management for Indian schools: the office on the web, parents and teachers on their phones.')}</p>
           <a href={`mailto:${CONTACT_EMAIL}`} className="text-[14px] font-medium text-accent-strong hover:underline">{CONTACT_EMAIL}</a>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-8 gap-y-1 text-[14px] text-fg-secondary">
-          <Link href="/#features" className="py-1.5 hover:text-fg">Features</Link>
-          <Link href="/#india" className="py-1.5 hover:text-fg">Built for India</Link>
-          <Link href="/#how" className="py-1.5 hover:text-fg">How it works</Link>
-          {mode === 'site' ? <Link href="/#contact" className="py-1.5 hover:text-fg">Contact</Link> : <Link href="/login" className="py-1.5 hover:text-fg">{mode === 'demo' ? 'Live demo' : 'Sign in'}</Link>}
-          <Link href="/privacy" className="py-1.5 hover:text-fg">Privacy</Link>
-          <Link href="/terms" className="py-1.5 hover:text-fg">Terms</Link>
+          <Link href="/#features" className="py-1.5 hover:text-fg">{t('Features')}</Link>
+          <Link href="/#india" className="py-1.5 hover:text-fg">{t('Built for India')}</Link>
+          <Link href="/#how" className="py-1.5 hover:text-fg">{t('How it works')}</Link>
+          {mode === 'site' ? <Link href="/#contact" className="py-1.5 hover:text-fg">{t('Contact')}</Link> : <Link href="/login" className="py-1.5 hover:text-fg">{t(mode === 'demo' ? 'Live demo' : 'Sign in')}</Link>}
+          <Link href="/privacy" className="py-1.5 hover:text-fg">{t('Privacy')}</Link>
+          <Link href="/terms" className="py-1.5 hover:text-fg">{t('Terms')}</Link>
         </nav>
       </div>
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 min-[375px]:px-5 lg:px-8">
-          <p className="text-caption text-fg-tertiary">© {new Date().getFullYear()} Bastaa · Made in India</p>
+          <p className="text-caption text-fg-tertiary">© {new Date().getFullYear()} Bastaa · {t('Made in India')}</p>
           <ThemeToggle className="size-8" />
         </div>
       </div>
@@ -48,6 +51,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <main className="flex-1">{children}</main>
           <SiteFooter mode={mode} />
         </div>
+        <Betu audience="visitor" />
       </BookDemoProvider>
     </SiteMotion>
   );

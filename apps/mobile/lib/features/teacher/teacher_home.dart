@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/i18n.dart';
 import '../../core/attendance_queue.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
@@ -48,15 +49,15 @@ class TeacherHome extends ConsumerWidget {
     final registers = d?.myRegisters ?? const [];
 
     final features = [
-      Feature('Attendance', Icons.how_to_reg_rounded, FeatureColors.green, () => onOpenTab?.call(1)),
-      Feature('Marks', Icons.edit_note_rounded, FeatureColors.pink, () => _classes(ref, 1)),
-      Feature('Homework', Icons.menu_book_rounded, FeatureColors.teal, () => _classes(ref, 0)),
-      if (me.can('message.use')) Feature('Messages', Icons.mail_rounded, FeatureColors.blue, () => _push(context, const MessagesScreen()), badge: unread),
-      if (me.can('meeting.view')) Feature('Meetings', Icons.videocam_rounded, FeatureColors.purple, () => _push(context, const MeetingsScreen())),
-      if (me.can('reminder.use')) Feature('Reminders', Icons.alarm_rounded, FeatureColors.orange, () => _push(context, const RemindersScreen())),
-      Feature('Alerts', Icons.campaign_rounded, FeatureColors.indigo, () => onOpenTab?.call(3)),
-      if (me.can('calendar.view')) Feature('Calendar', Icons.event_rounded, FeatureColors.red, () => _push(context, const CalendarScreen())),
-      if (me.can('certificate.issue')) Feature('Certificates', Icons.workspace_premium_rounded, certificateGold, () => _push(context, const TeacherCertificatesScreen())),
+      Feature(tr('Attendance'), Icons.how_to_reg_rounded, FeatureColors.green, () => onOpenTab?.call(1)),
+      Feature(tr('Marks'), Icons.edit_note_rounded, FeatureColors.pink, () => _classes(ref, 1)),
+      Feature(tr('Homework'), Icons.menu_book_rounded, FeatureColors.teal, () => _classes(ref, 0)),
+      if (me.can('message.use')) Feature(tr('Messages'), Icons.mail_rounded, FeatureColors.blue, () => _push(context, const MessagesScreen()), badge: unread),
+      if (me.can('meeting.view')) Feature(tr('Meetings'), Icons.videocam_rounded, FeatureColors.purple, () => _push(context, const MeetingsScreen())),
+      if (me.can('reminder.use')) Feature(tr('Reminders'), Icons.alarm_rounded, FeatureColors.orange, () => _push(context, const RemindersScreen())),
+      Feature(tr('Alerts'), Icons.campaign_rounded, FeatureColors.indigo, () => onOpenTab?.call(3)),
+      if (me.can('calendar.view')) Feature(tr('Calendar'), Icons.event_rounded, FeatureColors.red, () => _push(context, const CalendarScreen())),
+      if (me.can('certificate.issue')) Feature(tr('Certificates'), Icons.workspace_premium_rounded, certificateGold, () => _push(context, const TeacherCertificatesScreen())),
     ];
 
     return SafeArea(
@@ -68,24 +69,24 @@ class TeacherHome extends ConsumerWidget {
           ref.invalidate(unreadMessagesProvider);
           await ref.read(attendanceQueueProvider.notifier).sync();
         },
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 96), children: [
           HomeHeader(
-            greeting: greetingFor(DateTime.now()),
+            greeting: tr(greetingFor(DateTime.now())),
             name: me.user.name,
-            subtitle: ['Teacher', me.membership?.school.name].whereType<String>().join(' · '),
+            subtitle: [tr('Teacher'), me.membership?.school.name].whereType<String>().join(' · '),
             avatarName: me.user.name,
             actions: [
-              HeaderAction(icon: Icons.add_rounded, tooltip: 'New', onPressed: () => _quickAdd(context, ref)),
-              HeaderAction(icon: Icons.settings_outlined, tooltip: 'Profile and settings', onPressed: () => onOpenTab?.call(4)),
+              HeaderAction(icon: Icons.add_rounded, tooltip: tr('New'), onPressed: () => _quickAdd(context, ref)),
+              HeaderAction(icon: Icons.settings_outlined, tooltip: tr('Profile and settings'), onPressed: () => onOpenTab?.call(4)),
             ],
           ),
           const SizedBox(height: 18),
           FeatureCard(
             lines: [
-              (Icons.how_to_reg_rounded, registers.isEmpty ? 'All registers done' : '${registers.length} register${registers.length == 1 ? '' : 's'} to take'),
-              (Icons.edit_note_rounded, openSheets.isEmpty ? 'No marks pending' : '${openSheets.length} marks sheet${openSheets.length == 1 ? '' : 's'} open'),
+              (Icons.how_to_reg_rounded, registers.isEmpty ? tr('All registers done') : tr(registers.length == 1 ? '{n} register to take' : '{n} registers to take', {'n': registers.length})),
+              (Icons.edit_note_rounded, openSheets.isEmpty ? tr('No marks pending') : tr(openSheets.length == 1 ? '{n} marks sheet open' : '{n} marks sheets open', {'n': openSheets.length})),
             ],
-            metricLabel: 'Classes today',
+            metricLabel: tr('Classes today'),
             metricValue: d == null ? '—' : '$classesToday',
             features: features,
           ),
@@ -96,7 +97,7 @@ class TeacherHome extends ConsumerWidget {
             builder: (d) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               if (d.myRegisters.isNotEmpty) ...[
                 const SizedBox(height: 18),
-                HomeSectionTitle(title: 'Attendance to take', caption: '${d.myRegisters.length} section${d.myRegisters.length == 1 ? '' : 's'} · today'),
+                HomeSectionTitle(title: tr('Attendance to take'), caption: tr(d.myRegisters.length == 1 ? '{n} section · today' : '{n} sections · today', {'n': d.myRegisters.length})),
                 const SizedBox(height: 12),
                 for (final r in d.myRegisters)
                   Padding(
@@ -104,18 +105,18 @@ class TeacherHome extends ConsumerWidget {
                     child: AccentCard(
                       accent: r.status == 'DRAFT' ? FeatureColors.orange : FeatureColors.red,
                       title: r.label,
-                      subtitle: r.status == 'DRAFT' ? 'Saved as draft' : 'Not taken yet',
-                      chip: r.status == 'DRAFT' ? 'Finish and submit' : 'Take register',
+                      subtitle: r.status == 'DRAFT' ? tr('Saved as draft') : tr('Not taken yet'),
+                      chip: r.status == 'DRAFT' ? tr('Finish and submit') : tr('Take register'),
                       chipIcon: Icons.how_to_reg_rounded,
                       onTap: () => _push(context, RegisterScreen(sectionId: r.sectionId, label: r.label)),
                     ),
                   ),
               ],
               const SizedBox(height: 18),
-              HomeSectionTitle(title: "Today's classes", caption: d.today == null || d.today!.isWeeklyOff ? 'Day off' : '$classesToday classes'),
+              HomeSectionTitle(title: tr('Classes today'), caption: d.today == null || d.today!.isWeeklyOff ? tr('Day off') : tr('{n} classes', {'n': classesToday})),
               const SizedBox(height: 12),
               if (d.today == null || d.today!.isWeeklyOff || d.today!.slots.isEmpty)
-                const Card(child: EmptyView(icon: Icons.free_breakfast_outlined, title: 'No classes today'))
+                Card(child: EmptyView(icon: Icons.free_breakfast_outlined, title: tr('No classes today')))
               else
                 Card(
                   child: Column(children: [
@@ -130,9 +131,9 @@ class TeacherHome extends ConsumerWidget {
                             decoration: BoxDecoration(color: (current ? FeatureColors.green : s.muted).withValues(alpha: current ? 0.16 : 0.08), borderRadius: BorderRadius.circular(10)),
                             child: Text(slot.startTime, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, color: current ? FeatureColors.green : done ? s.muted : null)),
                           ),
-                          title: Text([slot.section, slot.subject].whereType<String>().join(' · '), style: TextStyle(color: done ? s.muted : null, fontWeight: FontWeight.w600)),
+                          title: Text([slot.section, if (slot.subject != null) tr(slot.subject!)].whereType<String>().join(' · '), style: TextStyle(color: done ? s.muted : null, fontWeight: FontWeight.w600)),
                           subtitle: Text([slot.periodName, slot.room].whereType<String>().join(' · ')),
-                          trailing: current ? const Pill('Now', tone: Tone.success) : null,
+                          trailing: current ? Pill(tr('Now'), tone: Tone.success) : null,
                         );
                       }),
                   ]),
@@ -147,7 +148,7 @@ class TeacherHome extends ConsumerWidget {
               if (open.isEmpty) return const SizedBox.shrink();
               return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const SizedBox(height: 18),
-                HomeSectionTitle(title: 'Marks to enter', caption: '${open.length} sheet${open.length == 1 ? '' : 's'}', action: 'All', actionIcon: Icons.list_rounded, onAction: () => _classes(ref, 1)),
+                HomeSectionTitle(title: tr('Marks to enter'), caption: tr(open.length == 1 ? '{n} sheet' : '{n} sheets', {'n': open.length}), action: tr('All'), actionIcon: Icons.list_rounded, onAction: () => _classes(ref, 1)),
                 const SizedBox(height: 12),
                 for (final m in open.take(5))
                   Padding(
@@ -156,7 +157,7 @@ class TeacherHome extends ConsumerWidget {
                       accent: m.entered == 0 ? FeatureColors.red : FeatureColors.orange,
                       title: '${m.subject} · ${m.sectionLabel}',
                       subtitle: m.examName,
-                      chip: m.entered == 0 ? 'Not started' : '${m.total - m.entered} left',
+                      chip: m.entered == 0 ? tr('Not started') : tr('{n} left', {'n': m.total - m.entered}),
                       chipIcon: Icons.edit_note_rounded,
                       trailing: ScoreRing(value: m.total == 0 ? 0 : m.entered / m.total, center: '${m.entered}', caption: '${m.entered}/${m.total}', color: m.entered == 0 ? FeatureColors.red : FeatureColors.orange),
                       onTap: () => _push(context, MarksEntryScreen(sheet: m)),

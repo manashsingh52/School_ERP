@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster, TooltipProvider } from '@schoolos/ui';
 import { useState, type ReactNode } from 'react';
 import { ApiError } from '@/lib/api-client';
+import { I18nProvider } from '@/lib/i18n';
+import type { Lang } from '@/lib/i18n-shared';
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ lang, children }: { lang: Lang; children: ReactNode }) {
   const [client] = useState(
     () =>
       new QueryClient({
@@ -21,10 +23,12 @@ export function Providers({ children }: { children: ReactNode }) {
   );
   return (
     <QueryClientProvider client={client}>
-      <TooltipProvider>
-        {children}
-        <Toaster />
-      </TooltipProvider>
+      <I18nProvider lang={lang}>
+        <TooltipProvider>
+          {children}
+          <Toaster />
+        </TooltipProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }
