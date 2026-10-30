@@ -74,7 +74,7 @@ class ParentHome extends ConsumerWidget {
           refreshChild(ref, child.id);
           ref.invalidate(unreadMessagesProvider);
         },
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 96), children: [
           HomeHeader(
             greeting: '${tr(greetingFor(DateTime.now()))}, ${me.user.name.split(' ').first}',
             name: child.name,
@@ -118,7 +118,7 @@ class ParentHome extends ConsumerWidget {
             builder: (p) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               HomeSectionTitle(
                 title: tr('Your Subjects'),
-                caption: p.subjects.isEmpty ? tr('No marks yet') : '${p.subjects.length} subjects · ${p.exams.length} exam${p.exams.length == 1 ? '' : 's'} · avg ${percent(p.overallPct)}',
+                caption: p.subjects.isEmpty ? tr('No marks yet') : tr(p.exams.length == 1 ? '{s} subjects · {e} exam · avg {p}' : '{s} subjects · {e} exams · avg {p}', {'s': p.subjects.length, 'e': p.exams.length, 'p': percent(p.overallPct)}),
                 action: tr('Results'),
                 actionIcon: Icons.insights_rounded,
                 onAction: () => _academics(ref, 3),
@@ -266,7 +266,7 @@ class _SubjectHomeCard extends StatelessWidget {
     return AccentCard(
       accent: color,
       title: tr(subject.name),
-      subtitle: '${subject.exams.length} test${subject.exams.length == 1 ? '' : 's'}${subject.sectionAveragePct == null ? '' : ' • Section ${percent(subject.sectionAveragePct)}'}',
+      subtitle: '${tr(subject.exams.length == 1 ? '{n} test' : '{n} tests', {'n': subject.exams.length})}${subject.sectionAveragePct == null ? '' : ' • ${tr('Section {p}', {'p': percent(subject.sectionAveragePct)})}'}',
       chip: chip,
       chipIcon: chipIcon,
       trailing: ScoreRing(value: avg == null ? null : avg / 100, center: avg == null ? '—' : '${avg.round()}', caption: max == 0 ? null : '${n(got)}/${n(max)}', color: color),

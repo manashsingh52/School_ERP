@@ -19,6 +19,9 @@ String schoolYear(DateTime now) {
 
 const _relation = {'FATHER': 'Father', 'MOTHER': 'Mother'};
 
+/// "+919000000005" → "+91 90000 00005", easier to read out at the gate.
+String _phone(String? p) => p != null && RegExp(r'^\+91\d{10}$').hasMatch(p) ? '+91 ${p.substring(3, 8)} ${p.substring(8)}' : p ?? '';
+
 /// A child's digital ID card, to show at the school gate at pick-up.
 class IdCardScreen extends ConsumerWidget {
   const IdCardScreen({super.key, required this.child});
@@ -164,7 +167,7 @@ class _IdCard extends StatelessWidget {
               Expanded(child: field(_relation[guardian?.relation] ?? 'Parent', guardian?.name)),
             ]),
             const SizedBox(height: 14),
-            Row(children: [Expanded(child: field('Parent phone', guardian?.phone))]),
+            Row(children: [Expanded(child: field('Parent phone', _phone(guardian?.phone)))]),
           ]),
         ),
         const SizedBox(height: 18),

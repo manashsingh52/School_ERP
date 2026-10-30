@@ -226,6 +226,13 @@ Still open: settlement (bank UTR) reconciliation — needs a school's live Razor
 - [x] Parents are told (`certificate.issued`) and see every certificate under the child's **Achievements**: app tile on the parent home, web `/my/achievements`. Staff: web `/certificates` and an Achievements tab on the student profile; teachers can also issue from the app (Certificates tile)
 - [x] New permissions `certificate.view` / `certificate.issue` with a data migration for existing schools; demo seed adds 9 certificates
 
+### 2026-10-30: Hindi, Betu, printable receipts, app ID card ✅ (546 API · 29 browser · 41 app tests)
+
+- [x] **English / हिन्दी** on the website, sign-in, dashboard shell (nav, header, account menu), dashboard home pages and owner console. Strings are keyed by their English text (`apps/web/src/lib/i18n*.ts`, cookie `bastaa-lang`, server-rendered); numbers in server text are matched as `{#}`. Deeper pages are still English. App: Profile → Language (saved on the phone), covering the bottom bar, home screens, Profile, ID card and Betu (`apps/mobile/lib/core/i18n.dart`)
+- [x] **Betu**, a demo helper: a floating button on the website, demo login, school dashboards (admin, teacher, parent by permission), owner console and every app tab. Preset questions per role and canned answers in both languages with a link to the right page or tab; typed questions are matched on keywords. No server (`components/betu/`, `features/common/betu.dart`)
+- [x] **Fee receipt** redesigned: logo (or the school's initials), PAID stamp, total box, numbered lines. Payments and Collect have **Print receipt** (hidden frame → the print window) and **Download**; phones, tablets, Safari and browsers without a PDF viewer download instead. Demo fixtures now include the admin's and parent's receipts. Sample: `docs/samples/Fee-Receipt-Sample.pdf`
+- [x] **Student ID card in the app**: Profile → Student ID card, one per child, from `GET /students/:id` (school band, photo or initials, class and roll, admission no., date of birth, blood group, parent and phone, school year), to show at the school gate
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

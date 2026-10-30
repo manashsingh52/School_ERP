@@ -69,7 +69,7 @@ class TeacherHome extends ConsumerWidget {
           ref.invalidate(unreadMessagesProvider);
           await ref.read(attendanceQueueProvider.notifier).sync();
         },
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 96), children: [
           HomeHeader(
             greeting: tr(greetingFor(DateTime.now())),
             name: me.user.name,
