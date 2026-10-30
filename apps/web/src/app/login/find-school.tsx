@@ -3,6 +3,7 @@
 import { Button, Field, Input } from '@schoolos/ui';
 import { ArrowRight, Building2 } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { LanguageToggle } from '@/lib/i18n';
 import { ThemeToggle } from '@/lib/theme';
 import { BastaaMark } from '@/components/brand/logo';
 import { ApiError, apiFetch } from '@/lib/api-client';
@@ -13,7 +14,10 @@ export function AuthFrame({ schoolName, subtitle, brand, children }: { schoolNam
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center bg-app px-4 py-10">
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_40%_at_50%_0%,var(--accent-50),transparent)]" />
-      <ThemeToggle className="absolute top-4 right-4" />
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <LanguageToggle />
+        <ThemeToggle />
+      </div>
       <div className="relative w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
           {brand ? (

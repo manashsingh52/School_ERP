@@ -5,8 +5,10 @@ import { ArrowLeft, ArrowRight, Building2, Check, GraduationCap, Heart, Loader2,
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { Betu } from '@/components/betu/betu';
 import { BastaaLogo } from '@/components/brand/logo';
 import { ApiError, apiPost } from '@/lib/api-client';
+import { LanguageToggle, useT } from '@/lib/i18n';
 import { ThemeToggle } from '@/lib/theme';
 import { SPRING, SiteMotion } from './motion-bits';
 
@@ -23,6 +25,7 @@ export interface DemoPersonaCard {
 /** Demo mode sign-in: pick whose day to look at; `autoEnter` opens one straight away. */
 export function DemoLogin({ personas, autoEnter }: { personas: readonly DemoPersonaCard[]; autoEnter?: DemoPersonaCard['key'] }) {
   const [busy, setBusy] = useState<string | null>(autoEnter ?? null);
+  const t = useT();
   const started = useRef(false);
 
   async function enter(key: string) {
@@ -31,7 +34,7 @@ export function DemoLogin({ personas, autoEnter }: { personas: readonly DemoPers
       const res = await apiPost<{ data: { home: string } }>('/api/session/demo', { persona: key });
       window.location.assign(res.data.home);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Please try again.');
+      toast.error(err instanceof ApiError ? err.message : t('Please try again.'));
       setBusy(null);
     }
   }
@@ -50,23 +53,26 @@ export function DemoLogin({ personas, autoEnter }: { personas: readonly DemoPers
         <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-4 min-[375px]:px-5 lg:px-8">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="inline-flex min-h-11 items-center gap-2 rounded-full pr-3 text-small font-medium text-fg-secondary hover:text-fg">
-              <ArrowLeft className="size-4" /> <span className="hidden min-[400px]:inline">Back to</span> <BastaaLogo className="text-[18px]" markClassName="size-6" />
+              <ArrowLeft className="size-4" /> <span className="hidden min-[400px]:inline">{t('Back to')}</span> <BastaaLogo className="text-[18px]" markClassName="size-6" />
             </Link>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <LanguageToggle />
+              <ThemeToggle />
+            </div>
           </div>
 
           <div className="grid flex-1 grid-cols-1 items-center gap-10 py-8 lg:grid-cols-[0.9fr_1.4fr] lg:gap-14 lg:py-12">
             <motion.div className="min-w-0" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}>
               <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-[12.5px] font-medium text-fg-secondary">
-                <span className="size-2 rounded-full bg-accent" /> Live demo · no sign-in needed
+                <span className="size-2 rounded-full bg-accent" /> {t('Live demo · no sign-in needed')}
               </p>
               <h1 className="site-h2 mt-4 text-fg">
-                Whose day do you want to <em className="text-accent-strong italic [font-variation-settings:'SOFT'_100]">see</em>?
+                {t('Whose day do you want to')} <em className="text-accent-strong italic [font-variation-settings:'SOFT'_100]">{t('see')}</em>?
               </h1>
-              <p className="site-lead mt-3 text-fg-secondary">A sample school with 750 students, 30 sections and a full term of attendance, fees and marks. Click a role to walk in. Changes aren&apos;t saved.</p>
+              <p className="site-lead mt-3 text-fg-secondary">{t('A sample school with 750 students, 30 sections and a full term of attendance, fees and marks. Click a role to walk in. Changes aren’t saved.')}</p>
               <ul className="mt-6 hidden gap-2 text-small text-fg-secondary lg:grid">
-                {['Switch roles any time from the bar at the bottom', 'Works on a phone too: open this page there', 'Every screen is the real product'].map((t) => (
-                  <li key={t} className="flex items-center gap-2"><Check className="size-4 text-accent" /> {t}</li>
+                {['Switch roles any time from the bar at the bottom', 'Works on a phone too: open this page there', 'Every screen is the real product'].map((line) => (
+                  <li key={line} className="flex items-center gap-2"><Check className="size-4 text-accent" /> {t(line)}</li>
                 ))}
               </ul>
             </motion.div>
@@ -97,17 +103,17 @@ export function DemoLogin({ personas, autoEnter }: { personas: readonly DemoPers
                         <Icon className="size-5" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[17px] font-semibold tracking-[-0.01em] text-fg">{p.title}</span>
-                        <span className="block truncate text-small text-fg-secondary">{p.person}</span>
+                        <span className="block text-[17px] font-semibold tracking-[-0.01em] text-fg">{t(p.title)}</span>
+                        <span className="block truncate text-small text-fg-secondary">{t(p.person)}</span>
                       </span>
                       {opening ? <Loader2 className="size-5 animate-spin text-accent" /> : <ArrowRight className="size-5 text-fg-tertiary transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />}
                     </span>
                     <ul className="mt-4 grid gap-1.5 border-t border-border pt-3 text-[13px] text-fg-secondary">
                       {p.caps.map((c) => (
-                        <li key={c} className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-accent/70" /> {c}</li>
+                        <li key={c} className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-accent/70" /> {t(c)}</li>
                       ))}
                     </ul>
-                    <span className="mt-auto pt-3 text-[12.5px] font-semibold text-accent-strong">{opening ? 'Opening…' : 'Walk in'}</span>
+                    <span className="mt-auto pt-3 text-[12.5px] font-semibold text-accent-strong">{opening ? t('Opening…') : t('Walk in')}</span>
                   </motion.button>
                 );
               })}
@@ -115,10 +121,11 @@ export function DemoLogin({ personas, autoEnter }: { personas: readonly DemoPers
           </div>
 
           <p className="pb-2 text-center text-caption text-fg-tertiary">
-            Bastaa demo · <Link href="/" className="hover:text-fg-secondary hover:underline">Home</Link> · <Link href="/privacy" className="hover:text-fg-secondary hover:underline">Privacy</Link>
+            {t('Bastaa demo')} · <Link href="/" className="hover:text-fg-secondary hover:underline">{t('Home')}</Link> · <Link href="/privacy" className="hover:text-fg-secondary hover:underline">{t('Privacy')}</Link>
           </p>
         </div>
       </main>
+      <Betu audience="visitor" />
     </SiteMotion>
   );
 }

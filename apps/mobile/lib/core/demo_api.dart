@@ -155,6 +155,8 @@ class DemoApi extends ApiClient {
     final student = RegExp(r'^/students/([^/]+)/(attendance|fees)$').firstMatch(path);
     if (student != null && student.group(2) == 'attendance') return _attendance(student.group(1)!, q['from'], q['to']);
     if (student != null) return _moved(_fees[student.group(1)]);
+    final detail = RegExp(r'^/students/([^/]+)$').firstMatch(path);
+    if (detail != null) return _studentCard(detail.group(1)!);
     final register = RegExp(r'^/sections/([^/]+)/attendance$').firstMatch(path);
     if (register != null) return _register(register.group(1)!, q['date'] ?? _today);
     if (path.endsWith('/receipt') || path.contains('/report-cards/') || path.contains('/attachments/') || path.endsWith('/download')) {
@@ -224,6 +226,33 @@ class DemoApi extends ApiClient {
     if (exact != null) return _moved(exact is Map && exact.containsKey('data') ? exact['data'] : exact);
     if (path == '/conversations/contacts' || path == '/documents' || path == '/homework') return [];
     throw ApiException(404, 'NOT_FOUND', 'Not available in the demo.');
+  }
+
+  /// A parent's child for the ID card (not recorded): the recorded name, class and admission
+  /// number, the signed-in parent, and a sample birthday and blood group.
+  Json _studentCard(String id) {
+    final me = _me;
+    final kids = ((me['membership'] as Json?)?['children'] as List?)?.cast<Json>() ?? const <Json>[];
+    final k = kids.where((c) => c['id'] == id).firstOrNull ?? (throw ApiException(404, 'NOT_FOUND', 'Student not found.'));
+    final label = '${k['classLabel'] ?? ''}'.split('-');
+    final grade = int.tryParse(label.first) ?? 5;
+    final user = me['user'] as Json;
+    return {
+      'id': id,
+      'admissionNo': ((_fees[id]?['student'] as Json?)?['admissionNo'] as String?) ?? '—',
+      'firstName': k['firstName'],
+      'lastName': '${k['name']}'.split(' ').skip(1).join(' '),
+      'status': 'ACTIVE',
+      'className': 'Class ${label.first}',
+      'sectionName': label.length > 1 ? label[1] : null,
+      'rollNo': 7 + grade,
+      'dateOfBirth': '${2020 - grade}-${grade.isEven ? '08-22' : '03-14'}',
+      'bloodGroup': grade.isEven ? 'O+' : 'B+',
+      'photoUrl': null,
+      'guardians': [
+        {'guardianId': user['id'], 'name': user['name'], 'phone': user['phone'], 'relation': 'FATHER', 'isPrimary': true},
+      ],
+    };
   }
 
   /// Attendance between two dates, cut from the recorded session; days past the recording repeat

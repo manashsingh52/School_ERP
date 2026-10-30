@@ -712,3 +712,38 @@ class CalendarItem {
   int get days => DateTime.parse(endDate).difference(DateTime.parse(startDate)).inDays + 1;
   bool get isDayOff => kind == 'HOLIDAY' || kind == 'VACATION';
 }
+
+// ---------------------------------------------------------------- student ID card
+
+class CardGuardian {
+  CardGuardian({required this.name, required this.relation, required this.isPrimary, this.phone});
+  factory CardGuardian.fromJson(Json j) => CardGuardian(name: j['name'] as String, relation: j['relation'] as String? ?? 'GUARDIAN', isPrimary: j['isPrimary'] as bool? ?? false, phone: _s(j['phone']));
+  final String name, relation;
+  final bool isPrimary;
+  final String? phone;
+}
+
+/// `GET /v1/students/:id` (StudentDetail): the fields the digital ID card shows.
+class StudentCard {
+  StudentCard({required this.id, required this.admissionNo, required this.firstName, required this.guardians, this.lastName, this.className, this.sectionName, this.rollNo, this.dateOfBirth, this.bloodGroup, this.photoUrl});
+  factory StudentCard.fromJson(Json j) => StudentCard(
+        id: j['id'] as String,
+        admissionNo: j['admissionNo'] as String,
+        firstName: j['firstName'] as String,
+        lastName: _s(j['lastName']),
+        className: _s(j['className']),
+        sectionName: _s(j['sectionName']),
+        rollNo: _in(j['rollNo']),
+        dateOfBirth: _s(j['dateOfBirth']),
+        bloodGroup: _s(j['bloodGroup']),
+        photoUrl: _s(j['photoUrl']),
+        guardians: _list(j['guardians']).map(CardGuardian.fromJson).toList(),
+      );
+  final String id, admissionNo, firstName;
+  final String? lastName, className, sectionName, dateOfBirth, bloodGroup, photoUrl;
+  final int? rollNo;
+  final List<CardGuardian> guardians;
+
+  String get name => [firstName, lastName].whereType<String>().join(' ');
+  CardGuardian? get primaryGuardian => guardians.where((g) => g.isPrimary).firstOrNull ?? guardians.firstOrNull;
+}

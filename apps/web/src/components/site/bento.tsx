@@ -21,16 +21,18 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useT } from '@/lib/i18n';
 import { Eyebrow, Reveal, SPRING } from './motion-bits';
 
 function Card({ icon, title, text, children, className, delay = 0 }: { icon: ReactNode; title: string; text: string; children?: ReactNode; className?: string; delay?: number }) {
+  const t = useT();
   return (
     <Reveal delay={delay} className={cn('group flex flex-col overflow-hidden rounded-[22px] border border-border bg-surface p-5 shadow-e1 transition-shadow duration-300 hover:shadow-e2 sm:p-6', className)}>
       <div className="flex items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-tint text-accent-strong transition-transform duration-300 group-hover:-rotate-6">{icon}</span>
-        <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-fg sm:text-[19px]">{title}</h3>
+        <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-fg sm:text-[19px]">{t(title)}</h3>
       </div>
-      <p className="mt-2.5 max-w-[56ch] text-[14.5px] leading-[1.6] text-fg-secondary [text-wrap:pretty]">{text}</p>
+      <p className="mt-2.5 max-w-[56ch] text-[14.5px] leading-[1.6] text-fg-secondary [text-wrap:pretty]">{t(text)}</p>
       {children && <div className="mt-5 flex-1">{children}</div>}
     </Reveal>
   );
@@ -39,6 +41,7 @@ function Card({ icon, title, text, children, className, delay = 0 }: { icon: Rea
 const STUDENTS = ['Aarav Sharma', 'Diya Patel', 'Rohan Verma', 'Ananya Nair'];
 
 function AttendanceDemo() {
+  const t = useT();
   const [absent, setAbsent] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -46,7 +49,7 @@ function AttendanceDemo() {
   const mark = (name: string, isAbsent: boolean) => {
     setAbsent((a) => ({ ...a, [name]: isAbsent }));
     if (isAbsent) {
-      setToast(`${name.split(' ')[0]}'s parent was told: marked absent at 8:15 AM`);
+      setToast(t("{name}'s parent was told: marked absent at 8:15 AM", { name: name.split(' ')[0]! }));
       clearTimeout(timer.current);
       timer.current = setTimeout(() => setToast(null), 3200);
     }
@@ -55,10 +58,10 @@ function AttendanceDemo() {
   return (
     <div className="relative rounded-2xl border border-border bg-app p-3 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-        <p className="text-small font-semibold text-fg">Class 8-B · Today</p>
+        <p className="text-small font-semibold text-fg">{t('Class 8-B · Today')}</p>
         <div className="flex items-center gap-2">
-          <span className="figures text-[12px] text-fg-secondary">{STUDENTS.length - absentCount} present · {absentCount} absent</span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-warm-soft px-2 py-0.5 text-[11px] font-semibold text-warm"><CloudOff className="size-3" /> Saved offline</span>
+          <span className="figures text-[12px] text-fg-secondary">{t('{p} present · {a} absent', { p: STUDENTS.length - absentCount, a: absentCount })}</span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-warm-soft px-2 py-0.5 text-[11px] font-semibold text-warm"><CloudOff className="size-3" /> {t('Saved offline')}</span>
         </div>
       </div>
       <ul className="mt-2 divide-y divide-border">
@@ -74,7 +77,7 @@ function AttendanceDemo() {
                     key={k}
                     role="radio"
                     aria-checked={on}
-                    aria-label={k === 'P' ? 'Present' : 'Absent'}
+                    aria-label={k === 'P' ? t('Present') : t('Absent')}
                     onClick={() => mark(s, k === 'A')}
                     className={cn(
                       'figures flex size-9 items-center justify-center rounded-lg text-[13px] font-semibold transition-colors sm:size-8',
@@ -103,7 +106,7 @@ function AttendanceDemo() {
           </motion.div>
         )}
       </AnimatePresence>
-      {!toast && <p className="mt-1 px-1 text-[12px] text-fg-tertiary">Tap A to see what the parent gets.</p>}
+      {!toast && <p className="mt-1 px-1 text-[12px] text-fg-tertiary">{t('Tap A to see what the parent gets.')}</p>}
     </div>
   );
 }
@@ -115,19 +118,20 @@ const FEE_ROWS = [
 ];
 
 function FeesDemo() {
+  const t = useT();
   const [state, setState] = useState<'due' | 'paying' | 'paid'>('due');
   return (
     <div className="rounded-2xl border border-border bg-app p-4">
       <ul className="space-y-2">
         {FEE_ROWS.map((r) => (
           <li key={r.label} className="flex items-center justify-between text-[13.5px]">
-            <span className="text-fg-secondary">{r.label}</span>
+            <span className="text-fg-secondary">{t(r.label)}</span>
             <span className={cn('figures font-medium', r.soft ? 'text-success' : 'text-fg')}>{r.amount}</span>
           </li>
         ))}
       </ul>
       <div className="mt-3 flex items-center justify-between border-t border-dashed border-border-strong pt-3">
-        <span className="text-small font-semibold text-fg">To pay</span>
+        <span className="text-small font-semibold text-fg">{t('To pay')}</span>
         <span className="figures text-[22px] font-semibold text-fg">₹14,200</span>
       </div>
       <div className="mt-3 min-h-11">
@@ -143,8 +147,8 @@ function FeesDemo() {
               className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-success-border bg-success-bg px-3 text-left text-[12.5px] font-semibold text-success"
             >
               <span className="flex size-6 items-center justify-center rounded-full bg-success text-white"><Check className="size-3.5" /></span>
-              <span className="flex-1"><span className="figures">Receipt BST-2026-8841</span> · Paid by UPI</span>
-              <span className="text-[11px] font-medium opacity-80">Reset</span>
+              <span className="flex-1"><span className="figures">{t('Receipt')} BST-2026-8841</span> · {t('Paid by UPI')}</span>
+              <span className="text-[11px] font-medium opacity-80">{t('Reset')}</span>
             </motion.button>
           ) : (
             <motion.button
@@ -156,7 +160,7 @@ function FeesDemo() {
               onClick={() => { setState('paying'); setTimeout(() => setState('paid'), 1100); }}
               className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-[14px] font-semibold text-accent-fg transition-colors hover:bg-accent-hover disabled:opacity-80"
             >
-              {state === 'paying' ? <><Loader2 className="size-4 animate-spin" /> Paying by UPI…</> : <><IndianRupee className="size-4" /> Try a payment</>}
+              {state === 'paying' ? <><Loader2 className="size-4 animate-spin" /> {t('Paying by UPI…')}</> : <><IndianRupee className="size-4" /> {t('Try a payment')}</>}
             </motion.button>
           )}
         </AnimatePresence>
@@ -170,13 +174,14 @@ const CBSE = [
 ] as const;
 
 function ExamsDemo() {
+  const t = useT();
   const [marks, setMarks] = useState(94);
   const [board, setBoard] = useState<'CBSE' | 'ICSE'>('CBSE');
   const grade = CBSE.find(([min]) => marks >= min)![1];
   return (
     <div className="rounded-2xl border border-border bg-app p-4">
       <div className="flex items-center justify-between">
-        <span className="text-small font-semibold text-fg">Mathematics</span>
+        <span className="text-small font-semibold text-fg">{t('Mathematics')}</span>
         <div className="flex rounded-full border border-border bg-surface p-0.5 text-[11px] font-semibold">
           {(['CBSE', 'ICSE'] as const).map((b) => (
             <button key={b} onClick={() => setBoard(b)} className={cn('min-h-7 rounded-full px-2.5', board === b ? 'bg-accent text-accent-fg' : 'text-fg-secondary')}>{b}</button>
@@ -186,15 +191,16 @@ function ExamsDemo() {
       <div className="mt-3 flex items-end justify-between">
         <p className="figures text-[26px] font-semibold text-fg">{marks}<span className="text-[15px] text-fg-tertiary">/100</span></p>
         <motion.span key={board + grade} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={SPRING} className="figures rounded-lg bg-accent-tint px-2.5 py-1 text-[15px] font-semibold text-accent-strong">
-          {board === 'CBSE' ? `Grade ${grade}` : `${marks}%`}
+          {board === 'CBSE' ? t('Grade {g}', { g: grade }) : `${marks}%`}
         </motion.span>
       </div>
-      <input type="range" min={0} max={100} value={marks} onChange={(e) => setMarks(Number(e.target.value))} aria-label="Marks in Mathematics" className="mt-3 w-full accent-[var(--accent-500)]" />
+      <input type="range" min={0} max={100} value={marks} onChange={(e) => setMarks(Number(e.target.value))} aria-label={t('Marks in Mathematics')} className="mt-3 w-full accent-[var(--accent-500)]" />
     </div>
   );
 }
 
 function HomeworkDemo() {
+  const t = useT();
   return (
     <div className="rounded-2xl border border-border bg-app p-3">
       <div className="relative flex aspect-[16/8] items-center justify-center overflow-hidden rounded-xl bg-[#1d3b2f] shadow-inner">
@@ -206,7 +212,7 @@ function HomeworkDemo() {
         <span className="flex size-8 items-center justify-center rounded-lg bg-surface text-fg-secondary ring-1 ring-border"><ImageIcon className="size-4" /></span>
         <div className="min-w-0 text-[12.5px] leading-tight">
           <p className="truncate font-semibold text-fg">board_algebra_ch4.jpg</p>
-          <p className="text-fg-tertiary">Sent to Class 8-B · <span className="figures">42</span> parents</p>
+          <p className="text-fg-tertiary">{t('Sent to Class 8-B')} · <span className="figures">42</span> {t('parents')}</p>
         </div>
       </div>
     </div>
@@ -221,13 +227,14 @@ const PERIODS = [
 ] as const;
 
 function TimetableDemo() {
+  const t = useT();
   return (
     <ul className="space-y-1.5">
-      {PERIODS.map(([t, s, who], i) => (
-        <li key={t} className={cn('flex items-center gap-3 rounded-xl px-3 py-2 text-[13px]', i === 2 ? 'bg-accent-tint ring-1 ring-accent/20' : 'bg-app')}>
-          <span className="figures w-11 text-fg-tertiary">{t}</span>
-          <span className="flex-1 font-medium text-fg">{s}</span>
-          <span className="text-fg-tertiary">{i === 2 ? <span className="font-semibold text-accent-strong">Now</span> : who}</span>
+      {PERIODS.map(([tm, s, who], i) => (
+        <li key={tm} className={cn('flex items-center gap-3 rounded-xl px-3 py-2 text-[13px]', i === 2 ? 'bg-accent-tint ring-1 ring-accent/20' : 'bg-app')}>
+          <span className="figures w-11 text-fg-tertiary">{tm}</span>
+          <span className="flex-1 font-medium text-fg">{t(s)}</span>
+          <span className="text-fg-tertiary">{i === 2 ? <span className="font-semibold text-accent-strong">{t('Now')}</span> : who}</span>
         </li>
       ))}
     </ul>
@@ -235,17 +242,18 @@ function TimetableDemo() {
 }
 
 function MessagesDemo() {
+  const t = useT();
   return (
     <div className="space-y-2">
       <div className="flex items-start gap-2">
-        <span className="mt-0.5 rounded-lg bg-warm-soft px-2 py-1 text-[11px] font-semibold text-warm">Notice</span>
-        <p className="rounded-2xl rounded-tl-sm bg-app px-3 py-2 text-[13px] text-fg">School closes at 12:30 on Friday for Diwali.</p>
+        <span className="mt-0.5 rounded-lg bg-warm-soft px-2 py-1 text-[11px] font-semibold text-warm">{t('Notice')}</span>
+        <p className="rounded-2xl rounded-tl-sm bg-app px-3 py-2 text-[13px] text-fg">{t('School closes at 12:30 on Friday for Diwali.')}</p>
       </div>
-      <p className="ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-accent px-3 py-2 text-[13px] text-accent-fg">Can Rahul submit the project on Monday?</p>
+      <p className="ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-accent px-3 py-2 text-[13px] text-accent-fg">{t('Can Rahul submit the project on Monday?')}</p>
       <div className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-[12.5px]">
         <Video className="size-4 text-accent-strong" />
-        <span className="flex-1 font-medium text-fg">Parent–teacher meeting</span>
-        <span className="figures text-fg-tertiary">Sat 10:30</span>
+        <span className="flex-1 font-medium text-fg">{t('Parent–teacher meeting')}</span>
+        <span className="figures text-fg-tertiary">{t('Sat')} 10:30</span>
       </div>
     </div>
   );
@@ -254,6 +262,7 @@ function MessagesDemo() {
 const BARS = [72, 88, 64, 93, 81, 77];
 
 function ReportsDemo() {
+  const t = useT();
   const [format, setFormat] = useState<'Excel' | 'PDF'>('Excel');
   return (
     <div className="rounded-2xl border border-border bg-app p-4">
@@ -268,20 +277,21 @@ function ReportsDemo() {
             {f === 'Excel' ? <FileSpreadsheet className="size-3.5" /> : <FileText className="size-3.5" />} {f}
           </button>
         ))}
-        <span className="text-[12px] text-fg-tertiary">Attendance by class · sent every Monday</span>
+        <span className="text-[12px] text-fg-tertiary">{t('Attendance by class · sent every Monday')}</span>
       </div>
     </div>
   );
 }
 
 export function FeatureBento() {
+  const t = useT();
   return (
     <section id="features" className="scroll-mt-24 border-y border-border bg-subtle/60">
       <div className="mx-auto max-w-7xl px-4 py-20 min-[375px]:px-5 lg:px-8 lg:py-28">
         <Reveal className="max-w-2xl">
-          <Eyebrow>The whole school</Eyebrow>
-          <h2 className="site-h2 mt-3 text-fg">Everything a school runs on</h2>
-          <p className="site-lead mt-4 text-fg-secondary">One place instead of registers, fee books, WhatsApp groups and spreadsheets. Try the pieces below; they work.</p>
+          <Eyebrow>{t('The whole school')}</Eyebrow>
+          <h2 className="site-h2 mt-3 text-fg">{t('Everything a school runs on')}</h2>
+          <p className="site-lead mt-4 text-fg-secondary">{t('One place instead of registers, fee books, WhatsApp groups and spreadsheets. Try the pieces below; they work.')}</p>
         </Reveal>
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-12 lg:gap-5">
           <Card className="md:col-span-2 lg:col-span-7" icon={<CalendarCheck className="size-5" />} title="Attendance" text="Teachers mark the register on their phone in seconds, even offline. Parents hear at once if their child is absent.">
@@ -311,13 +321,13 @@ export function FeatureBento() {
               <div className="flex items-start gap-4">
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/10"><Smartphone className="size-6" /></span>
                 <div>
-                  <h3 className="text-[20px] font-semibold tracking-[-0.01em]">One app for parents and teachers</h3>
-                  <p className="mt-1.5 max-w-[60ch] text-[14.5px] leading-[1.6] text-white/70">A simple Android app. Each person sees only what is theirs.</p>
+                  <h3 className="text-[20px] font-semibold tracking-[-0.01em]">{t('One app for parents and teachers')}</h3>
+                  <p className="mt-1.5 max-w-[60ch] text-[14.5px] leading-[1.6] text-white/70">{t('A simple Android app. Each person sees only what is theirs.')}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 text-[12.5px]">
-                {['Parents: attendance, homework, fees, results', 'Teachers: register, marks, homework, messages'].map((t) => (
-                  <span key={t} className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-white/85">{t}</span>
+                {['Parents: attendance, homework, fees, results', 'Teachers: register, marks, homework, messages'].map((x) => (
+                  <span key={x} className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-white/85">{t(x)}</span>
                 ))}
               </div>
             </div>

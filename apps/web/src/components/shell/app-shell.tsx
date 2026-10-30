@@ -17,8 +17,10 @@ import { LogOut, Menu as MenuIcon, PanelLeftClose, PanelLeftOpen, Search, X } fr
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Betu } from '@/components/betu/betu';
 import { apiPost } from '@/lib/api-client';
 import { ChildProvider, useIsParentView } from '@/lib/child';
+import { LanguageMenuItems, LanguageToggle, useT } from '@/lib/i18n';
 import { useMe } from '@/lib/me';
 import { ThemeMenuItems, ThemeToggle } from '@/lib/theme';
 import { CommandPalette } from './command-palette';
@@ -40,6 +42,7 @@ function Shell({ children }: { children: ReactNode }) {
   const { me, can } = useMe();
   const parentView = useIsParentView();
   const pathname = usePathname();
+  const t = useT();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -100,7 +103,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
         )}
         {mobile && (
-          <Button variant="ghost" size="icon-sm" className="ml-auto" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+          <Button variant="ghost" size="icon-sm" className="ml-auto" onClick={() => setMobileOpen(false)} aria-label={t('Close menu')}>
             <X />
           </Button>
         )}
@@ -121,17 +124,17 @@ function Shell({ children }: { children: ReactNode }) {
           ))}
         </ul>
         {!mobile && (
-          <Tooltip content={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} side="right">
+          <Tooltip content={collapsed ? t('Expand sidebar') : t('Collapse sidebar')} side="right">
             <button
               onClick={toggleCollapsed}
               className={cn(
                 'mt-0.5 flex h-9 w-full items-center gap-3 rounded-md px-2.5 text-body text-fg-tertiary hover:bg-hover hover:text-fg',
                 collapsed && 'justify-center px-0',
               )}
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={collapsed ? t('Expand sidebar') : t('Collapse sidebar')}
             >
               {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-              {!collapsed && 'Collapse'}
+              {!collapsed && t('Collapse')}
             </button>
           </Tooltip>
         )}
@@ -152,7 +155,7 @@ function Shell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-4">
-          <Button variant="ghost" size="icon-sm" className="md:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+          <Button variant="ghost" size="icon-sm" className="md:hidden" onClick={() => setMobileOpen(true)} aria-label={t('Open menu')}>
             <MenuIcon />
           </Button>
           <button
@@ -161,33 +164,36 @@ function Shell({ children }: { children: ReactNode }) {
           >
             <Search className="size-4" />
             <span className="flex-1 truncate text-left">
-              <span className="sm:hidden">Search…</span>
-              <span className="hidden sm:inline">Search students, pages and actions…</span>
+              <span className="sm:hidden">{t('Search…')}</span>
+              <span className="hidden sm:inline">{t('Search students, pages and actions…')}</span>
             </span>
             <Kbd className="hidden sm:inline-flex">⌘K</Kbd>
           </button>
           <div className="ml-auto flex shrink-0 items-center gap-1">
             {parentView && <ChildSwitcher />}
+            <LanguageToggle className="mr-1 hidden h-8 lg:inline-flex" />
             <ThemeToggle className="size-8 border-transparent bg-transparent" />
             <NotificationsButton />
             <UserMenu />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[1280px] px-4 py-6 md:px-6 md:py-8">{children}</div>
+          <div className="mx-auto w-full max-w-[1280px] px-4 pt-6 pb-24 md:px-6 md:pt-8 md:pb-24">{children}</div>
         </main>
       </div>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <Betu audience={parentView ? 'parent' : can('payment.collect') || can('fee.manage') ? 'admin' : 'teacher'} />
     </div>
   );
 }
 
 function NavLink({ item, active, collapsed }: { item: NavItem; active: boolean; collapsed: boolean }) {
   const Icon = item.icon;
+  const t = useT();
   return (
     <li>
-      <Tooltip content={item.label} side="right" disabled={!collapsed}>
+      <Tooltip content={t(item.label)} side="right" disabled={!collapsed}>
         <Link
           href={item.href}
           aria-current={active ? 'page' : undefined}
@@ -199,7 +205,7 @@ function NavLink({ item, active, collapsed }: { item: NavItem; active: boolean; 
         >
           {active && <span className="absolute top-2 bottom-2 left-0 w-[3px] rounded-full bg-accent" aria-hidden="true" />}
           <Icon className={cn('size-4 shrink-0', active ? 'text-accent-strong' : 'text-fg-tertiary')} />
-          {!collapsed && <span className="truncate">{item.label}</span>}
+          {!collapsed && <span className="truncate">{t(item.label)}</span>}
         </Link>
       </Tooltip>
     </li>
@@ -209,6 +215,7 @@ function NavLink({ item, active, collapsed }: { item: NavItem; active: boolean; 
 function UserMenu() {
   const { me } = useMe();
   const [signingOut, setSigningOut] = useState(false);
+  const t = useT();
   const others = me.memberships.filter((m) => m.membershipId !== me.membership?.membershipId);
 
   async function signOut() {
@@ -226,7 +233,7 @@ function UserMenu() {
   return (
     <Menu>
       <MenuTrigger asChild>
-        <button className="ml-1 rounded-full focus-visible:outline-2" aria-label="Account menu">
+        <button className="ml-1 rounded-full focus-visible:outline-2" aria-label={t('Account menu')}>
           <Avatar name={me.user.name} size={30} />
         </button>
       </MenuTrigger>
@@ -238,7 +245,7 @@ function UserMenu() {
         {others.length > 0 && (
           <>
             <MenuSeparator />
-            <MenuLabel>Switch school</MenuLabel>
+            <MenuLabel>{t('Switch school')}</MenuLabel>
             {others.map((m) => (
               <MenuItem key={m.membershipId} onSelect={() => openSchool(m.school.slug)}>
                 <span className="flex size-5 items-center justify-center rounded bg-subtle text-caption font-semibold">
@@ -252,8 +259,10 @@ function UserMenu() {
         <MenuSeparator />
         <ThemeMenuItems />
         <MenuSeparator />
+        <LanguageMenuItems />
+        <MenuSeparator />
         <MenuItem onSelect={signOut} disabled={signingOut}>
-          <LogOut /> Sign out
+          <LogOut /> {t('Sign out')}
         </MenuItem>
       </MenuContent>
     </Menu>

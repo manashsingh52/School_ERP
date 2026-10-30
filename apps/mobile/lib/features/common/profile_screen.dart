@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config.dart';
 import '../../core/format.dart';
+import '../../core/i18n.dart';
 import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../widgets/common.dart';
+import '../../widgets/home_kit.dart';
+import '../shell/home_shell.dart';
 import '../parent/parent_data.dart';
+import 'id_card_screen.dart';
 
 final sessionsProvider = FutureProvider.autoDispose<List<SessionItem>>((ref) async {
   final rows = await ref.read(apiProvider).get<List<dynamic>>('/me/sessions');
@@ -44,21 +48,39 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
         ),
-      if (mode == AppMode.parent && child != null) ...[
+      if (mode == AppMode.parent && me.children.isNotEmpty) ...[
         const SizedBox(height: 12),
-        SectionCard(title: "${child.firstName}'s documents", child: _Documents(childId: child.id)),
+        SectionCard(
+          title: tr('Student ID card'),
+          child: Column(children: [
+            for (final k in me.children)
+              ListTile(
+                leading: GradientAvatar(name: k.name, size: 40),
+                title: Text(k.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(tr('Show at the school gate when you pick up your child')),
+                trailing: const Icon(Icons.badge_outlined),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => IdCardScreen(child: k))),
+              ),
+          ]),
+        ),
       ],
       const SizedBox(height: 12),
-      SectionCard(title: 'Signed-in devices', child: const _Sessions()),
+      const _LanguageCard(),
+      if (mode == AppMode.parent && child != null) ...[
+        const SizedBox(height: 12),
+        SectionCard(title: tr("{name}'s documents", {'name': child.firstName}), child: _Documents(childId: child.id)),
+      ],
+      const SizedBox(height: 12),
+      SectionCard(title: tr('Signed-in devices'), child: const _Sessions()),
       const SizedBox(height: 12),
       Card(
         child: Column(children: [
-          if (me.memberships.length > 1) ListTile(leading: const Icon(Icons.swap_horiz), title: const Text('Switch school'), onTap: session.switchSchool),
+          if (me.memberships.length > 1) ListTile(leading: const Icon(Icons.swap_horiz), title: Text(tr('Switch school')), onTap: session.switchSchool),
           ListTile(
             leading: const Icon(Icons.logout),
-            title: const Text('Sign out'),
+            title: Text(tr('Sign out')),
             onTap: () async {
-              final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Sign out of Bastaa?'), actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sign out'))]));
+              final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text(tr('Sign out of Bastaa?')), actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Cancel'))), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Sign out')))]));
               if (ok == true) await session.signOut();
             },
           ),
@@ -80,7 +102,7 @@ class _Documents extends ConsumerWidget {
       value: docs,
       onRetry: () => ref.invalidate(childDocuments(childId)),
       builder: (list) => list.isEmpty
-          ? const EmptyView(icon: Icons.folder_open, title: 'Nothing shared yet')
+          ? EmptyView(icon: Icons.folder_open, title: tr('Nothing shared yet'))
           : Column(children: [
               for (final d in list)
                 ListTile(
@@ -106,8 +128,8 @@ class _Sessions extends ConsumerWidget {
         for (final s in items)
           ListTile(
             leading: Icon(s.platform == 'WEB' ? Icons.laptop : Icons.smartphone),
-            title: Text(s.deviceName ?? (s.platform == 'WEB' ? 'Web browser' : 'Phone')),
-            subtitle: Text(s.current ? 'This device' : 'Last used ${timeAgo(s.lastUsedAt)}'),
+            title: Text(s.deviceName ?? tr(s.platform == 'WEB' ? 'Web browser' : 'Phone')),
+            subtitle: Text(s.current ? tr('This device') : tr('Last used {when}', {'when': timeAgo(s.lastUsedAt)})),
             trailing: s.current
                 ? null
                 : TextButton(
@@ -119,10 +141,38 @@ class _Sessions extends ConsumerWidget {
                         if (context.mounted) toast(context, errorText(e), error: true);
                       }
                     },
-                    child: const Text('Sign out'),
+                    child: Text(tr('Sign out')),
                   ),
           ),
       ]),
+    );
+  }
+}
+
+/// English / हिन्दी. The app redraws in the new language and comes back to this tab.
+class _LanguageCard extends ConsumerWidget {
+  const _LanguageCard();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(langProvider);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+        child: Row(children: [
+          const Icon(Icons.translate_rounded),
+          const SizedBox(width: 14),
+          Expanded(child: Text(tr('Language'), style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600))),
+          SegmentedButton<Lang>(
+            showSelectedIcon: false,
+            segments: const [ButtonSegment(value: Lang.en, label: Text('English')), ButtonSegment(value: Lang.hi, label: Text('हिन्दी'))],
+            selected: {lang},
+            onSelectionChanged: (v) {
+              HomeShell.reopenTab = 4;
+              ref.read(langProvider.notifier).set(v.first);
+            },
+          ),
+        ]),
+      ),
     );
   }
 }

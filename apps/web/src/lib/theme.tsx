@@ -4,6 +4,7 @@ import { MenuItem, MenuLabel, cn } from '@schoolos/ui';
 import { Check, Monitor, Moon, Sun } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
+import { useT } from './i18n';
 import { THEME_COOKIE, type Theme } from './theme-shared';
 
 function currentTheme(): Theme {
@@ -26,9 +27,10 @@ const OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
 /** "Appearance" items for an account menu. */
 export function ThemeMenuItems() {
   const [theme, set] = useState<Theme>(currentTheme);
+  const t = useT();
   return (
     <>
-      <MenuLabel>Appearance</MenuLabel>
+      <MenuLabel>{t('Appearance')}</MenuLabel>
       {OPTIONS.map((o) => (
         <MenuItem
           key={o.value}
@@ -37,7 +39,7 @@ export function ThemeMenuItems() {
             set(o.value);
           }}
         >
-          <o.icon /> <span className="flex-1">{o.label}</span>
+          <o.icon /> <span className="flex-1">{t(o.label)}</span>
           {theme === o.value && <Check className="text-accent" />}
         </MenuItem>
       ))}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../core/session.dart';
@@ -36,7 +37,7 @@ class ParentHome extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final child = ref.watch(childProvider);
     final me = ref.watch(meProvider);
-    if (child == null) return const SafeArea(child: EmptyView(icon: Icons.family_restroom, title: 'No children linked yet', subtitle: 'Ask the school office to link your child to your account.'));
+    if (child == null) return SafeArea(child: EmptyView(icon: Icons.family_restroom, title: tr('No children linked yet'), subtitle: tr('Ask the school office to link your child to your account.')));
     final s = StatusColors.of(context);
     final session = ref.watch(childSessionAttendance(child.id)).value;
     final todayStatus = ref.watch(childTodayAttendance(child.id)).value?.days[today()];
@@ -51,15 +52,15 @@ class ParentHome extends ConsumerWidget {
     final schoolName = me.membership?.school.name ?? '';
 
     final features = [
-      if (me.can('message.use')) Feature('Messages', Icons.mail_rounded, FeatureColors.blue, () => _push(context, const MessagesScreen()), badge: unread),
-      if (me.can('meeting.view')) Feature('Meetings', Icons.videocam_rounded, FeatureColors.purple, () => _push(context, const MeetingsScreen())),
-      if (me.can('reminder.use')) Feature('Reminders', Icons.alarm_rounded, FeatureColors.orange, () => _push(context, const RemindersScreen())),
-      Feature('Results', Icons.insights_rounded, FeatureColors.pink, () => _academics(ref, 3)),
-      Feature('Homework', Icons.menu_book_rounded, FeatureColors.teal, () => _academics(ref, 1)),
-      Feature('Timetable', Icons.calendar_month_rounded, FeatureColors.sky, () => _academics(ref, 2)),
-      Feature('Fees', Icons.currency_rupee_rounded, FeatureColors.green, () => onOpenTab(2)),
-      if (me.can('calendar.view')) Feature('Calendar', Icons.event_rounded, FeatureColors.red, () => _push(context, const CalendarScreen())),
-      if (me.can('certificate.view')) Feature('Achievements', Icons.emoji_events_rounded, certificateGold, () => _push(context, const AchievementsScreen())),
+      if (me.can('message.use')) Feature(tr('Messages'), Icons.mail_rounded, FeatureColors.blue, () => _push(context, const MessagesScreen()), badge: unread),
+      if (me.can('meeting.view')) Feature(tr('Meetings'), Icons.videocam_rounded, FeatureColors.purple, () => _push(context, const MeetingsScreen())),
+      if (me.can('reminder.use')) Feature(tr('Reminders'), Icons.alarm_rounded, FeatureColors.orange, () => _push(context, const RemindersScreen())),
+      Feature(tr('Results'), Icons.insights_rounded, FeatureColors.pink, () => _academics(ref, 3)),
+      Feature(tr('Homework'), Icons.menu_book_rounded, FeatureColors.teal, () => _academics(ref, 1)),
+      Feature(tr('Timetable'), Icons.calendar_month_rounded, FeatureColors.sky, () => _academics(ref, 2)),
+      Feature(tr('Fees'), Icons.currency_rupee_rounded, FeatureColors.green, () => onOpenTab(2)),
+      if (me.can('calendar.view')) Feature(tr('Calendar'), Icons.event_rounded, FeatureColors.red, () => _push(context, const CalendarScreen())),
+      if (me.can('certificate.view')) Feature(tr('Achievements'), Icons.emoji_events_rounded, certificateGold, () => _push(context, const AchievementsScreen())),
     ];
 
     final nowText = DateFormat('HH:mm').format(DateTime.now());
@@ -75,23 +76,23 @@ class ParentHome extends ConsumerWidget {
         },
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
           HomeHeader(
-            greeting: '${greetingFor(DateTime.now())}, ${me.user.name.split(' ').first}',
+            greeting: '${tr(greetingFor(DateTime.now()))}, ${me.user.name.split(' ').first}',
             name: child.name,
-            subtitle: ['Class ${child.classLabel ?? '—'}', if (schoolName.isNotEmpty) schoolName].join(' · '),
+            subtitle: [tr('Class {c}', {'c': child.classLabel ?? '—'}), if (schoolName.isNotEmpty) schoolName].join(' · '),
             avatarName: child.name,
             onTapIdentity: me.children.length > 1 ? () => _pickChild(context, ref) : null,
             actions: [
-              HeaderAction(icon: Icons.add_rounded, tooltip: 'New', onPressed: () => _quickAdd(context)),
-              HeaderAction(icon: Icons.settings_outlined, tooltip: 'Profile and settings', onPressed: () => onOpenTab(4)),
+              HeaderAction(icon: Icons.add_rounded, tooltip: tr('New'), onPressed: () => _quickAdd(context)),
+              HeaderAction(icon: Icons.settings_outlined, tooltip: tr('Profile and settings'), onPressed: () => onOpenTab(4)),
             ],
           ),
           const SizedBox(height: 18),
           FeatureCard(
             lines: [
-              (Icons.school_rounded, 'Class ${child.classLabel ?? '—'}'),
-              classTeacher == null ? (Icons.apartment_rounded, schoolName) : (Icons.person_rounded, 'Class teacher: ${classTeacher.name}'),
+              (Icons.school_rounded, tr('Class {c}', {'c': child.classLabel ?? '—'})),
+              classTeacher == null ? (Icons.apartment_rounded, schoolName) : (Icons.person_rounded, tr('Class teacher: {name}', {'name': classTeacher.name})),
             ],
-            metricLabel: 'Attendance',
+            metricLabel: tr('Attendance'),
             metricValue: percent(pct),
             metricColor: pct == null ? null : pct >= 85 ? s.success : pct >= 75 ? null : s.danger,
             onTapInfo: () => _academics(ref, 0),
@@ -103,11 +104,11 @@ class ParentHome extends ConsumerWidget {
             const SizedBox(height: 12),
             AccentCard(
               accent: fees.overduePaise > 0 ? FeatureColors.red : FeatureColors.orange,
-              title: '${rupees(fees.balancePaise)} fees due',
-              subtitle: fees.overduePaise > 0 ? '${rupees(fees.overduePaise)} is overdue' : 'Pay online in a minute',
-              chip: fees.overduePaise > 0 ? 'Overdue' : 'Due soon',
+              title: tr('{amount} fees due', {'amount': rupees(fees.balancePaise)}),
+              subtitle: fees.overduePaise > 0 ? tr('{amount} is overdue', {'amount': rupees(fees.overduePaise)}) : tr('Pay online in a minute'),
+              chip: fees.overduePaise > 0 ? tr('Overdue') : tr('Due soon'),
               chipIcon: Icons.error_rounded,
-              trailing: FilledButton(onPressed: () => onOpenTab(2), child: const Text('Pay')),
+              trailing: FilledButton(onPressed: () => onOpenTab(2), child: Text(tr('Pay'))),
             ),
           ],
           const SizedBox(height: 22),
@@ -116,15 +117,15 @@ class ParentHome extends ConsumerWidget {
             onRetry: () => ref.invalidate(childPerformance(child.id)),
             builder: (p) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               HomeSectionTitle(
-                title: 'Your Subjects',
-                caption: p.subjects.isEmpty ? 'No marks yet' : '${p.subjects.length} subjects · ${p.exams.length} exam${p.exams.length == 1 ? '' : 's'} · avg ${percent(p.overallPct)}',
-                action: 'Results',
+                title: tr('Your Subjects'),
+                caption: p.subjects.isEmpty ? tr('No marks yet') : '${p.subjects.length} subjects · ${p.exams.length} exam${p.exams.length == 1 ? '' : 's'} · avg ${percent(p.overallPct)}',
+                action: tr('Results'),
                 actionIcon: Icons.insights_rounded,
                 onAction: () => _academics(ref, 3),
               ),
               const SizedBox(height: 12),
               if (p.subjects.isEmpty)
-                const Card(child: EmptyView(icon: Icons.emoji_events_outlined, title: 'No marks yet', subtitle: 'Subjects appear here when the first test results are out.'))
+                Card(child: EmptyView(icon: Icons.emoji_events_outlined, title: tr('No marks yet'), subtitle: tr('Subjects appear here when the first test results are out.')))
               else
                 for (final x in p.subjects)
                   Padding(
@@ -149,7 +150,7 @@ class ParentHome extends ConsumerWidget {
             ListTile(
               leading: GradientAvatar(name: k.name, size: 40),
               title: Text(k.name),
-              subtitle: Text('Class ${k.classLabel ?? '—'}'),
+              subtitle: Text(tr('Class {c}', {'c': k.classLabel ?? '—'})),
               trailing: ref.read(childProvider)?.id == k.id ? const Icon(Icons.check_circle) : null,
               onTap: () {
                 ref.read(childProvider.notifier).select(k);
@@ -167,15 +168,15 @@ class ParentHome extends ConsumerWidget {
       showDragHandle: true,
       builder: (ctx) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(leading: const Icon(Icons.mail_rounded, color: FeatureColors.blue), title: const Text('Message a teacher'), onTap: () {
+          ListTile(leading: const Icon(Icons.mail_rounded, color: FeatureColors.blue), title: Text(tr('Message a teacher')), onTap: () {
             Navigator.pop(ctx);
             _push(context, const NewMessageScreen());
           }),
-          ListTile(leading: const Icon(Icons.report_rounded, color: FeatureColors.red), title: const Text('Raise a complaint'), onTap: () {
+          ListTile(leading: const Icon(Icons.report_rounded, color: FeatureColors.red), title: Text(tr('Raise a complaint')), onTap: () {
             Navigator.pop(ctx);
             _push(context, const NewMessageScreen(category: 'COMPLAINT'));
           }),
-          ListTile(leading: const Icon(Icons.alarm_add_rounded, color: FeatureColors.orange), title: const Text('Set a reminder'), onTap: () {
+          ListTile(leading: const Icon(Icons.alarm_add_rounded, color: FeatureColors.orange), title: Text(tr('Set a reminder')), onTap: () {
             Navigator.pop(ctx);
             _push(context, const ReminderFormScreen());
           }),
@@ -198,10 +199,10 @@ class _TodayStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = StatusColors.of(context);
     final (icon, color, label) = switch (status) {
-      null => (Icons.schedule_rounded, s.muted, 'Not marked yet'),
-      'ABSENT' => (Icons.cancel_rounded, s.danger, 'Absent today'),
-      'LATE' => (Icons.watch_later_rounded, s.warning, 'Arrived late'),
-      _ => (Icons.check_circle_rounded, s.success, 'In school today'),
+      null => (Icons.schedule_rounded, s.muted, tr('Not marked yet')),
+      'ABSENT' => (Icons.cancel_rounded, s.danger, tr('Absent today')),
+      'LATE' => (Icons.watch_later_rounded, s.warning, tr('Arrived late')),
+      _ => (Icons.check_circle_rounded, s.success, tr('In school today')),
     };
     Widget cell(IconData i, Color c, String top, String bottom, VoidCallback onTap) => Expanded(
           child: InkWell(
@@ -230,8 +231,8 @@ class _TodayStrip extends StatelessWidget {
             cell(icon, color, label, firstName, onAttendance),
             VerticalDivider(width: 1, indent: 8, endIndent: 8, color: s.border),
             next != null
-                ? cell(Icons.class_rounded, FeatureColors.sky, next!.subject ?? next!.periodName, 'Next · ${next!.startTime}', onHomework)
-                : cell(Icons.menu_book_rounded, FeatureColors.teal, 'Homework', dueHomework == 0 ? 'Nothing due' : '$dueHomework due', onHomework),
+                ? cell(Icons.class_rounded, FeatureColors.sky, tr(next!.subject ?? next!.periodName), tr('Next · {time}', {'time': next!.startTime}), onHomework)
+                : cell(Icons.menu_book_rounded, FeatureColors.teal, tr('Homework'), dueHomework == 0 ? tr('Nothing due') : tr('{n} due', {'n': dueHomework}), onHomework),
           ]),
         ),
       ),
@@ -255,16 +256,16 @@ class _SubjectHomeCard extends StatelessWidget {
     final max = counted.fold<double>(0, (n, e) => n + e.maxMarks);
     final color = avg == null ? StatusColors.of(context).muted : avg >= 75 ? FeatureColors.green : avg >= 50 ? FeatureColors.orange : FeatureColors.red;
     final (chip, chipIcon) = avg == null
-        ? ('No marks yet', Icons.hourglass_empty_rounded)
+        ? (tr('No marks yet'), Icons.hourglass_empty_rounded)
         : avg >= 75
-            ? (subject.trend == 'down' ? 'Doing well · slipped a little' : 'Doing well', Icons.verified_rounded)
+            ? (tr(subject.trend == 'down' ? 'Doing well · slipped a little' : 'Doing well'), Icons.verified_rounded)
             : avg >= 50
-                ? (subject.trend == 'up' ? 'Improving — keep going' : 'Keep practising', Icons.trending_up_rounded)
-                : ('Needs attention', Icons.error_rounded);
+                ? (tr(subject.trend == 'up' ? 'Improving — keep going' : 'Keep practising'), Icons.trending_up_rounded)
+                : (tr('Needs attention'), Icons.error_rounded);
     String n(double v) => v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(1);
     return AccentCard(
       accent: color,
-      title: subject.name,
+      title: tr(subject.name),
       subtitle: '${subject.exams.length} test${subject.exams.length == 1 ? '' : 's'}${subject.sectionAveragePct == null ? '' : ' • Section ${percent(subject.sectionAveragePct)}'}',
       chip: chip,
       chipIcon: chipIcon,
@@ -308,7 +309,7 @@ class _SubjectHomeCard extends StatelessWidget {
                   onOpenResults();
                 },
                 icon: const Icon(Icons.insights_rounded),
-                label: const Text('All results and report cards'),
+                label: Text(tr('All results and report cards')),
               ),
             ]),
           ),

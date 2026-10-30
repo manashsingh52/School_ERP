@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { BastaaLogo } from '@/components/brand/logo';
+import { LanguageToggle, useT } from '@/lib/i18n';
 import { ThemeToggle } from '@/lib/theme';
 import { CONTACT_EMAIL, WHATSAPP_NUMBER } from '@/lib/site';
 import { useBookDemo } from './book-demo';
@@ -37,6 +38,7 @@ function LiveDot() {
 
 export function SiteHeader({ mode }: { mode: SiteMode }) {
   const bookDemo = useBookDemo();
+  const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export function SiteHeader({ mode }: { mode: SiteMode }) {
         >
           <Link href="/" aria-label="Bastaa home" className="flex shrink-0 items-center gap-2.5">
             <BastaaLogo markClassName="size-8" />
-            <span className="hidden rounded-full border border-border bg-subtle px-2 py-0.5 text-[11px] font-medium text-fg-secondary xl:inline">Made in India</span>
+            <span className="hidden rounded-full border border-border bg-subtle px-2 py-0.5 text-[11px] font-medium text-fg-secondary xl:inline">{t('Made in India')}</span>
           </Link>
 
           <nav aria-label="Site" className="isolate mx-auto hidden items-center lg:flex" onMouseLeave={() => setHover(null)}>
@@ -82,31 +84,32 @@ export function SiteHeader({ mode }: { mode: SiteMode }) {
                 className={cn('relative rounded-full px-4 py-2 text-[14px] font-medium transition-colors', pill === l.id ? 'text-fg' : 'text-fg-secondary hover:text-fg')}
               >
                 {pill === l.id && <motion.span layoutId="nav-pill" transition={SPRING} className="absolute inset-0 -z-10 rounded-full bg-subtle" />}
-                {l.label}
+                {t(l.label)}
               </Link>
             ))}
           </nav>
 
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <LanguageToggle className="hidden sm:inline-flex" />
             <ThemeToggle />
             {mode === 'demo' && (
               <Button asChild size="sm" variant="secondary" className="hidden rounded-full lg:inline-flex">
-                <Link href="/login"><span className="text-accent"><LiveDot /></span> Explore live demo</Link>
+                <Link href="/login"><span className="text-accent"><LiveDot /></span> {t('Explore live demo')}</Link>
               </Button>
             )}
             {mode === 'app' && (
-              <Button asChild size="sm" variant="ghost" className="hidden rounded-full lg:inline-flex"><Link href="/login">Sign in</Link></Button>
+              <Button asChild size="sm" variant="ghost" className="hidden rounded-full lg:inline-flex"><Link href="/login">{t('Sign in')}</Link></Button>
             )}
-            <Button size="sm" className="hidden rounded-full lg:inline-flex" onClick={() => bookDemo()}>Book a demo</Button>
+            <Button size="sm" className="hidden rounded-full lg:inline-flex" onClick={() => bookDemo()}>{t('Book a demo')}</Button>
             {mode === 'demo' ? (
-              <Button asChild size="sm" className="rounded-full lg:hidden"><Link href="/login">Try demo</Link></Button>
+              <Button asChild size="sm" className="rounded-full lg:hidden"><Link href="/login">{t('Try demo')}</Link></Button>
             ) : (
-              <Button size="sm" className="rounded-full lg:hidden" onClick={() => bookDemo()}>Book demo</Button>
+              <Button size="sm" className="rounded-full lg:hidden" onClick={() => bookDemo()}>{t('Book demo')}</Button>
             )}
             <button
               type="button"
               onClick={() => setOpen((o) => !o)}
-              aria-label={open ? 'Close menu' : 'Open menu'}
+              aria-label={open ? t('Close menu') : t('Open menu')}
               aria-expanded={open}
               aria-controls="site-menu"
               className="relative flex size-11 items-center justify-center rounded-full text-fg hover:bg-subtle lg:hidden"
@@ -123,6 +126,7 @@ export function SiteHeader({ mode }: { mode: SiteMode }) {
 }
 
 function MobileMenu({ open, onClose, mode, onBook }: { open: boolean; onClose: () => void; mode: SiteMode; onBook: () => void }) {
+  const t = useT();
   const first = useRef<HTMLAnchorElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -154,23 +158,27 @@ function MobileMenu({ open, onClose, mode, onBook }: { open: boolean; onClose: (
             className="absolute inset-x-0 bottom-0 max-h-[88dvh] overflow-y-auto rounded-t-[28px] border-t border-border bg-surface px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] shadow-e3"
           >
             <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-border-strong" aria-hidden />
+            <div className="mb-3 flex items-center justify-between px-3">
+              <span className="text-[12px] font-semibold tracking-[0.14em] text-fg-tertiary uppercase">{t('Language')}</span>
+              <LanguageToggle />
+            </div>
             <nav aria-label="Site" className="flex flex-col">
               {LINKS.map((l, i) => (
                 <Link key={l.id} ref={i === 0 ? first : undefined} href={l.href} onClick={onClose} className="flex min-h-12 items-center justify-between rounded-xl px-3 font-display text-[22px] font-semibold tracking-[-0.02em] text-fg hover:bg-subtle">
-                  {l.label} <ArrowRight className="size-5 text-fg-tertiary" />
+                  {t(l.label)} <ArrowRight className="size-5 text-fg-tertiary" />
                 </Link>
               ))}
             </nav>
             {mode === 'demo' && (
               <div className="mt-4">
-                <p className="px-3 text-[12px] font-semibold tracking-[0.14em] text-fg-tertiary uppercase">Jump into the demo</p>
+                <p className="px-3 text-[12px] font-semibold tracking-[0.14em] text-fg-tertiary uppercase">{t('Jump into the demo')}</p>
                 <div className="mt-2 grid gap-2">
                   {ROLE_JUMPS.map((r) => (
                     <Link key={r.as} href={`/login?as=${r.as}`} onClick={onClose} className="flex min-h-14 items-center gap-3 rounded-2xl border border-border bg-app px-4 hover:border-accent">
                       <span className="flex size-9 items-center justify-center rounded-xl bg-accent-tint text-accent-strong"><r.icon className="size-[18px]" /></span>
                       <span className="flex-1">
-                        <span className="block text-[15px] font-semibold text-fg">{r.label}</span>
-                        <span className="block text-small text-fg-secondary">{r.note}</span>
+                        <span className="block text-[15px] font-semibold text-fg">{t(r.label)}</span>
+                        <span className="block text-small text-fg-secondary">{t(r.note)}</span>
                       </span>
                       <ArrowRight className="size-4 text-fg-tertiary" />
                     </Link>
@@ -179,16 +187,16 @@ function MobileMenu({ open, onClose, mode, onBook }: { open: boolean; onClose: (
               </div>
             )}
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <Button className="col-span-2 min-h-12 rounded-full text-[15px]" onClick={onBook}>Book a free demo</Button>
+              <Button className="col-span-2 min-h-12 rounded-full text-[15px]" onClick={onBook}>{t('Book a free demo')}</Button>
               <Button asChild variant="secondary" className={cn('min-h-12 rounded-full', !WHATSAPP_NUMBER && 'col-span-2')}>
-                <a href={`mailto:${CONTACT_EMAIL}`}><Mail /> Email us</a>
+                <a href={`mailto:${CONTACT_EMAIL}`}><Mail /> {t('Email us')}</a>
               </Button>
               {WHATSAPP_NUMBER && (
                 <Button asChild variant="secondary" className="min-h-12 rounded-full">
                   <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener"><MessageCircle /> WhatsApp</a>
                 </Button>
               )}
-              {mode === 'app' && <Button asChild variant="ghost" className="col-span-2 min-h-12 rounded-full"><Link href="/login" onClick={onClose}>Sign in to your school</Link></Button>}
+              {mode === 'app' && <Button asChild variant="ghost" className="col-span-2 min-h-12 rounded-full"><Link href="/login" onClick={onClose}>{t('Sign in to your school')}</Link></Button>}
             </div>
           </motion.div>
         </div>

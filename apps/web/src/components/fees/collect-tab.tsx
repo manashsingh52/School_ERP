@@ -3,14 +3,14 @@
 import type { PaymentItem, StudentFeeStatement } from '@schoolos/contracts';
 import { Avatar, Badge, Button, Card, Checkbox, EmptyState, Field, Input, Skeleton, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, Printer, Receipt, UserRound } from 'lucide-react';
+import { CheckCircle2, Download, Printer, Receipt, UserRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { ApiError, apiFetch, apiPost, idempotencyKey } from '@/lib/api-client';
 import { formatDate } from '@/lib/format';
 import { useData } from '@/lib/hooks';
 import { rupees } from '@/lib/money';
-import { openReceipt } from './payment-dialog';
+import { downloadReceipt, printReceipt } from './payment-dialog';
 import { StudentPicker } from './student-picker';
 
 const METHODS = [
@@ -166,8 +166,9 @@ function Done({ payment, onNext }: { payment: PaymentItem; onNext: () => void })
         <div className="text-body text-fg-secondary">{p.student.name} · receipt <b className="tabular">{p.receiptNo}</b></div>
       </div>
       <div className="flex flex-wrap justify-center gap-2">
-        <Button onClick={() => void openReceipt(p.id)} disabled={!p.receiptReady} loading={!p.receiptReady}><Printer /> {p.receiptReady ? 'Print receipt' : 'Preparing receipt…'}</Button>
-        <Button variant="secondary" onClick={onNext} autoFocus>Next student</Button>
+        <Button onClick={() => void printReceipt(p.id, p.receiptNo)} disabled={!p.receiptReady} loading={!p.receiptReady}><Printer /> {p.receiptReady ? 'Print receipt' : 'Preparing receipt…'}</Button>
+        <Button variant="secondary" onClick={() => void downloadReceipt(p.id, p.receiptNo)} disabled={!p.receiptReady}><Download /> Download</Button>
+        <Button variant="ghost" onClick={onNext} autoFocus>Next student</Button>
       </div>
       <Badge tone="success">Parents have been notified</Badge>
     </Card>

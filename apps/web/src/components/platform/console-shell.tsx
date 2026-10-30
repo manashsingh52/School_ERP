@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { apiPost } from '@/lib/api-client';
+import { LanguageMenuItems, LanguageToggle, useT } from '@/lib/i18n';
 import { ThemeMenuItems } from '@/lib/theme';
 import { BastaaMark } from '@/components/brand/logo';
+import { Betu } from '@/components/betu/betu';
 
 export type PlatformRole = 'SUPER_ADMIN' | 'SUPPORT';
 const RoleContext = createContext<PlatformRole>('SUPPORT');
@@ -27,6 +29,7 @@ const NAV: { href: string; label: string; icon: LucideIcon; superOnly?: boolean 
 
 export function ConsoleShell({ user, role, children }: { user: { name: string; email: string | null; phone: string | null }; role: PlatformRole; children: ReactNode }) {
   const pathname = usePathname();
+  const t = useT();
   const [signingOut, setSigningOut] = useState(false);
   const items = NAV.filter((n) => !n.superOnly || role === 'SUPER_ADMIN');
   async function signOut() {
@@ -47,7 +50,7 @@ export function ConsoleShell({ user, role, children }: { user: { name: string; e
               const active = n.href === '/platform' ? pathname === '/platform' : pathname.startsWith(n.href);
               return (
                 <Link key={n.href} href={n.href} aria-current={active ? 'page' : undefined} className={cn('flex h-9 items-center gap-2.5 rounded-md px-2.5 text-body transition-colors [&_svg]:size-4', active ? 'bg-accent-tint font-medium text-fg' : 'text-fg-secondary hover:bg-hover hover:text-fg')}>
-                  <n.icon /> {n.label}
+                  <n.icon /> {t(n.label)}
                 </Link>
               );
             })}
@@ -57,14 +60,15 @@ export function ConsoleShell({ user, role, children }: { user: { name: string; e
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur md:px-6">
             <nav aria-label="Console (mobile)" className="flex gap-1 overflow-x-auto md:hidden">
               {items.map((n) => (
-                <Link key={n.href} href={n.href} className="rounded-md px-2 py-1 text-small whitespace-nowrap text-fg-secondary hover:bg-hover">{n.label}</Link>
+                <Link key={n.href} href={n.href} className="rounded-md px-2 py-1 text-small whitespace-nowrap text-fg-secondary hover:bg-hover">{t(n.label)}</Link>
               ))}
             </nav>
             <div className="flex-1" />
-            <Badge tone={role === 'SUPER_ADMIN' ? 'accent' : 'neutral'}>{role === 'SUPER_ADMIN' ? 'Super admin' : 'Support'}</Badge>
+            <LanguageToggle className="hidden h-8 sm:inline-flex" />
+            <Badge tone={role === 'SUPER_ADMIN' ? 'accent' : 'neutral'}>{role === 'SUPER_ADMIN' ? t('Super admin') : t('Support')}</Badge>
             <Menu>
               <MenuTrigger asChild>
-                <button className="rounded-full focus-visible:outline-2" aria-label="Account menu"><Avatar name={user.name} size={30} /></button>
+                <button className="rounded-full focus-visible:outline-2" aria-label={t('Account menu')}><Avatar name={user.name} size={30} /></button>
               </MenuTrigger>
               <MenuContent>
                 <div className="px-2 py-2">
@@ -74,13 +78,16 @@ export function ConsoleShell({ user, role, children }: { user: { name: string; e
                 <MenuSeparator />
                 <ThemeMenuItems />
                 <MenuSeparator />
-                <MenuItem onSelect={signOut} disabled={signingOut}><LogOut /> Sign out</MenuItem>
+                <LanguageMenuItems />
+                <MenuSeparator />
+                <MenuItem onSelect={signOut} disabled={signingOut}><LogOut /> {t('Sign out')}</MenuItem>
               </MenuContent>
             </Menu>
           </header>
           <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 md:px-8">{children}</main>
         </div>
       </div>
+      <Betu audience="owner" />
     </RoleContext.Provider>
   );
 }
