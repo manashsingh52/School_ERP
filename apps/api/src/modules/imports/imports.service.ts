@@ -28,6 +28,7 @@ import { purposeOf } from '../files/files.service.js';
 import { GuardiansService } from '../guardians/guardians.service.js';
 import { IdentityService } from '../schools/identity.service.js';
 import { classKey, parseDate, parseGender, parseSpreadsheet, splitClassSection, splitName, suggestMapping } from './parsing.js';
+import { PaymentImports, summarizePayment } from './payment-imports.js';
 import { SetupImports } from './setup-imports.js';
 
 type In<T extends z.ZodType> = z.output<T>;
@@ -69,6 +70,7 @@ export class ImportsService implements OnModuleInit {
     private readonly guardians: GuardiansService,
     private readonly identity: IdentityService,
     private readonly setup: SetupImports,
+    private readonly paymentImports: PaymentImports,
     private readonly audit: AuditService,
     private readonly outbox: OutboxService,
     @Inject(LOGGER) private readonly logger: Logger,
@@ -83,6 +85,7 @@ export class ImportsService implements OnModuleInit {
 
   async create(input: In<typeof createImportSchema>): Promise<ImportJobItem> {
     const ctx = RequestContextStore.tenant();
+    assertCanImport(input.entity);
     const file = await this.prisma.db.file.findUnique({ where: { id: input.fileId } });
     if (!file || file.status !== 'READY' || purposeOf(file.objectKey) !== 'import' || file.uploadedByMemberId !== ctx.membershipId) {
       throw AppError.invalidReference('fileId', 'file');
@@ -152,6 +155,7 @@ export class ImportsService implements OnModuleInit {
       : entity === 'TEACHERS' ? await this.checkTeachers(mapped)
       : entity === 'CLASSES' ? await this.setup.checkClasses(mapped)
       : entity === 'SUBJECTS' ? await this.setup.checkSubjects(mapped)
+      : entity === 'FEE_PAYMENTS' ? await this.paymentImports.checkPastPayments(mapped)
       : await this.setup.checkFeeAssignments(mapped);
     const stats = statsOf(results.map((r) => r.status));
 
@@ -369,6 +373,7 @@ export class ImportsService implements OnModuleInit {
     const job = await this.prisma.db.importJob.findUnique({ where: { id } });
     if (!job) throw AppError.notFound('import');
     if (job.status !== 'VALIDATED') throw new AppError('IMPORT_NOT_READY', 409, 'Check the file before importing.');
+    assertCanImport(job.entity as ImportEntity);
     if (!(job.stats as unknown as ImportStats | null)?.valid) throw new AppError('NOTHING_TO_IMPORT', 422, 'There are no valid rows to import.');
     if (job.entity === 'STUDENTS') await this.entitlements.assertStudents((job.stats as unknown as ImportStats).valid);
     // Conditional update: a double-click can't start two imports.
@@ -396,6 +401,7 @@ export class ImportsService implements OnModuleInit {
           : job.entity === 'TEACHERS' ? await this.importTeacher(n, inviteLogins)
           : job.entity === 'CLASSES' ? await this.setup.importClass(n)
           : job.entity === 'SUBJECTS' ? await this.setup.importSubject(n)
+          : job.entity === 'FEE_PAYMENTS' ? await this.paymentImports.importPastPayment(n)
           : await this.setup.importFeeAssignment(n);
         await this.prisma.db.importRow.update({ where: { id: row.id }, data: { status: 'IMPORTED', entityId } });
         imported++;
@@ -628,6 +634,13 @@ export class ImportsService implements OnModuleInit {
   }
 }
 
+/** Recording money needs the cashier's permission as well as import.run. */
+function assertCanImport(entity: ImportEntity): void {
+  if (entity === 'FEE_PAYMENTS' && !RequestContextStore.tenant().permissions['payment.collect']) {
+    throw AppError.forbidden('Importing payments needs permission to collect fees.');
+  }
+}
+
 function applyMapping(raw: Raw, columns: Record<string, string>): Mapped {
   const out: Mapped = {};
   for (const [header, key] of Object.entries(columns)) if (key) out[key] = raw[header] ?? '';
@@ -668,6 +681,7 @@ function summarize(entity: ImportEntity, n: Record<string, unknown>, raw: Raw): 
   const list = (v: unknown) => (Array.isArray(v) ? v.join(', ') : '');
   if (entity === 'CLASSES' && n.name) return [n.name, list(n.sections) ? `sections ${list(n.sections)}` : null].filter(Boolean).join(' · ');
   if (entity === 'SUBJECTS' && n.name) return [n.name, n.code, list(n.classes)].filter(Boolean).join(' · ');
+  if (entity === 'FEE_PAYMENTS') return summarizePayment(n) ?? (Object.values(raw).filter(Boolean).slice(0, 3).join(' · '));
   if (entity === 'FEE_ASSIGNMENTS' && n.name) return [n.name, n.admissionNo, list(n.labels) || 'no optional fees'].filter(Boolean).join(' · ');
   const name = [n.firstName, n.lastName].filter(Boolean).join(' ');
   if (!name) return Object.values(raw).filter(Boolean).slice(0, 3).join(' · ');

@@ -50,6 +50,8 @@ export interface ApplyPayment {
   receivedAt?: Date;
   /** Counter payments: refuse (instead of crediting) if the invoices changed since they were chosen. */
   exact?: boolean;
+  /** Imported history: no message to parents; the receipt PDF is made when first opened. */
+  quiet?: boolean;
 }
 
 const paymentInclude = {
@@ -150,9 +152,9 @@ export class PaymentsService implements OnModuleInit {
       action: 'payment.capture',
       entityType: 'Payment',
       entityId: payment.id,
-      metadata: { receiptNo, amountPaise: p.amountPaise, method: p.method, invoices: p.invoiceIds.length, creditPaise: remaining, gatewayPaymentId: p.gatewayPaymentId },
+      metadata: { receiptNo, amountPaise: p.amountPaise, method: p.method, invoices: p.invoiceIds.length, creditPaise: remaining, gatewayPaymentId: p.gatewayPaymentId, ...(p.quiet ? { via: 'import' } : {}) },
     });
-    await this.outbox.publish(tx, 'payment.captured', { paymentId: payment.id });
+    if (!p.quiet) await this.outbox.publish(tx, 'payment.captured', { paymentId: payment.id });
     return { paymentId: payment.id, created: true };
   }
 
@@ -199,6 +201,33 @@ export class PaymentsService implements OnModuleInit {
     );
     this.outbox.flush();
     return this.get(paymentId);
+  }
+
+  /**
+   * Money a school took before it used Bastaa (import): paid against the student's oldest dues,
+   * anything extra kept as credit. Parents aren't messaged about old payments.
+   */
+  async recordPast(n: { studentId: string; amountPaise: number; paidOn: string; method: Method; referenceNo: string | null; notes: string | null }): Promise<string> {
+    const open = await this.prisma.db.invoice.findMany({
+      where: { studentId: n.studentId, status: { in: ['ISSUED', 'PARTIALLY_PAID'] }, balancePaise: { gt: 0 } },
+      orderBy: [{ dueDate: 'asc' }, { number: 'asc' }],
+      select: { id: true },
+    });
+    const { paymentId } = await this.prisma.tenantTx(
+      (tx) =>
+        this.apply(tx, {
+          studentId: n.studentId,
+          amountPaise: n.amountPaise,
+          method: n.method,
+          invoiceIds: open.map((i) => i.id),
+          referenceNo: n.referenceNo,
+          notes: n.notes,
+          receivedAt: new Date(`${n.paidOn}T06:30:00.000Z`), // noon in India
+          quiet: true,
+        }),
+      { timeout: 20_000 },
+    );
+    return paymentId;
   }
 
   /** Cancel a counter receipt: allocations are reversed (append-only) and balances reopen. */

@@ -9,6 +9,7 @@ import type {
   PlatformSchoolDetail,
   PlatformSchoolItem,
   PlatformUserItem,
+  SchoolSignInCode,
   SubscriptionItem,
   SystemStatus,
   featureFlagSchema,
@@ -26,6 +27,7 @@ import { PlatformPrismaService } from '../../core/prisma/prisma.service.js';
 import { QUEUES, QueueService } from '../../core/queue/queue.service.js';
 import { fromDate, toDate } from '../../core/util/dates.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+import { AuthService } from '../auth/auth.service.js';
 import { SchoolsService } from '../schools/schools.service.js';
 
 type In<T extends z.ZodType> = z.output<T>;
@@ -43,6 +45,7 @@ export class PlatformService {
     private readonly entitlements: EntitlementsService,
     private readonly queues: QueueService,
     private readonly access: AccessService,
+    private readonly auth: AuthService,
   ) {}
 
   /** Audit a platform action (optionally about one school). */
@@ -134,7 +137,7 @@ export class PlatformService {
     const [entitlements, features, admins, teachers, guardians, invoices, paid] = await Promise.all([
       this.entitlements.entitlements(id),
       this.entitlements.features(id),
-      this.platform.membership.findMany({ where: { schoolId: id, roles: { some: { role: { key: 'school_admin' } } } }, select: { status: true, user: { select: { name: true, phone: true, email: true } } } }),
+      this.platform.membership.findMany({ where: { schoolId: id, roles: { some: { role: { key: 'school_admin' } } } }, select: { id: true, status: true, user: { select: { name: true, phone: true, email: true } } } }),
       this.platform.teacher.count({ where: { schoolId: id, status: { not: 'LEFT' } } }),
       this.platform.guardian.count({ where: { schoolId: id, archivedAt: null } }),
       this.platform.invoice.count({ where: { schoolId: id, status: { not: 'CANCELLED' } } }),
@@ -149,7 +152,7 @@ export class PlatformService {
       subscription: s.subscription ? this.toSubscription(s.subscription) : null,
       entitlements,
       features,
-      admins: admins.map((a) => ({ ...a.user, status: a.status })),
+      admins: admins.map((a) => ({ id: a.id, ...a.user, status: a.status })),
       counts: { teachers, guardians, invoices, paymentsPaise: paid._sum.amountPaise ?? 0 },
     };
   }
@@ -185,6 +188,22 @@ export class PlatformService {
     }
     await this.audit('school.provision', 'School', school.id, { schoolId: school.id, after: { ...input, adminPhone: '••••' } });
     return this.school(school.id);
+  }
+
+  /**
+   * A one-time sign-in code for one of a school's admins. Without SMS this is how a new school's
+   * first admin gets in (and how a locked-out admin gets back in): Bastaa staff pass it on.
+   */
+  async adminSignInCode(schoolId: string, membershipId: string): Promise<SchoolSignInCode> {
+    const m = await this.platform.membership.findFirst({
+      where: { id: membershipId, schoolId, status: { not: 'REMOVED' }, roles: { some: { role: { key: 'school_admin' } } } },
+      select: { id: true, userId: true, status: true },
+    });
+    if (!m) throw AppError.notFound('school admin');
+    if (m.status === 'SUSPENDED') throw new AppError('CONFLICT', 409, 'This admin is suspended. The school must reactivate them first.');
+    const issued = await this.auth.createOfficeCode(m.userId, schoolId);
+    await this.audit('school.admin_sign_in_code', 'Membership', m.id, { schoolId, after: { expiresAt: issued.expiresAt } });
+    return issued;
   }
 
   async setStatus(id: string, status: PlatformSchoolItem['status'], reason: string): Promise<PlatformSchoolDetail> {

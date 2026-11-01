@@ -125,7 +125,7 @@ export function DemoLogin({ personas, autoEnter }: { personas: readonly DemoPers
           </p>
         </div>
       </main>
-      <Betu audience="visitor" />
+      <Betu audience="visitor" demo />
     </SiteMotion>
   );
 }

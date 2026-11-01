@@ -27,7 +27,7 @@ const NAV: { href: string; label: string; icon: LucideIcon; superOnly?: boolean 
   { href: '/platform/audit', label: 'Audit log', icon: ScrollText, superOnly: true },
 ];
 
-export function ConsoleShell({ user, role, children }: { user: { name: string; email: string | null; phone: string | null }; role: PlatformRole; children: ReactNode }) {
+export function ConsoleShell({ user, role, demo = false, children }: { user: { name: string; email: string | null; phone: string | null }; role: PlatformRole; demo?: boolean; children: ReactNode }) {
   const pathname = usePathname();
   const t = useT();
   const [signingOut, setSigningOut] = useState(false);
@@ -87,7 +87,7 @@ export function ConsoleShell({ user, role, children }: { user: { name: string; e
           <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 md:px-8">{children}</main>
         </div>
       </div>
-      <Betu audience="owner" />
+      <Betu audience="owner" demo={demo} />
     </RoleContext.Provider>
   );
 }

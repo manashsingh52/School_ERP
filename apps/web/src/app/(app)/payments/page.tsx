@@ -1,6 +1,8 @@
 'use client';
 
-import { PageHeader, Tabs } from '@schoolos/ui';
+import { Button, PageHeader, Tabs } from '@schoolos/ui';
+import { FileSpreadsheet } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { CollectTab } from '@/components/fees/collect-tab';
@@ -26,7 +28,13 @@ function PaymentsPageContent() {
   const tab = (tabs.find((t) => t.value === params.get('tab'))?.value ?? tabs[0]!.value) as Tab;
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Payments" description="Counter collection, receipts, day close and reports" />
+      <PageHeader
+        title="Payments"
+        description="Counter collection, receipts, day close and reports"
+        actions={can('payment.collect') && can('import.run') && (
+          <Button asChild variant="secondary"><Link href="/imports/new?entity=FEE_PAYMENTS"><FileSpreadsheet /> Import earlier payments</Link></Button>
+        )}
+      />
       <Tabs<Tab> value={tab} onChange={(v) => router.replace(`/payments?tab=${v}`)} items={tabs} />
       {tab === 'collect' && <CollectTab />}
       {tab === 'payments' && <PaymentsListTab />}

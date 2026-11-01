@@ -2,6 +2,8 @@
 
 Super-admin and support: schools, plans, feature flags, platform users, time-limited support access, system health and the platform audit log.
 
+The first owner account on a live server comes from `pnpm owner:create` (`src/ops/create-owner.ts`; on Cloud Run `deploy.sh owner`). A new school's admin signs in for the first time with a code from the console (school page → School admins → Make sign-in code), since production may run without SMS.
+
 ## Routes
 
 | Route | What | Who |
@@ -16,6 +18,7 @@ Super-admin and support: schools, plans, feature flags, platform users, time-lim
 | `GET /v1/platform/schools` | All schools | platform staff (`platform.dashboard.view`) |
 | `POST /v1/platform/schools` | Onboard a school (admin invited, trial started) | platform staff (`platform.schools.manage`) |
 | `GET /v1/platform/schools/:id` | One school: plan, usage, features, admins | platform staff (`platform.dashboard.view`) |
+| `POST /v1/platform/schools/:id/admins/:memberId/sign-in-code` | One-time sign-in code for a school admin (first sign-in or locked out) | platform staff (`platform.schools.manage`) |
 | `PUT /v1/platform/schools/:id/features/:key` | Per-school feature override (null clears) | platform staff (`platform.flags.manage`) |
 | `PUT /v1/platform/schools/:id/status` | Activate, suspend or archive a school | platform staff (`platform.schools.manage`) |
 | `PUT /v1/platform/schools/:id/subscription` | Set plan, status, dates and limit overrides (manual billing) | platform staff (`platform.subscriptions.manage`) |

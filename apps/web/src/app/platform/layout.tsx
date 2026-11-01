@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { ConsoleShell } from '@/components/platform/console-shell';
 import { serverApi } from '@/lib/server-api';
+import { serverEnv } from '@/lib/server-env';
 import { AuthFrame } from '../login/find-school';
 import { ShellError } from '../(app)/shell-error';
 
@@ -23,5 +24,5 @@ export default async function PlatformLayout({ children }: { children: ReactNode
       </AuthFrame>
     );
   }
-  return <ConsoleShell user={me.data.user} role={me.data.platformRole}>{children}</ConsoleShell>;
+  return <ConsoleShell user={me.data.user} role={me.data.platformRole} demo={serverEnv.demo}>{children}</ConsoleShell>;
 }

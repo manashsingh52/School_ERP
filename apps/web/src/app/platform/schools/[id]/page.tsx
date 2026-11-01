@@ -1,9 +1,9 @@
 'use client';
 
-import type { PlanItem, PlanLimits, PlatformSchoolDetail } from '@schoolos/contracts';
+import type { PlanItem, PlanLimits, PlatformSchoolDetail, SchoolSignInCode } from '@schoolos/contracts';
 import { Badge, Button, Card, CardHeader, Dialog, DialogBody, DialogContent, DialogFooter, Field, Input, PageHeader, Select, Skeleton, Textarea, cn, toast } from '@schoolos/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { ExternalLink, LifeBuoy } from 'lucide-react';
+import { Copy, ExternalLink, KeyRound, LifeBuoy } from 'lucide-react';
 import { use, useState } from 'react';
 import { AuditList } from '@/components/platform/audit-list';
 import { useIsSuperAdmin } from '@/components/platform/console-shell';
@@ -132,6 +132,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ id: str
               <span className="font-medium">{a.name}</span>
               <span className="text-small text-fg-secondary">{[a.phone, a.email].filter(Boolean).join(' · ')}</span>
               <Badge tone={a.status === 'ACTIVE' ? 'success' : a.status === 'INVITED' ? 'info' : 'neutral'}>{a.status === 'INVITED' ? 'Invited — hasn’t signed in' : a.status.toLowerCase()}</Badge>
+              {superAdmin && a.status !== 'SUSPENDED' && <AdminCode schoolId={s.id} schoolName={s.name} slug={s.slug} admin={a} />}
             </li>
           ))}
         </ul>
@@ -264,6 +265,45 @@ function SubscriptionDialog({ school, onDone }: { school: PlatformSchoolDetail; 
         <Button onClick={() => void save()} loading={busy} disabled={!v.planId}>Save</Button>
       </DialogFooter>
     </DialogContent>
+  );
+}
+
+/** First sign-in (or a locked-out admin): a one-time code Bastaa staff pass on, since there's no SMS. */
+function AdminCode({ schoolId, schoolName, slug, admin }: { schoolId: string; schoolName: string; slug: string; admin: PlatformSchoolDetail['admins'][number] }) {
+  const [issued, setIssued] = useState<SchoolSignInCode | null>(null);
+  const [busy, setBusy] = useState(false);
+  async function make() {
+    setBusy(true);
+    try {
+      setIssued((await apiPost<{ data: SchoolSignInCode }>(`/platform/schools/${schoolId}/admins/${admin.id}/sign-in-code`)).data);
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Couldn't make a code. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  const url = schoolUrl(slug);
+  const message = issued
+    ? `Hello ${admin.name}, welcome to Bastaa. Open ${url}/login, choose "Use a code from your school", enter ${issued.signInWith} and the code ${issued.code}, then choose your password. The code works once, until ${formatDate(issued.expiresAt)}.`
+    : '';
+  return (
+    <>
+      <Button size="sm" variant="secondary" className="ml-auto" loading={busy} onClick={() => void make()}><KeyRound /> Make sign-in code</Button>
+      <Dialog open={!!issued} onOpenChange={(o) => !o && setIssued(null)}>
+        {issued && (
+          <DialogContent title={`Sign-in code for ${admin.name}`} description={`${schoolName}: for the first sign-in or a forgotten password. A new code replaces the old one.`}>
+            <DialogBody>
+              <div className="tabular text-center text-[26px] font-semibold tracking-[0.2em]">{issued.code}</div>
+              <p className="mt-1 text-center text-small text-fg-secondary">Sign in with {issued.signInWith} at {url.replace(/^https?:\/\//, '')} · works once, until {formatDate(issued.expiresAt)}</p>
+            </DialogBody>
+            <DialogFooter className="flex-wrap">
+              <Button variant="secondary" onClick={() => void navigator.clipboard.writeText(message).then(() => toast.success('Message copied'))}><Copy /> Copy message</Button>
+              <Button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener')}>Send on WhatsApp</Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
+    </>
   );
 }
 

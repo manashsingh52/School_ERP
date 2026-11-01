@@ -3,11 +3,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../core/config.dart';
 import '../../core/i18n.dart';
 import '../../core/theme.dart';
 
-/// Betu, the in-app helper. A demo for now: preset questions about the parent or teacher app and
-/// canned answers in English and Hindi, with a button to the right tab. Nothing goes to a server.
+/// Betu, the in-app helper: preset questions about the parent or teacher app and canned answers in
+/// English and Hindi, with a button to the right tab. Nothing goes to a server.
 class _Answer {
   const _Answer(this.id, this.q, this.a, {this.steps = const [], this.tab, this.keys = const []});
   final String id;
@@ -260,7 +261,7 @@ class _BetuChatState extends State<_BetuChat> {
                           ? (_hi ? 'नमस्ते! मैं बेटू हूँ। मुझसे $area के बारे में पूछें, या नीचे से कोई सवाल चुनें।' : 'Namaste! I’m Betu. Ask me about $area, or pick a question below.')
                           : m.answer != null
                               ? _say(m.answer!.a)
-                              : (_hi ? 'मैं अभी सीख रहा हूँ, इसलिए इस डेमो में नीचे दिए आम सवालों के जवाब जानता हूँ। बाकी के लिए स्कूल ऑफ़िस मदद करेगा।' : 'I’m still learning, so in this demo I know the common questions below. For anything else, the school office is happy to help.'),
+                              : (_hi ? 'मैं नीचे दिए आम सवालों में मदद कर सकता हूँ। बाकी के लिए स्कूल ऑफ़िस मदद करेगा।' : 'I can help with the common questions below. For anything else, the school office is happy to help.'),
                       style: const TextStyle(fontSize: 15, height: 1.45),
                     ),
                     if (m.answer != null && m.answer!.steps.isNotEmpty) ...[
@@ -338,7 +339,7 @@ class _BetuChatState extends State<_BetuChat> {
               IconButton.filled(onPressed: _send, icon: const Icon(Icons.arrow_upward_rounded), tooltip: _hi ? 'भेजें' : 'Send'),
             ]),
             const SizedBox(height: 6),
-            Text(_hi ? 'डेमो · बेटू ऐप के आम सवालों के जवाब देता है' : 'Demo · Betu answers common questions about the app', style: TextStyle(color: s.muted, fontSize: 11.5)),
+            Text(demoMode ? (_hi ? 'डेमो · बेटू ऐप के आम सवालों के जवाब देता है' : 'Demo · Betu answers common questions about the app') : (_hi ? 'आम सवालों के तुरंत जवाब' : 'Quick answers to common questions'), style: TextStyle(color: s.muted, fontSize: 11.5)),
           ]),
         ),
       ]),

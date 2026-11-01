@@ -2,6 +2,8 @@
 # Build, migrate and deploy Bastaa to Cloud Run (docs/10, lean mode).
 #   ENV=staging ./infra/gcp/deploy.sh            # build → migrate → deploy → smoke test
 #   ENV=staging ./infra/gcp/deploy.sh roles      # once, after bootstrap: create the database roles
+#   ENV=staging OWNER_EMAIL=you@… ./infra/gcp/deploy.sh owner   # after the first deploy: your console sign-in
+#   ENV=production ALERT_EMAIL=you@… ./infra/gcp/deploy.sh monitoring   # once DNS works: emails when the site or API is down
 #   ENV=staging ./infra/gcp/deploy.sh build|migrate|deploy|smoke
 #   TAG=<image tag> to deploy an already-built image (default: current git commit)
 # GitHub Actions runs the same steps (.github/workflows/deploy.yml).
@@ -39,10 +41,10 @@ build() {
     --substitutions="_IMAGE_BASE=$IMAGE_BASE,_TAG=$TAG" .
 }
 
-job() { # job NAME COMMAND SECRETS — run a one-off Cloud Run job with the migrate image and wait
-  local name=$1 command=$2 secrets=$3
+job() { # job NAME COMMAND SECRETS [ENV] — run a one-off Cloud Run job with the migrate image and wait
+  local name=$1 command=$2 secrets=$3 extra=${4:-}
   gcloud run jobs deploy "$name" --region="$REGION" --image="$IMAGE_BASE/migrate:$TAG" --service-account="$SA_MIGRATE" \
-    --set-cloudsql-instances="$SQL_CONNECTION" --set-env-vars=NODE_ENV="$NODE_ENV_VALUE" --set-secrets="$secrets" \
+    --set-cloudsql-instances="$SQL_CONNECTION" --set-env-vars="^@^NODE_ENV=$NODE_ENV_VALUE${extra:+@$extra}" --set-secrets="$secrets" \
     --command=sh --args=-c,"$command" --max-retries=0 --task-timeout=900s >/dev/null
   gcloud run jobs execute "$name" --region="$REGION" --wait
 }
@@ -56,6 +58,75 @@ roles() {
 migrate() {
   say "Migrating the database (expand-only migrations; safe before the new code is live)"
   job schoolos-migrate "pnpm exec prisma migrate deploy && node scripts/apply-sql.mjs" "DATABASE_URL=database-url-owner:latest"
+}
+
+# The owner's console sign-in (and the starting plans). The password is typed here, held in Secret
+# Manager only while the job runs, then destroyed; it never reaches the logs or the job's settings.
+owner() {
+  : "${OWNER_EMAIL:?Set OWNER_EMAIL=you@example.com (and optionally OWNER_NAME, OWNER_PHONE=+91…)}"
+  local pw pw2
+  read -r -s -p "Password for $OWNER_EMAIL (12+ characters): " pw; echo
+  read -r -s -p "Type it again: " pw2; echo
+  [ "$pw" = "$pw2" ] || { echo "The two passwords don't match." >&2; exit 1; }
+  [ ${#pw} -ge 12 ] || { echo "Use at least 12 characters." >&2; exit 1; }
+  has_secret owner-password || gcloud secrets create owner-password --replication-policy=automatic --quiet >/dev/null
+  printf '%s' "$pw" | gcloud secrets versions add owner-password --data-file=- --quiet >/dev/null
+  for s in owner-password database-url-platform; do
+    gcloud secrets add-iam-policy-binding "$s" --member="serviceAccount:$SA_MIGRATE" --role=roles/secretmanager.secretAccessor >/dev/null
+  done
+  say "Creating the owner account $OWNER_EMAIL"
+  local status=0
+  job schoolos-owner "node dist/ops/create-owner.js" "PLATFORM_DATABASE_URL=database-url-platform:latest,OWNER_PASSWORD=owner-password:latest" \
+    "OWNER_EMAIL=$OWNER_EMAIL@OWNER_NAME=${OWNER_NAME:-Bastaa Owner}${OWNER_PHONE:+@OWNER_PHONE=$OWNER_PHONE}" || status=$?
+  for v in $(gcloud secrets versions list owner-password --filter='state=ENABLED' --format='value(name.basename())'); do
+    gcloud secrets versions destroy "$v" --secret=owner-password --quiet >/dev/null
+  done
+  [ $status = 0 ] && echo "  Sign in at https://admin.$DOMAIN/login" || { echo "The job failed: Cloud Run → Jobs → schoolos-owner → Logs." >&2; exit $status; }
+}
+
+# Uptime checks from several regions every 5 minutes; an email if the API (which also checks the
+# database) or the website stops answering. Safe to run again.
+monitoring() {
+  : "${ALERT_EMAIL:?Set ALERT_EMAIL=you@example.com (who gets the down/up emails)}"
+  gcloud services enable monitoring.googleapis.com --quiet
+  local channel
+  channel=$(gcloud beta monitoring channels list --filter="displayName='Bastaa alerts ($ALERT_EMAIL)'" --format='value(name)' | head -1)
+  [ -n "$channel" ] || channel=$(gcloud beta monitoring channels create --display-name="Bastaa alerts ($ALERT_EMAIL)" --type=email \
+    --channel-labels=email_address="$ALERT_EMAIL" --format='value(name)')
+  say "Uptime checks and alerts → $ALERT_EMAIL"
+  local name host path check id policy
+  for spec in "Bastaa API|api.$DOMAIN|/health" "Bastaa website|$DOMAIN|/"; do
+    IFS='|' read -r name host path <<<"$spec"
+    check=$(gcloud monitoring uptime list-configs --filter="displayName='$name'" --format='value(name)' | head -1)
+    [ -n "$check" ] || check=$(gcloud monitoring uptime create "$name" --resource-type=uptime-url \
+      --resource-labels=host="$host",project_id="$PROJECT_ID" --protocol=https --path="$path" --period=5 --timeout=10 --format='value(name)')
+    id=${check##*/}
+    if [ -z "$(gcloud alpha monitoring policies list --filter="displayName='$name is down'" --format='value(name)' | head -1)" ]; then
+      policy=$(mktemp)
+      cat >"$policy" <<JSON
+{
+  "displayName": "$name is down",
+  "combiner": "OR",
+  "conditions": [{
+    "displayName": "$host$path stops answering",
+    "conditionThreshold": {
+      "filter": "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.label.check_id=\"$id\" AND resource.type=\"uptime_url\"",
+      "aggregations": [{ "alignmentPeriod": "600s", "perSeriesAligner": "ALIGN_NEXT_OLDER", "crossSeriesReducer": "REDUCE_COUNT_FALSE", "groupByFields": ["resource.label.*"] }],
+      "comparison": "COMPARISON_GT",
+      "thresholdValue": 1,
+      "duration": "300s",
+      "trigger": { "count": 1 }
+    }
+  }],
+  "notificationChannels": ["$channel"],
+  "documentation": { "content": "Check Cloud Run → schoolos-api / schoolos-web → Logs, and Cloud SQL. Roll back: Cloud Run → Revisions.", "mimeType": "text/markdown" }
+}
+JSON
+      gcloud alpha monitoring policies create --policy-from-file="$policy" --quiet >/dev/null
+      rm -f "$policy"
+    fi
+    echo "  $name: https://$host$path"
+  done
 }
 
 deploy() {
@@ -104,6 +175,8 @@ case "$STEP" in
   roles) gcloud artifacts docker images describe "$IMAGE_BASE/migrate:$TAG" >/dev/null 2>&1 || build; roles ;;
   build) build ;;
   migrate) migrate ;;
+  owner) owner ;;
+  monitoring) monitoring ;;
   deploy) deploy; smoke ;;
   smoke) smoke ;;
   *) echo "Unknown step $STEP" >&2; exit 1 ;;

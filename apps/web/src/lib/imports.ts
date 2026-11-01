@@ -7,4 +7,5 @@ export const IMPORT_META: Record<ImportEntity, { label: string; what: string; hr
   CLASSES: { label: 'Classes & sections', what: 'classes', href: '/academics?tab=classes', backLabel: 'Academics', invite: null },
   SUBJECTS: { label: 'Subjects', what: 'subjects', href: '/academics?tab=subjects', backLabel: 'Academics', invite: null },
   FEE_ASSIGNMENTS: { label: 'Optional fees', what: 'students’ optional fees', href: '/fees', backLabel: 'Fees', invite: null },
+  FEE_PAYMENTS: { label: 'Fees already paid', what: 'earlier payments', href: '/payments?tab=payments', backLabel: 'Payments', invite: null },
 };

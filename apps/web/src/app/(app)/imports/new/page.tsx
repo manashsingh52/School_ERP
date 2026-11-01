@@ -3,11 +3,12 @@
 import { Gate } from '@/components/gate';
 import type { ImportEntity, ImportJobItem } from '@schoolos/contracts';
 import { Button, Card, PageHeader, Spinner, Stepper, cn, toast } from '@schoolos/ui';
-import { BookOpen, Download, FileSpreadsheet, GraduationCap, IndianRupee, LayoutGrid, Upload, Users } from 'lucide-react';
+import { BookOpen, Download, FileSpreadsheet, GraduationCap, IndianRupee, LayoutGrid, Receipt, Upload, Users } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, type DragEvent } from 'react';
 import { ApiError, apiPost } from '@/lib/api-client';
 import { uploadFile } from '@/lib/hooks';
+import { useMe } from '@/lib/me';
 
 function NewImportPageContent() {
   return (
@@ -17,18 +18,21 @@ function NewImportPageContent() {
   );
 }
 
-const ENTITIES: { value: ImportEntity; label: string; description: string; icon: typeof Users }[] = [
+const ENTITIES: { value: ImportEntity; label: string; description: string; icon: typeof Users; cashier?: boolean }[] = [
   { value: 'STUDENTS', label: 'Students', description: 'With class, section and parents', icon: Users },
   { value: 'TEACHERS', label: 'Teachers', description: 'With mobile numbers for sign-in', icon: GraduationCap },
   { value: 'CLASSES', label: 'Classes & sections', description: 'e.g. “Class 8 — A, B, C”, with seats', icon: LayoutGrid },
   { value: 'SUBJECTS', label: 'Subjects', description: 'With the classes that study each one', icon: BookOpen },
   { value: 'FEE_ASSIGNMENTS', label: 'Optional fees', description: 'Which students take transport, lab…', icon: IndianRupee },
+  { value: 'FEE_PAYMENTS', label: 'Fees already paid', description: 'Payments taken this year before Bastaa', icon: Receipt, cashier: true },
 ];
 
 function NewImport() {
   const router = useRouter();
   const params = useSearchParams();
-  const [entity, setEntity] = useState<ImportEntity>(ENTITIES.find((e) => e.value === params.get('entity'))?.value ?? 'STUDENTS');
+  const { can } = useMe();
+  const entities = ENTITIES.filter((e) => !e.cashier || can('payment.collect'));
+  const [entity, setEntity] = useState<ImportEntity>(entities.find((e) => e.value === params.get('entity'))?.value ?? 'STUDENTS');
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -62,7 +66,7 @@ function NewImport() {
       <Stepper steps={['Upload', 'Match columns', 'Review', 'Import']} current={0} />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label="What are you importing?">
-        {ENTITIES.map((e) => {
+        {entities.map((e) => {
           const Icon = e.icon;
           return (
             <button

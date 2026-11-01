@@ -49,10 +49,11 @@ const COPY = {
   send: { en: 'Send', hi: 'भेजें' },
   typing: { en: 'Betu is typing', hi: 'बेटू लिख रहा है' },
   demo: { en: 'Demo · Betu answers common questions about this page', hi: 'डेमो · बेटू इस पेज के आम सवालों के जवाब देता है' },
+  live: { en: 'Quick answers to common questions', hi: 'आम सवालों के तुरंत जवाब' },
 } satisfies Record<string, Bi>;
 
-/** Floating help on every screen: preset questions for the viewer's role and canned answers. */
-export function Betu({ audience }: { audience: BetuAudience }) {
+/** Floating help on every screen: preset questions for the viewer's role and canned answers. `demo` labels it as the demo. */
+export function Betu({ audience, demo = false }: { audience: BetuAudience; demo?: boolean }) {
   const { lang } = useI18n();
   const say = (b: Bi) => b[lang];
   const answers = BETU[audience];
@@ -252,7 +253,7 @@ export function Betu({ audience }: { audience: BetuAudience }) {
                   <ArrowUp className="size-4" />
                 </button>
               </div>
-              <p className="mt-2 text-center text-[11.5px] text-fg-tertiary">{say(COPY.demo)}</p>
+              <p className="mt-2 text-center text-[11.5px] text-fg-tertiary">{say(demo ? COPY.demo : COPY.live)}</p>
             </form>
           </motion.section>
         )}

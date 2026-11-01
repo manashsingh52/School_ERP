@@ -51,7 +51,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <main className="flex-1">{children}</main>
           <SiteFooter mode={mode} />
         </div>
-        <Betu audience="visitor" />
+        <Betu audience="visitor" demo={mode === 'demo'} />
       </BookDemoProvider>
     </SiteMotion>
   );

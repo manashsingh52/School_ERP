@@ -24,7 +24,7 @@ gcloud config set project "$PROJECT_ID" >/dev/null
 say "Enabling APIs"
 gcloud services enable run.googleapis.com sqladmin.googleapis.com secretmanager.googleapis.com \
   artifactregistry.googleapis.com cloudbuild.googleapis.com iam.googleapis.com iamcredentials.googleapis.com \
-  storage.googleapis.com sts.googleapis.com
+  storage.googleapis.com sts.googleapis.com monitoring.googleapis.com
 
 say "Artifact Registry ($REPO)"
 exists gcloud artifacts repositories describe "$REPO" --location="$REGION" ||
@@ -84,7 +84,7 @@ gcloud iam service-accounts add-iam-policy-binding "$SA_API" --member="serviceAc
 grant() { gcloud secrets add-iam-policy-binding "$1" --member="serviceAccount:$2" --role=roles/secretmanager.secretAccessor >/dev/null; }
 for s in database-url-app database-url-platform jwt-private-key jwt-public-key otp-pepper payment-secrets-key bff-shared-secret edge-shared-secret; do grant "$s" "$SA_API"; done
 for s in bff-shared-secret edge-shared-secret; do grant "$s" "$SA_WEB"; done
-for s in database-url-owner database-url-admin db-owner-password db-app-password db-platform-password; do grant "$s" "$SA_MIGRATE"; done
+for s in database-url-owner database-url-admin database-url-platform db-owner-password db-app-password db-platform-password; do grant "$s" "$SA_MIGRATE"; done
 # The deployer builds, pushes and deploys, and runs services as the accounts above.
 for role in roles/run.admin roles/artifactregistry.writer roles/cloudbuild.builds.editor roles/storage.admin roles/logging.viewer roles/logging.logWriter; do bind "$SA_DEPLOY" "$role"; done
 # Cloud Build runs as the deployer too (no default compute account needed).

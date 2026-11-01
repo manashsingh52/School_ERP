@@ -30,6 +30,10 @@ Search the code for `⏸` to find every slot.
 | 21 | **Move the project off the iCloud-synced Desktop** | Safety of the local database | e.g. `~/Developer/schoolerp` (then reopen it there) | iCloud makes conflict copies inside `apps/api/.data/pg` — a live database must not be synced |
 | 22 | **WhatsApp number for demo requests** — *optional* | A WhatsApp button in the website's "Book a demo" form and menu | `WHATSAPP_NUMBER` in `apps/web/src/lib/site.ts` (digits with country code, e.g. `919876543210`) | Email and "Copy details" only |
 
+| 23 | **Your owner account on the live server** | Signing in to the platform console | After the first deploy: `ENV=production OWNER_EMAIL=you@… ./infra/gcp/deploy.sh owner` (asks for the password) | Local: the seed's `superadmin@schoolos.local` |
+| 24 | **Uptime alerts** | An email when the site or API is down | `ENV=production ALERT_EMAIL=you@… ./infra/gcp/deploy.sh monitoring` | Sentry and logs only |
+| 25 | **Cloudflare Access on `admin.<domain>`** | A second lock on the owner console | Cloudflare → Zero Trust → Access → Applications (steps in `infra/README.md`) | The console's own sign-in only |
+
 ## Secrets that must be **regenerated** for staging/production
 
 Never reuse the local values. Store them in Google Secret Manager.
