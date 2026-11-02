@@ -1,5 +1,6 @@
 import { FeatureBento } from './bento';
 import { FinalCta, Timeline } from './closing';
+import { FeeDemo } from './fee-demo';
 import { Hero } from './hero';
 import { SiteShell, siteMode } from './site-shell';
 import { TrustShowcase } from './trust';
@@ -10,6 +11,7 @@ export function Landing() {
   return (
     <SiteShell>
       <Hero mode={mode} />
+      <FeeDemo />
       <FeatureBento />
       <TrustShowcase />
       <Timeline />
