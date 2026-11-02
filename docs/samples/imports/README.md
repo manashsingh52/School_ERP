@@ -1,5 +1,9 @@
 # Sample sheets for Import from Excel
 
+No data in a spreadsheet yet? Print `../forms/Student-Details-Form.pdf` (one A4 page) for each student:
+parents fill sections A and B, the office fills C, and the fields follow the order of sheets 4, 5 and 6
+below so each form types straight in.
+
 Give these to a new school to fill in. Each file's first sheet is the data (row 1 is the column
 names Bastaa recognises: keep them), and its second sheet, **How to fill**, explains every column.
 Orange columns are needed; green ones are optional. The sample rows show the format and can be
