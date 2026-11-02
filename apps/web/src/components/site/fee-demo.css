@@ -1,0 +1,390 @@
+/* Bastaa's look on the Stageshow kit: the demo school's emerald, the site's Inter, warm greys.
+   The scene sits on its own soft tile (as the gold device-pair does), so the crop at the foot is a
+   deliberate edge and the window's shadow is never sliced across the page. */
+.fee-demo .ss-stage {
+  --gutter: 40px;
+  --ss-accent: #0f5338;
+  --ss-accent-soft: rgb(15 83 56 / 0.1);
+  --ss-success: #0f5338;
+  --ss-success-text: #0f5338;
+  --ss-font: var(--font-sans, Inter), system-ui, sans-serif;
+  --ss-radius-window: 14px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f0ede7;
+}
+
+.fee-demo .ss-stage[data-theme='dark'] {
+  background: #121815;
+  --ss-accent: #3fb07e;
+  --ss-accent-soft: rgb(63 176 126 / 0.16);
+  --ss-success: #3fb07e;
+  --ss-success-text: #6fd3a5;
+}
+
+/* Pinned top-left, about a sixth past the bottom */
+.fee-demo .fd-window {
+  position: absolute;
+  top: var(--gutter);
+  left: var(--gutter);
+  width: 800px;
+  height: 600px;
+  box-shadow: var(--ss-shadow-hero);
+}
+
+.fee-demo .fd-window .ss-window__body {
+  display: flex;
+  background: var(--ss-surface);
+}
+
+.fee-demo .fd-side {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  gap: 2px;
+  width: 188px;
+  padding: 16px 10px;
+  border-right: 1px solid var(--ss-line);
+  background: var(--ss-canvas);
+}
+
+/* The product draws the school's initial on its colour beside the name */
+.fee-demo .fd-school {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px 4px;
+}
+
+.fee-demo .fd-school__mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--ss-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-box: trim-both cap alphabetic;
+}
+
+.fee-demo .fd-school__name {
+  overflow: hidden;
+  color: var(--ss-text-strong);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fee-demo .fd-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 7px;
+  color: var(--ss-icon);
+}
+
+.fee-demo .fd-nav__icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.fee-demo .fd-nav[data-active] {
+  background: var(--ss-accent-soft);
+  color: var(--ss-accent);
+}
+
+.fee-demo .fd-nav__label {
+  color: var(--ss-text-strong);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.fee-demo .fd-main {
+  flex: 1;
+  min-width: 0;
+  padding: 18px 24px;
+}
+
+.fee-demo .fd-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.fee-demo .fd-title {
+  color: var(--ss-text-strong);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.fee-demo .fd-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--ss-canvas);
+}
+
+.fee-demo .fd-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: var(--ss-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.fee-demo .fd-tab[data-active] {
+  background: var(--ss-surface);
+  color: var(--ss-text-strong);
+  box-shadow: 0 0 0 1px var(--ss-line), 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.fee-demo .fd-cols {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 28px;
+  margin-top: 18px;
+}
+
+.fee-demo .fd-card {
+  border: 1px solid var(--ss-line);
+  border-radius: 12px;
+  background: var(--ss-surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+}
+
+.fee-demo .fd-student {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ss-line);
+}
+
+.fee-demo .fd-student__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fee-demo .fd-student__name {
+  color: var(--ss-text-strong);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.fee-demo .fd-student__sub {
+  color: var(--ss-text);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.fee-demo .fd-bill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ss-line);
+}
+
+.fee-demo .fd-bill .ss-check {
+  flex: none;
+}
+
+.fee-demo .fd-bill__name {
+  color: var(--ss-text-strong);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.fee-demo .fd-bill__amount {
+  margin-left: auto;
+  color: var(--ss-text-strong);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.fee-demo .fd-pay {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 14px;
+}
+
+.fee-demo .fd-label {
+  color: var(--ss-text);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.fee-demo .fd-seg {
+  width: 100%;
+}
+
+.fee-demo .fd-field {
+  margin-top: 2px;
+}
+
+/* Full width: the idle label and the busy group are two layers in one cell that crossfade */
+.fee-demo .fd-button {
+  display: grid;
+  grid-template-areas: 'stack';
+  place-items: center;
+  height: 40px;
+  margin-top: 4px;
+  border-radius: 9px;
+  background: var(--ss-accent);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background-color 0.3s ease, filter 0.15s ease;
+}
+
+.fee-demo .fd-button[data-pressed] {
+  filter: brightness(0.92);
+}
+
+.fee-demo .fd-layer {
+  grid-area: stack;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  filter: blur(2px);
+  transition: opacity 0.25s ease, filter 0.25s ease;
+  text-box: trim-both cap alphabetic;
+}
+
+.fee-demo .fd-layer[data-on] {
+  opacity: 1;
+  filter: none;
+  transition-delay: 0.08s;
+}
+
+.fee-demo .fd-labels {
+  display: grid;
+  justify-items: start;
+}
+
+.fee-demo .fd-labels__one {
+  grid-area: 1 / 1;
+  opacity: 0;
+  filter: blur(2px);
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+.fee-demo .fd-labels__one[data-on] {
+  opacity: 1;
+  filter: none;
+  transition-delay: 0.08s;
+}
+
+.fee-demo .fd-button .ss-check__ring { stroke: rgb(255 255 255 / 0.45); }
+.fee-demo .fd-button .ss-check__arc { stroke: #fff; }
+.fee-demo .fd-button .ss-check__fill { fill: #fff; }
+.fee-demo .fd-button .ss-check__tick { stroke: var(--ss-accent); }
+
+/* A lane reserved under the button, so the receipt line never moves the card */
+.fee-demo .fd-lane {
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+
+.fee-demo .fd-lane__text {
+  color: var(--ss-success-text);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* Filler the phone stands over */
+.fee-demo .fd-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 6px;
+}
+
+.fee-demo .fd-recent > .ss-bar:first-child {
+  margin-bottom: 12px;
+}
+
+.fee-demo .fd-recent__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  border-bottom: 1px solid var(--ss-line-faint);
+}
+
+/* Straddles the window's right edge, about half outside, over the receipts filler; the stage
+   crops its base. A level above the window. */
+.fee-demo .fd-phone {
+  position: absolute;
+  top: 92px;
+  right: var(--gutter);
+  box-shadow: var(--ss-shadow-satellite), 0 30px 50px -20px rgb(50 50 93 / 0.35);
+}
+
+.fee-demo .fd-app-icon {
+  width: 100%;
+  height: 100%;
+}
+
+/* Narrow: the sidebar and receipts go; the card keeps the column, the phone sits below it */
+.fee-demo .ss-stage[data-layout='compact'] {
+  --gutter: 16px;
+  border-radius: 20px;
+}
+
+.fee-demo .ss-stage[data-layout='compact'] .fd-window {
+  width: 420px;
+  height: 760px;
+}
+
+.fee-demo .ss-stage[data-layout='compact'] .fd-side,
+.fee-demo .ss-stage[data-layout='compact'] .fd-recent,
+.fee-demo .ss-stage[data-layout='compact'] .fd-tabs .fd-tab:not([data-active]) {
+  display: none;
+}
+
+.fee-demo .ss-stage[data-layout='compact'] .fd-main {
+  padding: 16px;
+}
+
+.fee-demo .ss-stage[data-layout='compact'] .fd-cols {
+  grid-template-columns: 294px;
+}
+
+.fee-demo .ss-stage[data-layout='compact'] .fd-phone {
+  top: 470px;
+}
+
+/* Dark: the bright green takes dark ink, as the site's own dark accent does */
+.fee-demo .ss-stage[data-theme='dark'] .fd-button,
+.fee-demo .ss-stage[data-theme='dark'] .fd-school__mark {
+  color: #06130d;
+}
+
+.fee-demo .ss-stage[data-theme='dark'] .fd-button .ss-check__ring { stroke: rgb(6 19 13 / 0.35); }
+.fee-demo .ss-stage[data-theme='dark'] .fd-button .ss-check__arc { stroke: #06130d; }
+.fee-demo .ss-stage[data-theme='dark'] .fd-button .ss-check__fill { fill: #06130d; }
+.fee-demo .ss-stage[data-theme='dark'] .fd-button .ss-check__tick { stroke: var(--ss-accent); }

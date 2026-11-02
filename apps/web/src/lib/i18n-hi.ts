@@ -156,6 +156,12 @@ export const HI: Record<string, string> = {
   'Pay fees': 'फ़ीस भरें',
   'Fee receipt': 'फ़ीस रसीद',
 
+  // Fee demo
+  'From the counter to the phone': 'काउंटर से सीधे फ़ोन तक',
+  'Fee collected. Parent told. Receipt sent.': 'फ़ीस जमा। अभिभावक को सूचना। रसीद भेजी।',
+  'The office takes the fee at the counter, and the parent gets the receipt on their phone the same moment. No calls, no lost slips.':
+    'ऑफ़िस काउंटर पर फ़ीस लेता है और उसी पल अभिभावक के फ़ोन पर रसीद पहुँच जाती है। न फ़ोन कॉल, न खोई पर्ची।',
+
   // How it works and contact
   'Up and running in a week': 'एक हफ़्ते में शुरू',
   'Day 1–2': 'दिन 1–2',
