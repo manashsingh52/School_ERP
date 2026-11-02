@@ -65,7 +65,7 @@ export class MarksImportService {
       const adm = (r[admCol] ?? '').trim();
       const value = (r[marksCol] ?? '').trim();
       if (!adm && !value) return;
-      if (!adm && /^fill in marks/i.test(Object.values(r).join(' '))) return; // the template's note
+      if (/^fill in marks/i.test(adm || Object.values(r).join(' ').trim())) return; // the template's note, in the first column
       const student = byAdm.get(norm(adm));
       const base = { row, admissionNo: adm, name: student?.name ?? null, value, marks: null as number | null, absent: false, exempt: false };
       const fail = (error: string) => rows.push({ ...base, change: 'blank', error });

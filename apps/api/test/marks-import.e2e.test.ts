@@ -47,6 +47,22 @@ describe('marks import', () => {
     expect((await as('parent').get(`/v1/exams/marks/template?${q()}`)).status).toBe(403);
   });
 
+  it('the downloaded sheet, filled in, goes back in as it is (its note line included)', async () => {
+    const res = await as('teacher').get(`/v1/exams/marks/template?${q()}`).buffer(true).parse((r, cb) => {
+      const chunks: Buffer[] = [];
+      r.on('data', (c: Buffer) => chunks.push(c));
+      r.on('end', () => cb(null, Buffer.concat(chunks)));
+    });
+    const sheet = await readXlsxFile(res.body as Buffer);
+    const rows = (Array.isArray(sheet[0]) ? sheet : (sheet as unknown as { data: unknown[][] }[])[0]!.data) as unknown[][];
+    expect(String(rows.at(-1)![0])).toMatch(/^Fill in marks/);
+    // The same sheet as CSV, with a mark typed in for student 1
+    const csv = rows.map((r) => r.map((c) => (r[0] === '1' && c === r[3] ? 44 : c ?? '')).map((c) => `"${String(c)}"`).join(',')).join('\n');
+    const r = await run('teacher', await upload('teacher', csv));
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect(r.body.data.errors).toBe(0);
+  });
+
   it('every row is checked; nothing is saved while any row has a problem', async () => {
     const fileId = await upload('teacher', 'Admission no,Marks\n1,45\n2,A\n999,10\n1,30\n2,60\n');
     const res = await run('teacher', fileId, { apply: true });
