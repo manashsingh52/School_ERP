@@ -401,6 +401,7 @@ export const ENDPOINTS: Record<string, EndpointDef> = {
   'GET /v1/platform/schools': { summary: 'All schools', tag: 'Platform', access: 'platform:platform.dashboard.view', query: listSchoolsQuerySchema },
   'POST /v1/platform/schools': { summary: 'Onboard a school (admin invited, trial started)', tag: 'Platform', access: 'platform:platform.schools.manage', body: provisionSchoolSchema },
   'GET /v1/platform/schools/:id': { summary: 'One school: plan, usage, features, admins', tag: 'Platform', access: 'platform:platform.dashboard.view' },
+  'POST /v1/platform/schools/:id/admins/:memberId/sign-in-code': { summary: 'One-time sign-in code for a school admin (first sign-in or locked out)', tag: 'Platform', access: 'platform:platform.schools.manage' },
   'PUT /v1/platform/schools/:id/status': { summary: 'Activate, suspend or archive a school', tag: 'Platform', access: 'platform:platform.schools.manage', body: schoolStatusSchema },
   'PUT /v1/platform/schools/:id/subscription': { summary: 'Set plan, status, dates and limit overrides (manual billing)', tag: 'Platform', access: 'platform:platform.subscriptions.manage', body: subscriptionSchema },
   'PUT /v1/platform/schools/:id/features/:key': { summary: 'Per-school feature override (null clears)', tag: 'Platform', access: 'platform:platform.flags.manage', body: schoolFeatureSchema },

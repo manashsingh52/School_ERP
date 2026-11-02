@@ -233,6 +233,15 @@ Still open: settlement (bank UTR) reconciliation — needs a school's live Razor
 - [x] **Fee receipt** redesigned: logo (or the school's initials), PAID stamp, total box, numbered lines. Payments and Collect have **Print receipt** (hidden frame → the print window) and **Download**; phones, tablets, Safari and browsers without a PDF viewer download instead. Demo fixtures now include the admin's and parent's receipts. Sample: `docs/samples/Fee-Receipt-Sample.pdf`
 - [x] **Student ID card in the app**: Profile → Student ID card, one per child, from `GET /students/:id` (school band, photo or initials, class and roll, admission no., date of birth, blood group, parent and phone, school year), to show at the school gate
 
+### 2026-11-01: Ready for a live server ✅
+
+- [x] **Security updates**: Next.js 16.4.3 (fixes two critical advisories, including remote code execution), NestJS 12.3, Express 5.3, Prisma 7.10.1, Puppeteer 25.16, Zod 4.6.7, Google Cloud Storage 8.4, plus overrides for body-parser, qs, fast-uri and shell-quote. `pnpm audit --prod`: no known vulnerabilities
+- [x] **Owner account on a live server**: `pnpm owner:create` / `deploy.sh owner` creates the super admin and the starting plans (the seed refuses production). The password goes through Secret Manager and is destroyed after the job
+- [x] **First sign-in for a new school without SMS**: the console makes a one-time sign-in code for a school's admin (`POST /v1/platform/schools/:id/admins/:memberId/sign-in-code`, audited)
+- [x] **Import → Fees already paid** for schools that start mid-year: payments against the oldest dues, extra kept as advance, duplicates caught, no messages to parents, receipts on demand (`payment.collect` needed)
+- [x] Betu shows "Demo" only in demo mode; real schools see "Quick answers to common questions"
+- [x] `deploy.sh monitoring`: uptime checks on the API (with the database) and the website, emailed alerts; Cloudflare Access steps for `admin.<domain>`; go-live checklist in `infra/README.md`
+
 ### Implementation notes (where code differs from the plan, and why)
 
 | Plan said | Built | Why |

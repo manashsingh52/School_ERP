@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { uuidSchema } from './common.js';
 
-export const importEntitySchema = z.enum(['STUDENTS', 'TEACHERS', 'CLASSES', 'SUBJECTS', 'FEE_ASSIGNMENTS']);
+export const importEntitySchema = z.enum(['STUDENTS', 'TEACHERS', 'CLASSES', 'SUBJECTS', 'FEE_ASSIGNMENTS', 'FEE_PAYMENTS']);
 export type ImportEntity = z.infer<typeof importEntitySchema>;
 
 export interface ImportField {
@@ -74,6 +74,15 @@ export const IMPORT_FIELDS: Record<ImportEntity, ImportField[]> = {
   FEE_ASSIGNMENTS: [
     { key: 'admissionNo', label: 'Admission number', aliases: ['admission no', 'admission number', 'adm no', 'admno', 'scholar no', 'sr no'], example: '1042', required: true },
     { key: 'optionalFees', label: 'Optional fees taken (Transport, Lab)', aliases: ['optional fees', 'opted fees', 'fees', 'optional', 'add ons', 'addons', 'services'], example: 'Transport', required: true },
+  ],
+  /** Fees paid before the school started on Bastaa (this academic year): paid against the oldest dues first. */
+  FEE_PAYMENTS: [
+    { key: 'admissionNo', label: 'Admission number', aliases: ['admission no', 'admission number', 'adm no', 'admno', 'scholar no', 'sr no'], example: '1042', required: true },
+    { key: 'amount', label: 'Amount paid (₹)', aliases: ['amount', 'amount paid', 'paid amount', 'paid', 'fee paid', 'fees paid', 'rs', 'rupees', 'total paid'], example: '12500', required: true },
+    { key: 'paidOn', label: 'Date paid', aliases: ['date', 'paid on', 'payment date', 'date of payment', 'receipt date', 'paid date', 'date paid'], example: '15/07/2026', required: true },
+    { key: 'method', label: 'Paid by (cash, UPI, bank, card)', aliases: ['mode', 'payment mode', 'method', 'paid by', 'payment method', 'mode of payment'], example: 'Cash' },
+    { key: 'reference', label: 'Old receipt no. / UTR', aliases: ['receipt no', 'receipt number', 'old receipt no', 'reference', 'ref no', 'utr', 'transaction id', 'cheque no'], example: 'R-0412' },
+    { key: 'note', label: 'Note', aliases: ['note', 'notes', 'remarks', 'remark'], example: 'Quarter 1' },
   ],
 };
 

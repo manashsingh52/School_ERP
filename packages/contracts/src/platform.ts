@@ -125,7 +125,7 @@ export interface PlatformSchoolDetail extends PlatformSchoolItem {
   subscription: SubscriptionItem | null;
   entitlements: Entitlements;
   features: { key: string; description: string; enabled: boolean; source: 'kill_switch' | 'override' | 'plan' | 'default' }[];
-  admins: { name: string; phone: string | null; email: string | null; status: string }[];
+  admins: { id: string; name: string; phone: string | null; email: string | null; status: string }[];
   counts: { teachers: number; guardians: number; invoices: number; paymentsPaise: number };
 }
 

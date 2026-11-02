@@ -30,15 +30,15 @@ import { PARENT_NAV, SETTINGS_NAV, visibleNav, type NavItem } from './nav';
 
 const COLLAPSE_KEY = 'sos.sidebar.collapsed';
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, demo = false }: { children: ReactNode; demo?: boolean }) {
   return (
     <ChildProvider>
-      <Shell>{children}</Shell>
+      <Shell demo={demo}>{children}</Shell>
     </ChildProvider>
   );
 }
 
-function Shell({ children }: { children: ReactNode }) {
+function Shell({ children, demo }: { children: ReactNode; demo: boolean }) {
   const { me, can } = useMe();
   const parentView = useIsParentView();
   const pathname = usePathname();
@@ -183,7 +183,7 @@ function Shell({ children }: { children: ReactNode }) {
       </div>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-      <Betu audience={parentView ? 'parent' : can('payment.collect') || can('fee.manage') ? 'admin' : 'teacher'} />
+      <Betu demo={demo} audience={parentView ? 'parent' : can('payment.collect') || can('fee.manage') ? 'admin' : 'teacher'} />
     </div>
   );
 }

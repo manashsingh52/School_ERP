@@ -4455,7 +4455,8 @@
                       "TEACHERS",
                       "CLASSES",
                       "SUBJECTS",
-                      "FEE_ASSIGNMENTS"
+                      "FEE_ASSIGNMENTS",
+                      "FEE_PAYMENTS"
                     ]
                   },
                   "fileId": {
@@ -14353,6 +14354,59 @@
         "parameters": [
           {
             "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success — `{ data }`"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/platform/schools/{id}/admins/{memberId}/sign-in-code": {
+      "post": {
+        "summary": "One-time sign-in code for a school admin (first sign-in or locked out)",
+        "tags": [
+          "Platform"
+        ],
+        "x-access": "platform:platform.schools.manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
             "in": "path",
             "required": true,
             "schema": {

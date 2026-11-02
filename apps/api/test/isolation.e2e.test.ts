@@ -161,6 +161,7 @@ const NON_TENANT_ID_ROUTES = new Set([
   'GET /v1/files/local/:token',
   // Platform console: cross-school by design, guarded by platform roles (tested in platform.e2e)
   'GET /v1/platform/schools/:id',
+  'POST /v1/platform/schools/:id/admins/:memberId/sign-in-code',
   'PUT /v1/platform/schools/:id/status',
   'PUT /v1/platform/schools/:id/subscription',
   'PUT /v1/platform/schools/:id/features/:key',

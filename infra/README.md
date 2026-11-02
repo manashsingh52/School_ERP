@@ -35,8 +35,27 @@ ENV=staging PROJECT_ID=<your-project> DOMAIN=<your-domain> ./infra/gcp/deploy.sh
 4. **Cloudflare**: copy `infra/cloudflare/wrangler.toml.example` to `wrangler.toml`, put in your domain and the two `run.app` URLs that `deploy.sh` printed, then
    `npx wrangler deploy` and `npx wrangler secret put EDGE_SECRET` (value: `gcloud secrets versions access latest --secret=edge-shared-secret`).
    DNS: proxied (orange-cloud) records for `@`, `*` and `api` — any target, the Worker answers. SSL mode **Full (strict)**.
-5. **Budget alerts**: Billing → Budgets → $50 / $80 / $100 per month.
-6. **GitHub**: add the repository variables `bootstrap.sh` printed, plus `DOMAIN`. From then on, every push to `main` that passes CI deploys staging. Production: Actions → Deploy → Run workflow → production (add required reviewers to the `production` environment first).
+5. **Your owner account** (the platform console at `admin.<domain>`): `ENV=staging OWNER_EMAIL=you@example.com OWNER_NAME="Your Name" ./infra/gcp/deploy.sh owner`. It asks for a password (12+ characters), creates the super admin and the starting plans, and destroys the password from Secret Manager afterwards. Run it again to reset the password (that account is signed out everywhere).
+6. **Uptime alerts**: `ENV=staging ALERT_EMAIL=you@example.com ./infra/gcp/deploy.sh monitoring` (after DNS works). Google checks `https://api.<domain>/health` (which also checks the database) and the website every 5 minutes and emails you if either stops answering.
+7. **Budget alerts**: Billing → Budgets → $50 / $80 / $100 per month.
+8. **GitHub**: add the repository variables `bootstrap.sh` printed, plus `DOMAIN`. From then on, every push to `main` that passes CI deploys staging. Production: Actions → Deploy → Run workflow → production (add required reviewers to the `production` environment first).
+
+## Protect the owner console (Cloudflare Access)
+
+The console has every school's data behind it, so put a second lock in front of `admin.<domain>`:
+Cloudflare dashboard → **Zero Trust → Access → Applications → Add an application → Self-hosted**.
+Application domain `admin.<domain>`; policy **Allow** → **Emails** → your email (and your team's).
+Cloudflare then emails a one-time code before the console's own sign-in page appears. Free for up to 50 people.
+
+## Going live with real schools (checklist)
+
+1. **Production, not staging.** Real data goes only into the `production` project: staging prints sign-in codes into the logs and uses the sandbox payment gateway on purpose. Create production with the same steps (`ENV=production`), on its own Google Cloud project.
+2. Domain on Cloudflare, Worker deployed, SSL **Full (strict)**, `admin.<domain>` behind Cloudflare Access (above).
+3. `deploy.sh owner` (your sign-in), `deploy.sh monitoring` (alerts), Sentry DSN stored as secret `sentry-dsn` (then deploy again).
+4. GitHub: branch protection on `main`, and required reviewers on the `production` environment.
+5. Legal: privacy policy, terms and the data agreement reviewed (SETUP-LATER #13).
+6. **First school**: console → Schools → New school (name, web address, the admin's phone/email, plan) → the admin signs in at `<school>.<domain>` with a code from you (console → the school → its admin → Make code) → the setup wizard → Excel imports (classes, subjects, teachers, students, optional fees) → fee structures → **Import → Fees already paid** if the school starts mid-year → go-live checklist → parents install the app.
+7. The Play Store app: build the **real** variant (Actions → Android → Run workflow → variant `real`, with the repository variable `API_URL=https://api.<domain>`) and upload it to the same listing; the demo stays on the website.
 
 ## Every release
 

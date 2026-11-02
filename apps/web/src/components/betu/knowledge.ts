@@ -1,6 +1,6 @@
 /**
- * Betu's answers. A demo for now: no server, just common questions about each dashboard, in
- * English and Hindi. Free-typed questions are matched on keywords.
+ * Betu's answers: common questions about each dashboard, in English and Hindi, with no server.
+ * Free-typed questions are matched on keywords.
  */
 export type BetuAudience = 'visitor' | 'admin' | 'teacher' | 'parent' | 'owner';
 
@@ -28,8 +28,8 @@ export const BETU_AREA: Record<BetuAudience, Bi> = {
 };
 
 export const BETU_FALLBACK: Bi = {
-  en: 'I’m still learning, so in this demo I know the common questions below. For anything else, the school office (or the Bastaa team) is happy to help.',
-  hi: 'मैं अभी सीख रहा हूँ, इसलिए इस डेमो में नीचे दिए आम सवालों के जवाब जानता हूँ। बाकी किसी भी बात के लिए स्कूल ऑफ़िस (या Bastaa टीम) मदद करेगा।',
+  en: 'I can help with the common questions below. For anything else, the school office (or the Bastaa team) is happy to help.',
+  hi: 'मैं नीचे दिए आम सवालों में मदद कर सकता हूँ। बाकी किसी भी बात के लिए स्कूल ऑफ़िस (या Bastaa टीम) मदद करेगा।',
 };
 
 export const BETU: Record<BetuAudience, BetuAnswer[]> = {

@@ -453,6 +453,10 @@ feature in §5 is complete with tests. The following were started but stopped at
 
 The code is ready for every item below; each waits on an account, a key or a decision from the owner.
 
+0. **Going live**: follow "Going live with real schools" in `infra/README.md`. The code side is done
+   (2026-11-01): `deploy.sh owner` makes your console sign-in, `deploy.sh monitoring` sets up uptime
+   alerts, the console makes a new school's first admin a sign-in code, and Import → Fees already paid
+   brings in a mid-year school's earlier payments. Real data goes into **production** only.
 1. **Deploy staging** (`infra/README.md`). Needs a GCP project with billing (the owner has a **$300 /
    3-month trial credit**; keep lean mode; budget alerts at $50/$80/$100) and a domain on Cloudflare.
    - Run `bootstrap.sh`, then `deploy.sh roles`, then `deploy.sh`.

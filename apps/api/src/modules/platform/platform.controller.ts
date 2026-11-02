@@ -63,6 +63,13 @@ export class PlatformController {
     return { data: await this.platform.setStatus(schoolId, body.status, body.reason) };
   }
 
+  @Post('schools/:id/admins/:memberId/sign-in-code')
+  @HttpCode(200)
+  @RequirePlatform('platform.schools.manage')
+  async adminSignInCode(@Param('id', id) schoolId: string, @Param('memberId', id) memberId: string) {
+    return { data: await this.platform.adminSignInCode(schoolId, memberId) };
+  }
+
   @Put('schools/:id/subscription')
   @RequirePlatform('platform.subscriptions.manage')
   async subscription(@Param('id', id) schoolId: string, @Body(new ZodPipe(subscriptionSchema)) body: Out<typeof subscriptionSchema>) {

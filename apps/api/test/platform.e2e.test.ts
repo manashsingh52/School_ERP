@@ -89,6 +89,22 @@ describe('schools', () => {
     expect((await sa().post('/v1/platform/schools', { name: 'Reserved', slug: 'admin', adminName: 'X Y', adminPhone: '+919700000001' })).status).toBe(422);
   });
 
+  it('the owner makes the new admin a sign-in code (no SMS needed), and the admin gets in with it', async () => {
+    const detail = (await sa().get(`/v1/platform/schools/${schoolId}`)).body.data;
+    const adminId = detail.admins[0].id as string;
+    expect((await sp().post(`/v1/platform/schools/${schoolId}/admins/${adminId}/sign-in-code`)).status).toBe(403);
+    expect((await sa().post(`/v1/platform/schools/${A.schoolId}/admins/${adminId}/sign-in-code`)).status).toBe(404); // another school's admin
+    const issued = await sa().post(`/v1/platform/schools/${schoolId}/admins/${adminId}/sign-in-code`);
+    expect(issued.status, JSON.stringify(issued.body)).toBe(200);
+    expect(issued.body.data.code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+    t.resetLimits();
+    const res = await t.http.post('/v1/auth/code/redeem').send({ identifier: issued.body.data.signInWith, code: issued.body.data.code, newPassword: 'Sunrise-admin-42', schoolSlug: slug });
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(res.body.activeMembershipId).toBe(adminId);
+    const audit = (await sa().get(`/v1/platform/audit?schoolId=${schoolId}`)).body.data as { action: string }[];
+    expect(audit.map((a) => a.action)).toContain('school.admin_sign_in_code');
+  });
+
   it('lists and searches schools', async () => {
     const list = (await sa().get(`/v1/platform/schools?q=${slug}`)).body.data;
     expect(list.map((s: { id: string }) => s.id)).toEqual([schoolId]);

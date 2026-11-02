@@ -21,6 +21,7 @@ import { loadEnv } from '../config/env.js';
 import { createLogger } from '../core/logger/logger.js';
 import { PasswordService } from '../core/auth/password.service.js';
 import { PlatformPrismaService } from '../core/prisma/prisma.service.js';
+import { ensurePlatformDefaults } from './platform-defaults.js';
 import { SchoolsService } from '../modules/schools/schools.service.js';
 import { PERMISSION_KEYS, type PermissionSet } from '@schoolos/permissions';
 import type { INestApplicationContext } from '@nestjs/common';
@@ -251,23 +252,7 @@ async function topUp(db: PlatformPrismaService, schoolId: string, app: INestAppl
 
 /** Phase 6: plans, feature flags, the demo school's subscription and a support user. Idempotent. */
 async function platform(db: PlatformPrismaService, app: INestApplicationContext, schoolId: string): Promise<string[]> {
-  const notes: string[] = [];
-  const PLANS = [
-    { code: 'basic', name: 'Basic', priceMonthlyPaise: 4_999_00, limits: { students: 500, storageGb: 5, smsPerMonth: 2_000, aiCallsPerMonth: 0 }, features: [] },
-    { code: 'professional', name: 'Professional', priceMonthlyPaise: 12_999_00, limits: { students: 2_000, storageGb: 50, smsPerMonth: 10_000, aiCallsPerMonth: 500 }, features: ['online_payments', 'report_builder'] },
-    { code: 'enterprise', name: 'Enterprise', priceMonthlyPaise: null, limits: { students: null, storageGb: 500, smsPerMonth: null, aiCallsPerMonth: 5_000 }, features: ['online_payments', 'report_builder', 'ai_assistant'] },
-  ];
-  if (!(await db.plan.count())) {
-    for (const p of PLANS) await db.plan.create({ data: p });
-    notes.push('3 plans');
-  }
-  const FLAGS = [
-    { key: 'online_payments', description: 'Parents pay fees online through the school’s Razorpay account', defaultEnabled: false },
-    { key: 'report_builder', description: 'Reports centre with exports (PDF, Excel, CSV)', defaultEnabled: false },
-    { key: 'ai_assistant', description: 'AI assistant for staff (later phase)', defaultEnabled: false },
-    { key: 'documents', description: 'Student and staff documents', defaultEnabled: true },
-  ];
-  for (const f of FLAGS) await db.featureFlag.upsert({ where: { key: f.key }, create: f, update: {} });
+  const notes = await ensurePlatformDefaults(db);
   // Phase 8: the demo school tries the AI assistant (offline rules provider unless Gemini is set).
   if (!(await db.schoolFeature.findUnique({ where: { schoolId_flagKey: { schoolId, flagKey: 'ai_assistant' } } }))) {
     await db.schoolFeature.create({ data: { schoolId, flagKey: 'ai_assistant', enabled: true } });

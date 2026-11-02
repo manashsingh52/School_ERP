@@ -77,6 +77,7 @@ import { GuardiansController } from './modules/guardians/guardians.controller.js
 import { GuardiansService } from './modules/guardians/guardians.service.js';
 import { ImportsController } from './modules/imports/imports.controller.js';
 import { ImportsService } from './modules/imports/imports.service.js';
+import { PaymentImports } from './modules/imports/payment-imports.js';
 import { SetupImports } from './modules/imports/setup-imports.js';
 import { MembersController, PermissionsController, RolesController } from './modules/members/members.controller.js';
 import { MembersService } from './modules/members/members.service.js';
@@ -237,10 +238,10 @@ export class WebhooksModule {}
 })
 export class FinanceModule {}
 
-@Module({ imports: [SchoolsModule, NotificationsModule], controllers: [PlatformController, SchoolPlanController], providers: [PlatformService, SupportAccessService] })
+@Module({ imports: [SchoolsModule, NotificationsModule, AuthModule], controllers: [PlatformController, SchoolPlanController], providers: [PlatformService, SupportAccessService] })
 export class PlatformModule {}
 
-@Module({ imports: [SchoolsModule, GuardiansModule, FinanceModule], controllers: [ImportsController], providers: [ImportsService, SetupImports] })
+@Module({ imports: [SchoolsModule, GuardiansModule, FinanceModule], controllers: [ImportsController], providers: [ImportsService, SetupImports, PaymentImports] })
 export class ImportsModule {}
 
 @Module({ imports: [FilesModule], controllers: [DocumentsController], providers: [DocumentsService] })

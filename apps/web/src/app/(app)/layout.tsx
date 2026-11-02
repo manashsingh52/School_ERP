@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { AppShell } from '@/components/shell/app-shell';
 import { MeProvider } from '@/lib/me';
 import { serverApi } from '@/lib/server-api';
+import { serverEnv } from '@/lib/server-env';
 import { AuthFrame } from '../login/find-school';
 import { ShellError } from './shell-error';
 
@@ -24,7 +25,7 @@ export default async function SignedInLayout({ children }: { children: ReactNode
 
   return (
     <MeProvider me={me.data}>
-      <AppShell>{children}</AppShell>
+      <AppShell demo={serverEnv.demo}>{children}</AppShell>
     </MeProvider>
   );
 }

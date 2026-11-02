@@ -1,6 +1,8 @@
 # Excel / CSV import
 
-Two-step imports (check, then commit in the background) for students, teachers, classes, subjects and fees, with row-level problems to fix.
+Two-step imports (check, then commit in the background) for students, teachers, classes, subjects, optional fees and **fees already paid**, with row-level problems to fix.
+
+**Fees already paid** (`FEE_PAYMENTS`, `payment-imports.ts`): for a school that starts mid-year. Each row (admission no., amount, date, optional mode / old receipt no. / note) becomes a payment against the student's oldest open bills; anything beyond what's due is kept as advance credit. The date must fall in the current school year and not in the future. Rows already recorded (same student, amount, day and reference) come back as duplicates, so re-importing a file adds nothing. Parents aren't messaged about old payments, and each receipt PDF is made when first opened. Needs `payment.collect` as well as `import.run`.
 
 ## Routes
 

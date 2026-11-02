@@ -343,6 +343,7 @@ enum ImportEntity {
   CLASSES
   SUBJECTS
   FEE_ASSIGNMENTS
+  FEE_PAYMENTS
 }
 
 enum ImportJobStatus {
